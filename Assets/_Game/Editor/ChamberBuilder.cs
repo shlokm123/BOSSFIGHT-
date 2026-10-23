@@ -1565,44 +1565,45 @@ namespace GlitchVerse.Editor
             SetPrivateField(switchComp, "consoleStatusText", swText);
             SetPrivateField(switchComp, "allowPlayerActivation", false);
             SetPrivateField(switchComp, "allowEchoActivation", true);
-            SetPrivateField(switchComp, "holdGraceDuration", 2.0f);
+            SetPrivateField(switchComp, "holdGraceDuration", 2.5f);
             SetPrivateField(switchComp, "latching", false);
             SetPrivateField(switchComp, "isPowered", false);
             SetPrivateField(switchComp, "isActivated", false);
 
             // 4. Dual Moving Red Lasers between Platform B and Platform A
-            // Laser A — Vertical Bar sweeping horizontally (X: 0.9 to 2.5, Y: -2.85)
+            // Laser A — Tall Vertical Bar sweeping horizontally across cube traversal route (X: 0.5 to 1.8, Y: -2.5) - ACTIVE FROM START
             GameObject laserAObj = new GameObject("LaserA_Vertical");
             laserAObj.transform.SetParent(refs.puzzleRoot.transform);
-            laserAObj.transform.position = new Vector3(1.7f, -2.85f, 0f);
+            laserAObj.transform.position = new Vector3(1.15f, -2.5f, 0f);
 
             SpriteRenderer laRend = laserAObj.AddComponent<SpriteRenderer>();
             laRend.sprite = laserSp;
             laRend.color = new Color(1.0f, 0.12f, 0.22f, 1f);
             laRend.sortingOrder = 7;
             laRend.drawMode = SpriteDrawMode.Sliced;
-            laRend.size = new Vector2(0.35f, 1.9f);
+            laRend.size = new Vector2(0.35f, 2.6f);
 
             BoxCollider2D laCol = laserAObj.AddComponent<BoxCollider2D>();
             laCol.isTrigger = true;
-            laCol.size = new Vector2(0.35f, 1.9f);
+            laCol.size = new Vector2(0.35f, 2.6f);
 
             GameObject laLightObj = new GameObject("LaserA_Light");
             laLightObj.transform.SetParent(laserAObj.transform);
             laLightObj.transform.localPosition = Vector3.zero;
             Light2D laLight = laLightObj.AddComponent<Light2D>();
             laLight.lightType = Light2D.LightType.Point;
-            laLight.pointLightOuterRadius = 2.5f;
+            laLight.pointLightOuterRadius = 2.8f;
             laLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
             laLight.intensity = 1.4f;
 
             MovingLaserHazard laserAComp = laserAObj.AddComponent<MovingLaserHazard>();
-            laserAComp.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(0.9f, -2.85f, 0f), new Vector3(2.5f, -2.85f, 0f), 1.6f, 0.5f);
+            laserAComp.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(0.5f, -2.5f, 0f), new Vector3(1.8f, -2.5f, 0f), 1.4f, 0.5f, startActive: true);
             SetPrivateField(laserAComp, "laserRenderer", laRend);
             SetPrivateField(laserAComp, "laserLight", laLight);
-            laserAComp.SetHazardActive(false);
+            SetPrivateField(laserAComp, "activeOnStart", true);
+            laserAComp.SetHazardActive(true);
 
-            // Laser B — Horizontal Bar sweeping vertically (X: -0.5, Y: -3.2 to -1.3)
+            // Laser B — Horizontal Bar sweeping vertically (X: -0.5, Y: -3.2 to -1.3) - ACTIVATED BY BETRAYAL PRANK
             GameObject laserBObj = new GameObject("LaserB_Horizontal");
             laserBObj.transform.SetParent(refs.puzzleRoot.transform);
             laserBObj.transform.position = new Vector3(-0.5f, -2.2f, 0f);
@@ -1628,9 +1629,10 @@ namespace GlitchVerse.Editor
             lbLight.intensity = 1.4f;
 
             MovingLaserHazard laserBComp = laserBObj.AddComponent<MovingLaserHazard>();
-            laserBComp.ConfigurePath(MovingLaserHazard.MotionAxis.Vertical, new Vector3(-0.5f, -3.2f, 0f), new Vector3(-0.5f, -1.3f, 0f), 1.1f, 0.0f);
+            laserBComp.ConfigurePath(MovingLaserHazard.MotionAxis.Vertical, new Vector3(-0.5f, -3.2f, 0f), new Vector3(-0.5f, -1.3f, 0f), 1.1f, 0.0f, startActive: false);
             SetPrivateField(laserBComp, "laserRenderer", lbRend);
             SetPrivateField(laserBComp, "laserLight", lbLight);
+            SetPrivateField(laserBComp, "activeOnStart", false);
             laserBComp.SetHazardActive(false);
 
             // 5. Wire FakeExitPrank with door, barrier, switch, and moving lasers

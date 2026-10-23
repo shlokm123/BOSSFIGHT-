@@ -29,6 +29,7 @@ namespace GlitchVerse.Mechanics
         [SerializeField] [Range(0f, 1f)] private float startPhase = 0f;
 
         [Header("Hazard State")]
+        [SerializeField] private bool activeOnStart = false;
         [SerializeField] private bool isActive = false;
 
         [Header("Visual References")]
@@ -66,19 +67,36 @@ namespace GlitchVerse.Mechanics
             UpdateVisuals();
         }
 
+        public bool ActiveOnStart { get => activeOnStart; set => activeOnStart = value; }
+
         private void Start()
         {
-            ResetHazard();
+            if (activeOnStart)
+            {
+                SetHazardActive(true);
+            }
+            else
+            {
+                ResetHazard();
+            }
         }
 
-        public void ConfigurePath(MotionAxis motionAxis, Vector3 start, Vector3 end, float speed, float phase = 0f)
+        public void ConfigurePath(MotionAxis motionAxis, Vector3 start, Vector3 end, float speed, float phase = 0f, bool startActive = false)
         {
             axis = motionAxis;
             pointA = start;
             pointB = end;
             moveSpeed = speed;
             startPhase = Mathf.Clamp01(phase);
-            ResetHazard();
+            activeOnStart = startActive;
+            if (activeOnStart)
+            {
+                SetHazardActive(true);
+            }
+            else
+            {
+                ResetHazard();
+            }
         }
 
         public void SetHazardActive(bool active)
@@ -95,6 +113,8 @@ namespace GlitchVerse.Mechanics
 
         public void ResetHazard()
         {
+            isActive = activeOnStart;
+
             // Position at start phase between pointA and pointB
             if (pointA != Vector3.zero || pointB != Vector3.zero)
             {

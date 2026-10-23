@@ -63,7 +63,7 @@ namespace GlitchVerse.Narrative
 
             if (laserA != null)
             {
-                laserA.SetHazardActive(false);
+                laserA.SetHazardActive(laserA.ActiveOnStart);
             }
 
             if (laserB != null)
@@ -140,7 +140,7 @@ namespace GlitchVerse.Narrative
                 secondarySwitch.SetSwitchPowered(true);
             }
 
-            // 5. Activate both moving red lasers
+            // 5. Activate Laser B (Laser A was already active from beginning)
             if (laserA != null)
             {
                 laserA.SetHazardActive(true);
@@ -166,8 +166,22 @@ namespace GlitchVerse.Narrative
                 }
             }
 
-            // 7. Contextual temporal instruction after initial betrayal
-            yield return new WaitForSeconds(3.2f);
+            // 7. Dialogue 2: "Funny how quickly a safe path becomes a bad decision."
+            yield return new WaitForSeconds(3.1f);
+            if (ArchitectDialogue.Current != null)
+            {
+                ArchitectDialogue.Current.Speak(
+                    "Funny how quickly a safe path becomes a bad decision.",
+                    "HAZARD ESCALATION",
+                    3.2f,
+                    "ch1_path_betrayal",
+                    0f,
+                    priority: true
+                );
+            }
+
+            // 8. Contextual temporal instruction after hazard escalation
+            yield return new WaitForSeconds(3.3f);
 
             if (ArchitectDialogue.Current != null)
             {
@@ -181,7 +195,7 @@ namespace GlitchVerse.Narrative
                 );
             }
 
-            Debug.Log("[FakeExitPrank] Exit relocated to Observation Platform A. Moving lasers online. Echo switch energized.");
+            Debug.Log("[FakeExitPrank] Exit relocated to Observation Platform A. Dual moving lasers online. Echo switch energized.");
         }
 
         public void ResetPrank()
