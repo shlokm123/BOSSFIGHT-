@@ -162,6 +162,11 @@ namespace GlitchVerse.Narrative
                     titleName = "TRUTH";
                     subtitle = "Some doors were locked for a reason.";
                     break;
+                case 7:
+                    chapterRom = "VII";
+                    titleName = "JUDGMENT";
+                    subtitle = "You were never supposed to reach this room.";
+                    break;
             }
 
             introRoutine = StartCoroutine(IntroSequenceRoutine(chapterRom, titleName, subtitle));

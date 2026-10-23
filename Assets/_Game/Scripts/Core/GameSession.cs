@@ -64,6 +64,12 @@ namespace GlitchVerse.Core
         {
             resetCount++;
             OnLevelRestarted?.Invoke();
+            var dir = LevelDirector.Current;
+            if (dir != null && dir.IsFinalLevel && dir.IsLevelCompleted)
+            {
+                SceneManager.LoadScene(0);
+                return;
+            }
             Scene activeScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(activeScene.buildIndex);
         }

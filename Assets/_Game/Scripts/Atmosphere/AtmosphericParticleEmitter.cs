@@ -16,7 +16,8 @@ namespace GlitchVerse.Atmosphere
             CryoStasisMist,      // Chapter III: Cold cyan temporal crystal mist
             EmergencyEmbers,     // Chapter IV: Quarantine alarm embers & steam particles
             SurveillanceMotes,   // Chapter V: Violet surveillance static motes
-            QuarantineStatic     // Chapter VI: Blood red / sterile white quarantine static
+            QuarantineStatic,    // Chapter VI: Blood red / sterile white quarantine static
+            BossCoreAnomalies    // Chapter VII: Harsh crimson & cyan corrupted core anomalies
         }
 
         [SerializeField] private AtmosphereType atmosphereType = AtmosphereType.ContainmentDust;
@@ -123,6 +124,14 @@ namespace GlitchVerse.Atmosphere
                     main.startSize = 0.09f;
                     main.startColor = new Color(1.0f, 0.18f, 0.22f, 0.38f); // Intense crimson/white sparks
                     main.gravityModifier = -0.04f;
+                    break;
+
+                case AtmosphereType.BossCoreAnomalies:
+                    main.startLifetime = 5.0f;
+                    main.startSpeed = 0.40f;
+                    main.startSize = 0.12f;
+                    main.startColor = new Color(1.0f, 0.10f, 0.25f, 0.45f); // Corrupted crimson/cyan energy sparks
+                    main.gravityModifier = -0.01f;
                     break;
             }
         }

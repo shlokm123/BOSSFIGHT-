@@ -9,6 +9,7 @@ using GlitchVerse.Interactables;
 using GlitchVerse.Narrative;
 using GlitchVerse.UI;
 using GlitchVerse.Mechanics;
+using GlitchVerse.Boss;
 
 namespace GlitchVerse.Editor
 {
@@ -24,9 +25,9 @@ namespace GlitchVerse.Editor
             // 1. Build Settings Verification
             sb.AppendLine("\n--- 1. Build Settings Verification ---");
             var scenes = EditorBuildSettings.scenes;
-            if (scenes.Length < 6)
+            if (scenes.Length < 7)
             {
-                sb.AppendLine($"[FAIL] Less than 6 scenes in BuildSettings: {scenes.Length}");
+                sb.AppendLine($"[FAIL] Less than 7 scenes in BuildSettings: {scenes.Length}");
                 allPassed = false;
             }
             else
@@ -44,11 +45,11 @@ namespace GlitchVerse.Editor
 
             // 2. Scene Field & Narrative Wiring Verification
             sb.AppendLine("\n--- 2. Scene Field & Narrative Wiring Verification ---");
-            string[] expectedScenes = { "Level01", "Level02", "Level03", "Level04", "Level05", "Level06" };
-            string[] expectedNext = { "Level02", "Level03", "Level04", "Level05", "Level06", "" };
-            bool[] expectedFinal = { false, false, false, false, false, true };
+            string[] expectedScenes = { "Level01", "Level02", "Level03", "Level04", "Level05", "Level06", "Level07" };
+            string[] expectedNext = { "Level02", "Level03", "Level04", "Level05", "Level06", "Level07", "" };
+            bool[] expectedFinal = { false, false, false, false, false, false, true };
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 7; i++)
             {
                 int levelNum = i + 1;
                 string scenePath = $"Assets/_Game/Scenes/Levels/{expectedScenes[i]}.unity";
@@ -214,6 +215,22 @@ namespace GlitchVerse.Editor
                     else
                     {
                         sb.AppendLine($"[FAIL] Level 06 missing components (truth={truth != null}, hazard={hazard != null}, switch={eSwitch != null}, plate={plate != null})");
+                        allPassed = false;
+                    }
+                }
+                else if (levelNum == 7)
+                {
+                    var boss = Object.FindAnyObjectByType<BossDirector>();
+                    var nodes = Object.FindObjectsByType<BossControlNode>(FindObjectsInactive.Include);
+                    var hazards = Object.FindObjectsByType<BossHazardEmitter>(FindObjectsInactive.Include);
+                    var eSwitch = Object.FindAnyObjectByType<GlitchVerse.Echo.EchoSwitch>();
+                    if (boss != null && nodes.Length >= 3 && hazards.Length >= 2 && eSwitch != null)
+                    {
+                        sb.AppendLine($"[PASS] Level 07: BossDirector, {nodes.Length} Control Nodes, {hazards.Length} BossHazardEmitters, and EchoSwitch confirmed.");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"[FAIL] Level 07 missing components (boss={boss != null}, nodes={nodes.Length}, hazards={hazards.Length}, switch={eSwitch != null})");
                         allPassed = false;
                     }
                 }

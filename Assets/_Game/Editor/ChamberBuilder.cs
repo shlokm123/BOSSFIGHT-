@@ -12,6 +12,7 @@ using GlitchVerse.Mechanics;
 using GlitchVerse.UI;
 using GlitchVerse.Narrative;
 using GlitchVerse.Atmosphere;
+using GlitchVerse.Boss;
 
 namespace GlitchVerse.Editor
 {
@@ -37,10 +38,10 @@ namespace GlitchVerse.Editor
             public Color architectMonitorColor;
         }
 
-        [MenuItem("GlitchVerse/Build All Six Levels")]
+        [MenuItem("GlitchVerse/Build All Seven Levels")]
         public static void BuildAll()
         {
-            Debug.Log("[ChamberBuilder] Beginning autonomous build of all 6 levels (Phase 09 Upgrade)...");
+            Debug.Log("[ChamberBuilder] Beginning autonomous build of all 7 levels (Phase 10 Boss Upgrade)...");
             GenerateProceduralSprites();
             
             ConstructLevel01Scene();
@@ -49,9 +50,10 @@ namespace GlitchVerse.Editor
             ConstructLevel04Scene();
             ConstructLevel05Scene();
             ConstructLevel06Scene();
+            ConstructLevel07Scene();
 
             RegisterScenesInBuildSettings();
-            Debug.Log("[ChamberBuilder] All six levels successfully built and registered!");
+            Debug.Log("[ChamberBuilder] All seven levels successfully built and registered!");
         }
 
         [MenuItem("GlitchVerse/Build Level 05 (Paranoia)")]
@@ -67,6 +69,14 @@ namespace GlitchVerse.Editor
         {
             GenerateProceduralSprites();
             ConstructLevel06Scene();
+            RegisterScenesInBuildSettings();
+        }
+
+        [MenuItem("GlitchVerse/Build Level 07 (Judgment Boss)")]
+        public static void BuildLevel07()
+        {
+            GenerateProceduralSprites();
+            ConstructLevel07Scene();
             RegisterScenesInBuildSettings();
         }
 
@@ -463,6 +473,70 @@ namespace GlitchVerse.Editor
                 }
 
                 return Color.Lerp(skyColor, new Color(0.05f, 0.10f, 0.14f, 1f), 0.25f);
+            });
+
+            // 29. Architect Boss Core (128x128) - Giant corrupted surveillance eye & AI reactor
+            CreateSpriteAsset("architect_boss_core.png", 128, 128, (x, y) =>
+            {
+                float dx = x - 64;
+                float dy = y - 64;
+                float r = Mathf.Sqrt(dx * dx + dy * dy);
+                if (r > 62) return Color.clear;
+
+                // Heavy brutalist steel armored ring
+                if (r >= 52 && r <= 62)
+                {
+                    if (x % 16 == 0 || y % 16 == 0) return new Color(0.12f, 0.15f, 0.20f, 1f);
+                    return new Color(0.08f, 0.10f, 0.14f, 1f);
+                }
+
+                // Inner aperture iris
+                if (r >= 38 && r < 52)
+                {
+                    if ((x + y) % 6 == 0) return new Color(0.9f, 0.15f, 0.25f, 0.8f);
+                    return new Color(0.16f, 0.18f, 0.24f, 1f);
+                }
+
+                // Glowing central camera eye / core pupil
+                if (r < 38)
+                {
+                    if (r <= 12) return new Color(1.0f, 0.95f, 0.95f, 1f); // Hot white core center
+                    if (r <= 22) return new Color(1.0f, 0.15f, 0.25f, 1f); // Corrupted red pupil
+                    if (y % 4 == 0) return new Color(0f, 0.94f, 1f, 0.85f); // Cyan digital scanlines
+                    return new Color(0.7f, 0.08f, 0.20f, 1f);
+                }
+
+                return new Color(0.10f, 0.12f, 0.16f, 1f);
+            });
+
+            // 30. Boss Control Override Node (64x64) - Heavy industrial terminal with cyan conduits
+            CreateSpriteAsset("boss_control_node.png", 64, 64, (x, y) =>
+            {
+                if (x <= 3 || x >= 60 || y <= 3 || y >= 60) return new Color(0.08f, 0.10f, 0.14f, 1f);
+                if (x <= 6 || x >= 57 || y <= 6 || y >= 57) return new Color(0.25f, 0.30f, 0.38f, 1f);
+                
+                int dist = Mathf.Abs(x - 32) + Mathf.Abs(y - 32);
+                if (dist <= 14)
+                {
+                    if (dist <= 8) return new Color(0f, 0.95f, 1f, 1f); // Glowing cyan active sensor
+                    return new Color(0.10f, 0.40f, 0.55f, 1f);
+                }
+
+                if (x == 32 || y == 32) return new Color(0f, 0.8f, 0.95f, 0.8f); // Cyan power traces
+                return new Color(0.14f, 0.17f, 0.22f, 1f);
+            });
+
+            // 31. Energy Surge Hazard Beam (128x32) - Telegraphed sweeping energy wave
+            CreateSpriteAsset("energy_surge_hazard.png", 128, 32, (x, y) =>
+            {
+                if (y <= 2 || y >= 29) return new Color(0.2f, 0.05f, 0.08f, 1f);
+                if (y >= 12 && y <= 19)
+                {
+                    if (y >= 14 && y <= 17) return new Color(1.0f, 0.95f, 0.90f, 1f); // Hot white core
+                    return new Color(1.0f, 0.2f, 0.3f, 1f); // Electric crimson plasma
+                }
+                if (x % 16 <= 2 || (x + y) % 8 == 0) return new Color(1.0f, 0.4f, 0.1f, 0.7f); // Arcing discharge
+                return new Color(0.8f, 0.1f, 0.2f, 0.4f);
             });
 
             AssetDatabase.Refresh();
@@ -1013,7 +1087,7 @@ namespace GlitchVerse.Editor
             // 9. Director and Triggers
             GameObject directorObj = new GameObject("LevelDirector");
             LevelDirector director = directorObj.AddComponent<LevelDirector>();
-            SetPrivateField(director, "levelTitle", isFinal ? "CONTAINMENT 04" : $"CONTAINMENT 0{chamberNum}");
+            SetPrivateField(director, "levelTitle", sceneTitle);
             SetPrivateField(director, "chamberNumber", chamberNum);
             SetPrivateField(director, "nextSceneName", nextScene);
             SetPrivateField(director, "isFinalLevel", isFinal);
@@ -2012,7 +2086,7 @@ namespace GlitchVerse.Editor
                 architectMonitorColor = new Color(1.0f, 0.15f, 0.20f, 0.95f)
             };
 
-            var refs = SetupBaseChamber("CONTAINMENT 06 // TRUTH", 6, "", true, atmo);
+            var refs = SetupBaseChamber("CONTAINMENT 06 // TRUTH", 6, "Level07", false, atmo);
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
@@ -2225,6 +2299,393 @@ namespace GlitchVerse.Editor
             SaveChamberScene("Level06.unity");
         }
 
+        public static void ConstructLevel07Scene()
+        {
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.24f, 0.04f, 0.08f, 1f), // Harsh crimson emergency
+                ambientIntensity = 0.85f,
+                spawnLampColor = new Color(1.0f, 0.15f, 0.20f, 1f),
+                spawnLampIntensity = 1.35f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.BossCorePulse,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.BossCoreAnomalies,
+                architectMonitorColor = new Color(1.0f, 0.15f, 0.25f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 07 // JUDGMENT", 7, "", true, atmo);
+
+            Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
+            Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
+            Sprite beamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ceiling_beam.png");
+            Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
+            Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
+            Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite nodeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/boss_control_node.png");
+            Sprite surgeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/energy_surge_hazard.png");
+            Sprite bossCoreSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/architect_boss_core.png");
+            Sprite hazardLaserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+
+            // ALL 3 reality powers enabled for final confrontation
+            refs.abilityCtrl.AllowGravity = true;
+            refs.abilityCtrl.AllowTimeFreeze = true;
+            refs.abilityCtrl.AllowDimensionSwap = true;
+
+            // --- ARENA PERIMETER & CHASM GEOMETRY ---
+            GameObject baseFloor = GameObject.Find("Floor");
+            if (baseFloor != null) Object.DestroyImmediate(baseFloor);
+
+            GameObject floorLeft = new GameObject("Floor_LeftArena");
+            floorLeft.transform.SetParent(refs.envRoot.transform);
+            floorLeft.transform.position = new Vector3(-6.5f, -4.0f, 0f);
+            SpriteRenderer flR = floorLeft.AddComponent<SpriteRenderer>();
+            flR.sprite = floorSp;
+            flR.drawMode = SpriteDrawMode.Tiled;
+            flR.size = new Vector2(7.0f, 1.0f);
+            flR.sortingOrder = 2;
+            BoxCollider2D flCol = floorLeft.AddComponent<BoxCollider2D>();
+            flCol.size = new Vector2(7.0f, 1.0f);
+
+            GameObject floorRight = new GameObject("Floor_RightArena");
+            floorRight.transform.SetParent(refs.envRoot.transform);
+            floorRight.transform.position = new Vector3(6.5f, -4.0f, 0f);
+            SpriteRenderer frR = floorRight.AddComponent<SpriteRenderer>();
+            frR.sprite = floorSp;
+            frR.drawMode = SpriteDrawMode.Tiled;
+            frR.size = new Vector2(7.0f, 1.0f);
+            frR.sortingOrder = 2;
+            BoxCollider2D frCol = floorRight.AddComponent<BoxCollider2D>();
+            frCol.size = new Vector2(7.0f, 1.0f);
+
+            GameObject pitObj = new GameObject("Arena_AbyssHazardZone");
+            pitObj.transform.SetParent(refs.envRoot.transform);
+            pitObj.transform.position = new Vector3(0f, -6.5f, 0f);
+            BoxCollider2D pitCol = pitObj.AddComponent<BoxCollider2D>();
+            pitCol.isTrigger = true;
+            pitCol.size = new Vector2(24.0f, 2.0f);
+
+            GameObject ceiling = GameObject.Find("Ceiling");
+            if (ceiling != null)
+            {
+                ceiling.transform.position = new Vector3(0f, 4.2f, 0f);
+            }
+
+            // --- CENTRAL ARCHITECT BOSS CORE ---
+            GameObject bossCoreObj = new GameObject("ArchitectBossCore");
+            bossCoreObj.transform.SetParent(refs.envRoot.transform);
+            bossCoreObj.transform.position = new Vector3(0f, 2.2f, 0f);
+            bossCoreObj.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
+
+            SpriteRenderer coreRend = bossCoreObj.AddComponent<SpriteRenderer>();
+            coreRend.sprite = bossCoreSp;
+            coreRend.sortingOrder = -4;
+
+            GameObject coreAlarmObj = new GameObject("Core_EmergencyAlarmStrobe");
+            coreAlarmObj.transform.SetParent(bossCoreObj.transform);
+            coreAlarmObj.transform.localPosition = Vector3.zero;
+            Light2D alarmLight = coreAlarmObj.AddComponent<Light2D>();
+            alarmLight.lightType = Light2D.LightType.Point;
+            alarmLight.pointLightOuterRadius = 10.0f;
+            alarmLight.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            alarmLight.intensity = 1.4f;
+            FlickeringLight2D alarmFlicker = coreAlarmObj.AddComponent<FlickeringLight2D>();
+            alarmFlicker.Mode = FlickeringLight2D.FlickerMode.BossCorePulse;
+
+            GameObject coreCyanObj = new GameObject("Core_CyanAnomalyBacklight");
+            coreCyanObj.transform.SetParent(bossCoreObj.transform);
+            coreCyanObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            Light2D cyanLight = coreCyanObj.AddComponent<Light2D>();
+            cyanLight.lightType = Light2D.LightType.Point;
+            cyanLight.pointLightOuterRadius = 6.0f;
+            cyanLight.color = new Color(0f, 0.94f, 1f, 1f);
+            cyanLight.intensity = 0.8f;
+
+            // --- STAGE 1: GRAVITY ASSAULT ---
+            GameObject lowSurgeObj = new GameObject("Stage1_LowSurgeHazard");
+            lowSurgeObj.transform.SetParent(refs.puzzleRoot.transform);
+            lowSurgeObj.transform.position = new Vector3(-0.5f, -3.5f, 0f);
+
+            SpriteRenderer lsRend = lowSurgeObj.AddComponent<SpriteRenderer>();
+            lsRend.sprite = surgeSp;
+            lsRend.drawMode = SpriteDrawMode.Tiled;
+            lsRend.size = new Vector2(13.0f, 0.7f);
+            lsRend.sortingOrder = 4;
+
+            BoxCollider2D lsCol = lowSurgeObj.AddComponent<BoxCollider2D>();
+            lsCol.isTrigger = true;
+            lsCol.size = new Vector2(13.0f, 0.7f);
+
+            GameObject lsWarnObj = new GameObject("LowHazard_WarningLight");
+            lsWarnObj.transform.SetParent(lowSurgeObj.transform);
+            lsWarnObj.transform.localPosition = Vector3.zero;
+            Light2D lsLight = lsWarnObj.AddComponent<Light2D>();
+            lsLight.lightType = Light2D.LightType.Point;
+            lsLight.pointLightOuterRadius = 4.0f;
+            lsLight.color = new Color(1.0f, 0.7f, 0.1f, 1f);
+            lsLight.intensity = 0f;
+
+            BossHazardEmitter lowEmitter = lowSurgeObj.AddComponent<BossHazardEmitter>();
+            SetPrivateField(lowEmitter, "initialDelay", 0.5f);
+            SetPrivateField(lowEmitter, "idleDuration", 2.2f);
+            SetPrivateField(lowEmitter, "warningDuration", 1.2f);
+            SetPrivateField(lowEmitter, "surgeDuration", 1.4f);
+            SetPrivateField(lowEmitter, "hazardRenderer", lsRend);
+            SetPrivateField(lowEmitter, "warningLight", lsLight);
+
+            GameObject highSurgeObj = new GameObject("Stage1_HighSurgeHazard");
+            highSurgeObj.transform.SetParent(refs.puzzleRoot.transform);
+            highSurgeObj.transform.position = new Vector3(-0.5f, 3.5f, 0f);
+
+            SpriteRenderer hsRend = highSurgeObj.AddComponent<SpriteRenderer>();
+            hsRend.sprite = surgeSp;
+            hsRend.drawMode = SpriteDrawMode.Tiled;
+            hsRend.size = new Vector2(13.0f, 0.7f);
+            hsRend.sortingOrder = 4;
+
+            BoxCollider2D hsCol = highSurgeObj.AddComponent<BoxCollider2D>();
+            hsCol.isTrigger = true;
+            hsCol.size = new Vector2(13.0f, 0.7f);
+
+            GameObject hsWarnObj = new GameObject("HighHazard_WarningLight");
+            hsWarnObj.transform.SetParent(highSurgeObj.transform);
+            hsWarnObj.transform.localPosition = Vector3.zero;
+            Light2D hsLight = hsWarnObj.AddComponent<Light2D>();
+            hsLight.lightType = Light2D.LightType.Point;
+            hsLight.pointLightOuterRadius = 4.0f;
+            hsLight.color = new Color(1.0f, 0.7f, 0.1f, 1f);
+            hsLight.intensity = 0f;
+
+            BossHazardEmitter highEmitter = highSurgeObj.AddComponent<BossHazardEmitter>();
+            SetPrivateField(highEmitter, "initialDelay", 2.6f);
+            SetPrivateField(highEmitter, "idleDuration", 2.2f);
+            SetPrivateField(highEmitter, "warningDuration", 1.2f);
+            SetPrivateField(highEmitter, "surgeDuration", 1.4f);
+            SetPrivateField(highEmitter, "hazardRenderer", hsRend);
+            SetPrivateField(highEmitter, "warningLight", hsLight);
+
+            GameObject node1Plat = new GameObject("Stage1_Node1Platform");
+            node1Plat.transform.SetParent(refs.puzzleRoot.transform);
+            node1Plat.transform.position = new Vector3(4.5f, 2.8f, 0f);
+            SpriteRenderer n1pR = node1Plat.AddComponent<SpriteRenderer>();
+            n1pR.sprite = beamSp;
+            n1pR.drawMode = SpriteDrawMode.Tiled;
+            n1pR.size = new Vector2(3.2f, 0.4f);
+            n1pR.sortingOrder = 2;
+            BoxCollider2D n1pCol = node1Plat.AddComponent<BoxCollider2D>();
+            n1pCol.size = new Vector2(3.2f, 0.4f);
+
+            GameObject node1Obj = new GameObject("Stage1_OverrideNode1");
+            node1Obj.transform.SetParent(refs.puzzleRoot.transform);
+            node1Obj.transform.position = new Vector3(4.5f, 3.2f, 0f);
+
+            SpriteRenderer n1Rend = node1Obj.AddComponent<SpriteRenderer>();
+            n1Rend.sprite = nodeSp;
+            n1Rend.sortingOrder = 4;
+
+            BoxCollider2D n1Col = node1Obj.AddComponent<BoxCollider2D>();
+            n1Col.isTrigger = true;
+            n1Col.size = new Vector2(1.2f, 0.8f);
+
+            GameObject n1LightObj = new GameObject("Node1_GlowLight");
+            n1LightObj.transform.SetParent(node1Obj.transform);
+            n1LightObj.transform.localPosition = Vector3.zero;
+            Light2D n1Light = n1LightObj.AddComponent<Light2D>();
+            n1Light.lightType = Light2D.LightType.Point;
+            n1Light.pointLightOuterRadius = 3.0f;
+            n1Light.color = new Color(1.0f, 0.25f, 0.25f, 1f);
+            n1Light.intensity = 0.8f;
+
+            BossControlNode node1Comp = node1Obj.AddComponent<BossControlNode>();
+            SetPrivateField(node1Comp, "stageNumber", 1);
+            SetPrivateField(node1Comp, "nodeName", "OVERRIDE NODE 01 // GRAVITY MATRIX");
+            SetPrivateField(node1Comp, "nodeRenderer", n1Rend);
+            SetPrivateField(node1Comp, "glowLight", n1Light);
+            SetPrivateField(node1Comp, "pulseVisual", node1Obj.transform);
+
+            // --- STAGE 2: REALITY COLLAPSE ---
+            GameObject stage2Root = new GameObject("Stage2_PuzzleRoot");
+            stage2Root.transform.SetParent(refs.puzzleRoot.transform);
+
+            CreateDimensionPlatform(stage2Root.transform, "DimAlpha_Stage2_Plat1",
+                new Vector3(-2.0f, -1.8f, 0f), new Vector2(2.8f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            CreateDimensionPlatform(stage2Root.transform, "DimBeta_Stage2_Plat2",
+                new Vector3(0.5f, -0.6f, 0f), new Vector2(2.8f, 0.4f), betaSp, DimensionType.Beta);
+
+            CreateDimensionPlatform(stage2Root.transform, "DimAlpha_Stage2_Plat3",
+                new Vector3(3.0f, 0.6f, 0f), new Vector2(2.8f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            GameObject stage2HazardObj = new GameObject("Stage2_MovingSecurityHazard");
+            stage2HazardObj.transform.SetParent(stage2Root.transform);
+            stage2HazardObj.transform.position = new Vector3(0.5f, 0.0f, 0f);
+
+            SpriteRenderer s2hRend = stage2HazardObj.AddComponent<SpriteRenderer>();
+            s2hRend.sprite = hazardLaserSp;
+            s2hRend.drawMode = SpriteDrawMode.Tiled;
+            s2hRend.size = new Vector2(1.6f, 0.8f);
+            s2hRend.sortingOrder = 4;
+            s2hRend.color = new Color(1.0f, 0.2f, 0.3f, 1f);
+
+            BoxCollider2D s2hCol = stage2HazardObj.AddComponent<BoxCollider2D>();
+            s2hCol.size = new Vector2(1.6f, 0.8f);
+
+            FreezableHazard stage2HazardComp = stage2HazardObj.AddComponent<FreezableHazard>();
+            SetPrivateField(stage2HazardComp, "offsetA", new Vector3(-1.6f, 0f, 0f));
+            SetPrivateField(stage2HazardComp, "offsetB", new Vector3(1.6f, 0f, 0f));
+            SetPrivateField(stage2HazardComp, "moveSpeed", 3.0f);
+            SetPrivateField(stage2HazardComp, "hazardRenderer", s2hRend);
+
+            GameObject node2Plat = new GameObject("Stage2_Node2Platform");
+            node2Plat.transform.SetParent(stage2Root.transform);
+            node2Plat.transform.position = new Vector3(5.5f, 0.8f, 0f);
+            SpriteRenderer n2pR = node2Plat.AddComponent<SpriteRenderer>();
+            n2pR.sprite = floorSp;
+            n2pR.drawMode = SpriteDrawMode.Tiled;
+            n2pR.size = new Vector2(2.5f, 0.4f);
+            n2pR.sortingOrder = 2;
+            BoxCollider2D n2pCol = node2Plat.AddComponent<BoxCollider2D>();
+            n2pCol.size = new Vector2(2.5f, 0.4f);
+
+            GameObject node2Obj = new GameObject("Stage2_OverrideNode2");
+            node2Obj.transform.SetParent(stage2Root.transform);
+            node2Obj.transform.position = new Vector3(5.5f, 1.3f, 0f);
+
+            SpriteRenderer n2Rend = node2Obj.AddComponent<SpriteRenderer>();
+            n2Rend.sprite = nodeSp;
+            n2Rend.sortingOrder = 4;
+
+            BoxCollider2D n2Col = node2Obj.AddComponent<BoxCollider2D>();
+            n2Col.isTrigger = true;
+            n2Col.size = new Vector2(1.2f, 0.8f);
+
+            GameObject n2LightObj = new GameObject("Node2_GlowLight");
+            n2LightObj.transform.SetParent(node2Obj.transform);
+            n2LightObj.transform.localPosition = Vector3.zero;
+            Light2D n2Light = n2LightObj.AddComponent<Light2D>();
+            n2Light.lightType = Light2D.LightType.Point;
+            n2Light.pointLightOuterRadius = 3.0f;
+            n2Light.color = new Color(1.0f, 0.25f, 0.25f, 1f);
+            n2Light.intensity = 0.8f;
+
+            BossControlNode node2Comp = node2Obj.AddComponent<BossControlNode>();
+            SetPrivateField(node2Comp, "stageNumber", 2);
+            SetPrivateField(node2Comp, "nodeName", "OVERRIDE NODE 02 // REALITY SYNTHESIS");
+            SetPrivateField(node2Comp, "nodeRenderer", n2Rend);
+            SetPrivateField(node2Comp, "glowLight", n2Light);
+            SetPrivateField(node2Comp, "pulseVisual", node2Obj.transform);
+
+            // --- STAGE 3: ECHO PROTOCOL ---
+            GameObject echoPlat = new GameObject("Stage3_EchoLedge");
+            echoPlat.transform.SetParent(refs.puzzleRoot.transform);
+            echoPlat.transform.position = new Vector3(-6.0f, 0.5f, 0f);
+            SpriteRenderer epR = echoPlat.AddComponent<SpriteRenderer>();
+            epR.sprite = floorSp;
+            epR.drawMode = SpriteDrawMode.Tiled;
+            epR.size = new Vector2(3.5f, 0.5f);
+            epR.sortingOrder = 2;
+            BoxCollider2D epCol = echoPlat.AddComponent<BoxCollider2D>();
+            epCol.size = new Vector2(3.5f, 0.5f);
+
+            GameObject stage3SwitchObj = new GameObject("Stage3_EchoSwitch");
+            stage3SwitchObj.transform.SetParent(echoPlat.transform);
+            stage3SwitchObj.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+
+            SpriteRenderer s3sRend = stage3SwitchObj.AddComponent<SpriteRenderer>();
+            s3sRend.sprite = echoSwitchSp;
+            s3sRend.sortingOrder = 4;
+
+            BoxCollider2D s3sCol = stage3SwitchObj.AddComponent<BoxCollider2D>();
+            s3sCol.isTrigger = true;
+            s3sCol.size = new Vector2(1.2f, 0.4f);
+
+            EchoSwitch echoSwitchComp = stage3SwitchObj.AddComponent<EchoSwitch>();
+            SetPrivateField(echoSwitchComp, "switchRenderer", s3sRend);
+            SetPrivateField(echoSwitchComp, "depressVisual", stage3SwitchObj.transform);
+
+            GameObject shieldObj = new GameObject("Stage3_ShieldBarrier");
+            shieldObj.transform.SetParent(refs.puzzleRoot.transform);
+            shieldObj.transform.position = new Vector3(8.0f, -2.5f, 0f);
+            SpriteRenderer sbRend = shieldObj.AddComponent<SpriteRenderer>();
+            sbRend.sprite = wallSp;
+            sbRend.drawMode = SpriteDrawMode.Tiled;
+            sbRend.size = new Vector2(0.8f, 3.5f);
+            sbRend.sortingOrder = 4;
+            sbRend.color = new Color(1.0f, 0.15f, 0.25f, 0.9f);
+            BoxCollider2D sbCol = shieldObj.AddComponent<BoxCollider2D>();
+            sbCol.size = new Vector2(0.8f, 3.5f);
+
+            GameObject node3Obj = new GameObject("Stage3_OverrideNode3");
+            node3Obj.transform.SetParent(refs.puzzleRoot.transform);
+            node3Obj.transform.position = new Vector3(9.0f, -2.8f, 0f);
+
+            SpriteRenderer n3Rend = node3Obj.AddComponent<SpriteRenderer>();
+            n3Rend.sprite = nodeSp;
+            n3Rend.sortingOrder = 4;
+
+            BoxCollider2D n3Col = node3Obj.AddComponent<BoxCollider2D>();
+            n3Col.isTrigger = true;
+            n3Col.size = new Vector2(1.2f, 0.8f);
+
+            GameObject n3LightObj = new GameObject("Node3_GlowLight");
+            n3LightObj.transform.SetParent(node3Obj.transform);
+            n3LightObj.transform.localPosition = Vector3.zero;
+            Light2D n3Light = n3LightObj.AddComponent<Light2D>();
+            n3Light.lightType = Light2D.LightType.Point;
+            n3Light.pointLightOuterRadius = 3.5f;
+            n3Light.color = new Color(1.0f, 0.25f, 0.25f, 1f);
+            n3Light.intensity = 1.0f;
+
+            BossControlNode node3Comp = node3Obj.AddComponent<BossControlNode>();
+            SetPrivateField(node3Comp, "stageNumber", 3);
+            SetPrivateField(node3Comp, "nodeName", "MASTER OVERLOAD NODE // ARCHITECT SHUTDOWN");
+            SetPrivateField(node3Comp, "nodeRenderer", n3Rend);
+            SetPrivateField(node3Comp, "glowLight", n3Light);
+            SetPrivateField(node3Comp, "pulseVisual", node3Obj.transform);
+
+            // --- BOSS UI OVERLAY (CORE INTEGRITY) ---
+            Text bossIntegrityText = CreateUIText(
+                refs.hud.transform,
+                "BossCoreIntegrityText",
+                "<color=#FF1E40>CORE INTEGRITY: 3/3</color>   <size=14><color=#888888>// PHASE 1: GRAVITY ASSAULT</color></size>",
+                Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"),
+                20,
+                TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 1.0f),
+                new Vector2(0.5f, 1.0f),
+                new Vector2(0f, -48f),
+                new Vector2(700f, 40f),
+                Color.white
+            );
+
+            // --- BOSS DIRECTOR CONTROLLER ---
+            GameObject bossDirectorObj = new GameObject("BossDirectorController");
+            bossDirectorObj.transform.SetParent(refs.puzzleRoot.transform);
+            BossDirector bossDirector = bossDirectorObj.AddComponent<BossDirector>();
+
+            SetPrivateField(bossDirector, "stage1Hazards", new BossHazardEmitter[] { lowEmitter, highEmitter });
+            SetPrivateField(bossDirector, "node1", node1Comp);
+            SetPrivateField(bossDirector, "stage2Chasm", pitObj);
+            SetPrivateField(bossDirector, "stage2Hazard", stage2HazardComp);
+            SetPrivateField(bossDirector, "stage2PuzzleRoot", stage2Root);
+            SetPrivateField(bossDirector, "node2", node2Comp);
+            SetPrivateField(bossDirector, "stage3EchoSwitch", echoSwitchComp);
+            SetPrivateField(bossDirector, "stage3ShieldBarrier", shieldObj);
+            SetPrivateField(bossDirector, "node3", node3Comp);
+            SetPrivateField(bossDirector, "architectEyeCore", bossCoreObj);
+            SetPrivateField(bossDirector, "coreRenderer", coreRend);
+            SetPrivateField(bossDirector, "coreLight", cyanLight);
+            SetPrivateField(bossDirector, "coreAlarmStrobe", alarmLight);
+            SetPrivateField(bossDirector, "bossStatusText", bossIntegrityText);
+
+            // Position Exit Door behind the final core node
+            refs.exitDoor.transform.position = new Vector3(9.2f, -2.8f, 0f);
+
+            // Wire HUD and Director
+            SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+
+            SaveChamberScene("Level07.unity");
+        }
+
         private static GameObject CreateDimensionPlatform(Transform parent, string name, Vector3 pos, Vector2 size, Sprite sp, DimensionType dim)
         {
             GameObject plat = new GameObject(name);
@@ -2269,7 +2730,8 @@ namespace GlitchVerse.Editor
                 "Assets/_Game/Scenes/Levels/Level03.unity",
                 "Assets/_Game/Scenes/Levels/Level04.unity",
                 "Assets/_Game/Scenes/Levels/Level05.unity",
-                "Assets/_Game/Scenes/Levels/Level06.unity"
+                "Assets/_Game/Scenes/Levels/Level06.unity",
+                "Assets/_Game/Scenes/Levels/Level07.unity"
             };
 
             EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[scenePaths.Length];

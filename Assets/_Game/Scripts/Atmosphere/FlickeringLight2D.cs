@@ -18,7 +18,8 @@ namespace GlitchVerse.Atmosphere
             SlowBreathing,      // Chapter III: Cold cryogenic stasis / containment core pulse
             EmergencyStrobe,    // Chapter IV: Quarantine emergency warning siren
             SurveillanceGlow,   // Chapter V: Paranoia surveillance complex pulse
-            QuarantineAlarm     // Chapter VI: Quarantine Core pulsating alarm
+            QuarantineAlarm,    // Chapter VI: Quarantine Core pulsating alarm
+            BossCorePulse       // Chapter VII: Corrupted AI core heartbeat surge
         }
 
         [Header("Flicker Configuration")]
@@ -115,6 +116,13 @@ namespace GlitchVerse.Atmosphere
                     // Heavy deep pulsing dread alarm
                     float qPulse = (Mathf.Sin(timer * 2.5f) + 1f) * 0.5f;
                     intensityModifier = Mathf.Lerp(0.35f, 1.4f, qPulse);
+                    break;
+
+                case FlickerMode.BossCorePulse:
+                    // Erratic, aggressive double-beat AI heartbeat with micro-glitches
+                    float bBeat = Mathf.Sin(timer * 5.0f);
+                    float bGlitch = (Mathf.PerlinNoise(seed + 137f, timer * 16f) > 0.65f) ? 0.35f : 0f;
+                    intensityModifier = Mathf.Lerp(0.5f, 1.5f, Mathf.Clamp01(bBeat * bBeat + bGlitch));
                     break;
             }
 

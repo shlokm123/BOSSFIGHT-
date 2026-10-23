@@ -90,6 +90,13 @@ namespace GlitchVerse.Core
                 {
                     chamberNumber = 6;
                     levelTitle = "CONTAINMENT 06";
+                    nextSceneName = "Level07";
+                    isFinalLevel = false;
+                }
+                else if (activeScene == "Level07")
+                {
+                    chamberNumber = 7;
+                    levelTitle = "CONTAINMENT 07 // JUDGMENT";
                     nextSceneName = "";
                     isFinalLevel = true;
                 }
@@ -230,6 +237,11 @@ namespace GlitchVerse.Core
         public void RestartLevel()
         {
             Time.timeScale = 1.0f;
+            if (isFinalLevel && isLevelCompleted)
+            {
+                SceneManager.LoadScene(0);
+                return;
+            }
             if (GameSession.Instance != null)
             {
                 GameSession.Instance.RestartCurrentLevel();

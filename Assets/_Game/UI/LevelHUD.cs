@@ -219,7 +219,7 @@ namespace GlitchVerse.UI
                 if (completionTitleText != null)
                 {
                     completionTitleText.text = (levelDirector != null && levelDirector.IsFinalLevel)
-                        ? "CONTAINMENT CORE UNLOCKED"
+                        ? "ARCHITECT CORE DISABLED"
                         : "CONTAINMENT PROTOCOL CLEARED";
                 }
 
@@ -255,8 +255,8 @@ namespace GlitchVerse.UI
                 if (levelDirector != null && levelDirector.IsFinalLevel)
                 {
                     completionBannerText.text = 
-                        "<color=#FF1E40><size=44>CONTAINMENT CORE UNLOCKED</size></color>\n" +
-                        "<size=24><color=#FFFFFF>CHAPTER VII — JUDGMENT: COMING NEXT</color></size>\n" +
+                        "<color=#FF1E40><size=44>ARCHITECT CORE DISABLED</size></color>\n" +
+                        "<size=24><color=#00F0FF>EXTERNAL CONTAINMENT ACCESS GRANTED</color></size>\n" +
                         $"<size=18><color=#FFAA00>FINAL TIME: {Mathf.FloorToInt(roomTimer / 60f):00}:{(roomTimer % 60f):00.0}   RESTARTS: {(GameSession.Instance != null ? GameSession.Instance.ResetCount : 0)}</color></size>";
                 }
                 else
