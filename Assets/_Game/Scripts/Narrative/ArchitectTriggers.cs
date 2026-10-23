@@ -364,13 +364,29 @@ namespace GlitchVerse.Narrative
             // If the echo playback finished and the EchoSwitch in the level was not satisfied
             if (echoSwitch != null && !echoSwitch.IsActivated)
             {
-                ArchitectDialogue.Current.Speak(
-                    "Even your previous self couldn't help you.",
-                    "ECHO SYNC FAILED",
-                    2.8f,
-                    "echo_betrayal_roast",
-                    15f
-                );
+                string activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (activeScene == "Level03")
+                {
+                    ArchitectDialogue.Current.FlashScreenRed(0.45f, 0.3f);
+                    ArchitectDialogue.Current.Speak(
+                        "You made that mistake before. I merely remembered it.",
+                        "TEMPORAL CONSEQUENCE",
+                        3.2f,
+                        "ch3_echo_betrayal",
+                        0f,
+                        priority: true
+                    );
+                }
+                else
+                {
+                    ArchitectDialogue.Current.Speak(
+                        "Even your previous self couldn't help you.",
+                        "ECHO SYNC FAILED",
+                        2.8f,
+                        "echo_betrayal_roast",
+                        15f
+                    );
+                }
             }
             else
             {

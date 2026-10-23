@@ -19,6 +19,9 @@ namespace GlitchVerse.Interactables
         [SerializeField] private Transform depressTarget;
         [SerializeField] private float depressDistance = 0.08f;
 
+        [Header("Target Interlock")]
+        [SerializeField] private SecurityBarrier targetBarrier;
+
         [Header("State")]
         [SerializeField] private bool isActivated = false;
         private int objectCount = 0;
@@ -26,6 +29,7 @@ namespace GlitchVerse.Interactables
         private BoxCollider2D plateCollider;
 
         public bool IsActivated => isActivated;
+        public SecurityBarrier TargetBarrier { get => targetBarrier; set => targetBarrier = value; }
         public event Action<bool> OnPlateStateChanged;
 
         private void Awake()
@@ -59,6 +63,10 @@ namespace GlitchVerse.Interactables
                 {
                     isActivated = shouldBeActive;
                     UpdateVisuals();
+                    if (targetBarrier != null)
+                    {
+                        targetBarrier.SetBarrierLocked(!isActivated);
+                    }
                     OnPlateStateChanged?.Invoke(isActivated);
                     Debug.Log($"[PressurePlate] State changed via OverlapCheck. Activated: {isActivated}");
                 }
@@ -90,6 +98,10 @@ namespace GlitchVerse.Interactables
             {
                 isActivated = shouldBeActive;
                 UpdateVisuals();
+                if (targetBarrier != null)
+                {
+                    targetBarrier.SetBarrierLocked(!isActivated);
+                }
                 OnPlateStateChanged?.Invoke(isActivated);
                 Debug.Log($"[PressurePlate] State changed. Activated: {isActivated}");
             }

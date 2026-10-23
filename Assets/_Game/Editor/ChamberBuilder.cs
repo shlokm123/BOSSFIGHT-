@@ -2139,86 +2139,12 @@ namespace GlitchVerse.Editor
             questionPrankObj.transform.SetParent(refs.puzzleRoot.transform);
             ImpossibleQuestionPrank questionPrank = questionPrankObj.AddComponent<ImpossibleQuestionPrank>();
             SetPrivateField(questionPrank, "questionPromptText", refs.questionPromptText);
-            SetPrivateField(questionPrank, "triggerX", -4.0f);
+            SetPrivateField(questionPrank, "triggerX", -5.0f);
 
-            // Moving Freezable Hazard Laser 1
-            GameObject hazardObj1 = new GameObject("FreezableLaser_Barrier_1");
-            hazardObj1.transform.SetParent(refs.puzzleRoot.transform);
-            hazardObj1.transform.position = new Vector3(-2.0f, -3.5f, 0f);
-
-            SpriteRenderer hazRend1 = hazardObj1.AddComponent<SpriteRenderer>();
-            hazRend1.sprite = hazardSp;
-            hazRend1.sortingOrder = 3;
-
-            GameObject hazLight1 = new GameObject("Hazard1_Glow");
-            hazLight1.transform.SetParent(hazardObj1.transform);
-            hazLight1.transform.localPosition = Vector3.zero;
-            Light2D hl1 = hazLight1.AddComponent<Light2D>();
-            hl1.lightType = Light2D.LightType.Point;
-            hl1.pointLightOuterRadius = 1.8f;
-            hl1.color = new Color(1.0f, 0.15f, 0.25f, 1f);
-            hl1.intensity = 0.6f;
-
-            BoxCollider2D hazCol1 = hazardObj1.AddComponent<BoxCollider2D>();
-            hazCol1.size = new Vector2(0.5f, 1.8f);
-            hazCol1.isTrigger = true;
-
-            FreezableHazard hazardComp1 = hazardObj1.AddComponent<FreezableHazard>();
-            SetPrivateField(hazardComp1, "offsetA", Vector3.zero);
-            SetPrivateField(hazardComp1, "offsetB", new Vector3(0f, 4.0f, 0f));
-            SetPrivateField(hazardComp1, "moveSpeed", 2.8f);
-            SetPrivateField(hazardComp1, "hazardRenderer", hazRend1);
-
-            // Moving Freezable Hazard Laser 2
-            GameObject hazardObj2 = new GameObject("FreezableLaser_Barrier_2");
-            hazardObj2.transform.SetParent(refs.puzzleRoot.transform);
-            hazardObj2.transform.position = new Vector3(2.0f, 0.5f, 0f);
-
-            SpriteRenderer hazRend2 = hazardObj2.AddComponent<SpriteRenderer>();
-            hazRend2.sprite = hazardSp;
-            hazRend2.sortingOrder = 3;
-
-            GameObject hazLight2 = new GameObject("Hazard2_Glow");
-            hazLight2.transform.SetParent(hazardObj2.transform);
-            hazLight2.transform.localPosition = Vector3.zero;
-            Light2D hl2 = hazLight2.AddComponent<Light2D>();
-            hl2.lightType = Light2D.LightType.Point;
-            hl2.pointLightOuterRadius = 1.8f;
-            hl2.color = new Color(1.0f, 0.15f, 0.25f, 1f);
-            hl2.intensity = 0.6f;
-
-            BoxCollider2D hazCol2 = hazardObj2.AddComponent<BoxCollider2D>();
-            hazCol2.size = new Vector2(0.5f, 1.8f);
-            hazCol2.isTrigger = true;
-
-            FreezableHazard hazardComp2 = hazardObj2.AddComponent<FreezableHazard>();
-            SetPrivateField(hazardComp2, "offsetA", Vector3.zero);
-            SetPrivateField(hazardComp2, "offsetB", new Vector3(0f, -4.0f, 0f));
-            SetPrivateField(hazardComp2, "moveSpeed", 3.2f);
-            SetPrivateField(hazardComp2, "hazardRenderer", hazRend2);
-
-            // Puzzle Plate across the hazards at (X: 6.0, Y: -3.9)
-            GameObject plateObj = new GameObject("PressurePlate");
-            plateObj.transform.SetParent(refs.puzzleRoot.transform);
-            plateObj.transform.position = new Vector3(6.0f, -3.9f, 0f);
-
-            SpriteRenderer plateRend = plateObj.AddComponent<SpriteRenderer>();
-            plateRend.sprite = plateSp;
-            plateRend.sortingOrder = 2;
-
-            BoxCollider2D plateTrigger = plateObj.AddComponent<BoxCollider2D>();
-            plateTrigger.isTrigger = true;
-            plateTrigger.size = new Vector2(1.2f, 0.35f);
-            plateTrigger.offset = new Vector2(0f, 0.15f);
-
-            PressurePlate plateComp = plateObj.AddComponent<PressurePlate>();
-            SetPrivateField(plateComp, "plateTopRenderer", plateRend);
-            SetPrivateField(plateComp, "depressTarget", plateObj.transform);
-
-            // Movable Cube before the hazards at (X: -5.0, Y: -3.4)
+            // Movable Cube before Laser 1 at (X: -4.2, Y: -3.4)
             GameObject cubeObj = new GameObject("MovableCube");
             cubeObj.transform.SetParent(refs.puzzleRoot.transform);
-            cubeObj.transform.position = new Vector3(-5.0f, -3.4f, 0f);
+            cubeObj.transform.position = new Vector3(-4.2f, -3.4f, 0f);
 
             SpriteRenderer cubeRend = cubeObj.AddComponent<SpriteRenderer>();
             cubeRend.sprite = cubeSp;
@@ -2234,6 +2160,207 @@ namespace GlitchVerse.Editor
 
             MovableCube cubeComp = cubeObj.AddComponent<MovableCube>();
             SetPrivateField(cubeComp, "spriteRenderer", cubeRend);
+
+            // Moving Freezable Hazard Laser 1 (Blocks cube path; requires Time Freeze F)
+            GameObject hazardObj1 = new GameObject("FreezableLaser_Barrier_1");
+            hazardObj1.transform.SetParent(refs.puzzleRoot.transform);
+            hazardObj1.transform.position = new Vector3(-1.8f, -3.5f, 0f);
+
+            SpriteRenderer hazRend1 = hazardObj1.AddComponent<SpriteRenderer>();
+            hazRend1.sprite = hazardSp;
+            hazRend1.sortingOrder = 3;
+
+            GameObject hazLight1 = new GameObject("Hazard1_Glow");
+            hazLight1.transform.SetParent(hazardObj1.transform);
+            hazLight1.transform.localPosition = Vector3.zero;
+            Light2D hl1 = hazLight1.AddComponent<Light2D>();
+            hl1.lightType = Light2D.LightType.Point;
+            hl1.pointLightOuterRadius = 2.0f;
+            hl1.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            hl1.intensity = 0.8f;
+
+            BoxCollider2D hazCol1 = hazardObj1.AddComponent<BoxCollider2D>();
+            hazCol1.size = new Vector2(0.5f, 1.8f);
+            hazCol1.isTrigger = true;
+
+            FreezableHazard hazardComp1 = hazardObj1.AddComponent<FreezableHazard>();
+            SetPrivateField(hazardComp1, "offsetA", Vector3.zero);
+            SetPrivateField(hazardComp1, "offsetB", new Vector3(0f, 4.0f, 0f));
+            SetPrivateField(hazardComp1, "moveSpeed", 3.2f);
+            SetPrivateField(hazardComp1, "hazardRenderer", hazRend1);
+
+            // Pressure Plate A at (X: 0.5, Y: -3.9) — Cube opens Blast Gate A
+            GameObject plateObj = new GameObject("PressurePlate");
+            plateObj.transform.SetParent(refs.puzzleRoot.transform);
+            plateObj.transform.position = new Vector3(0.5f, -3.9f, 0f);
+
+            SpriteRenderer plateRend = plateObj.AddComponent<SpriteRenderer>();
+            plateRend.sprite = plateSp;
+            plateRend.sortingOrder = 2;
+
+            BoxCollider2D plateTrigger = plateObj.AddComponent<BoxCollider2D>();
+            plateTrigger.isTrigger = true;
+            plateTrigger.size = new Vector2(1.2f, 0.35f);
+            plateTrigger.offset = new Vector2(0f, 0.15f);
+
+            PressurePlate plateComp = plateObj.AddComponent<PressurePlate>();
+            SetPrivateField(plateComp, "plateTopRenderer", plateRend);
+            SetPrivateField(plateComp, "depressTarget", plateObj.transform);
+
+            // Blast Gate A (Security Barrier interlocked with Pressure Plate A) at X: 1.6, Y: -2.7
+            GameObject gateAObj = new GameObject("SecurityBarrier_GateA");
+            gateAObj.transform.SetParent(refs.puzzleRoot.transform);
+            gateAObj.transform.position = new Vector3(1.6f, -2.7f, 0f);
+
+            SpriteRenderer gaRend = gateAObj.AddComponent<SpriteRenderer>();
+            gaRend.sprite = hazardSp;
+            gaRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            gaRend.sortingOrder = 8;
+            gaRend.drawMode = SpriteDrawMode.Sliced;
+            gaRend.size = new Vector2(0.35f, 2.4f);
+
+            BoxCollider2D gaCol = gateAObj.AddComponent<BoxCollider2D>();
+            gaCol.size = new Vector2(0.35f, 2.4f);
+
+            GameObject gaLightObj = new GameObject("GateA_Light");
+            gaLightObj.transform.SetParent(gateAObj.transform);
+            gaLightObj.transform.localPosition = Vector3.zero;
+            Light2D gaLight = gaLightObj.AddComponent<Light2D>();
+            gaLight.lightType = Light2D.LightType.Point;
+            gaLight.pointLightOuterRadius = 2.2f;
+            gaLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            gaLight.intensity = 1.2f;
+
+            SecurityBarrier gateAComp = gateAObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(gateAComp, "barrierCollider", gaCol);
+            SetPrivateField(gateAComp, "barrierRenderer", gaRend);
+            SetPrivateField(gateAComp, "barrierLight", gaLight);
+            plateComp.TargetBarrier = gateAComp;
+
+            // Catwalk Gantry beyond Gate A at X: 2.0 to 4.2, Y: -1.2
+            GameObject gantryCatwalk = new GameObject("Gantry_Catwalk");
+            gantryCatwalk.transform.SetParent(refs.envRoot.transform);
+            gantryCatwalk.transform.position = new Vector3(3.1f, -1.2f, 0f);
+            BoxCollider2D gantryCol = gantryCatwalk.AddComponent<BoxCollider2D>();
+            gantryCol.size = new Vector2(2.4f, 0.35f);
+
+            for (float px = 2.0f; px <= 4.2f; px += 0.7f)
+            {
+                GameObject seg = new GameObject($"GantrySeg_{px}");
+                seg.transform.SetParent(gantryCatwalk.transform);
+                seg.transform.position = new Vector3(px, -1.2f, 0f);
+                seg.transform.localScale = new Vector3(0.7f, 0.35f, 1f);
+                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
+                rend.sprite = floorSp;
+                rend.sortingOrder = 1;
+            }
+
+            // Step up to gantry at X: 1.8, Y: -2.6
+            GameObject stepGantry = new GameObject("Step_Gantry");
+            stepGantry.transform.SetParent(refs.envRoot.transform);
+            stepGantry.transform.position = new Vector3(1.8f, -2.6f, 0f);
+            BoxCollider2D sgCol = stepGantry.AddComponent<BoxCollider2D>();
+            sgCol.size = new Vector2(0.8f, 0.35f);
+
+            // EchoSwitch Terminal on Gantry at (X: 2.8, Y: -0.85)
+            GameObject echoSwitchObj = new GameObject("EchoSwitch_Terminal");
+            echoSwitchObj.transform.SetParent(refs.puzzleRoot.transform);
+            echoSwitchObj.transform.position = new Vector3(2.8f, -0.85f, 0f);
+
+            SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
+            switchRend.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            switchRend.sortingOrder = 2;
+
+            BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
+            switchCol.isTrigger = true;
+            switchCol.size = new Vector2(1.2f, 0.4f);
+
+            GameObject switchLightObj = new GameObject("Switch_Light");
+            switchLightObj.transform.SetParent(echoSwitchObj.transform);
+            switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            Light2D switchLight = switchLightObj.AddComponent<Light2D>();
+            switchLight.lightType = Light2D.LightType.Point;
+            switchLight.pointLightOuterRadius = 3.0f;
+            switchLight.color = new Color(0.85f, 0f, 1f, 1f);
+            switchLight.intensity = 0.7f;
+
+            SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
+            SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "glowLight", switchLight);
+            SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+            SetPrivateField(echoSwitchComp, "allowPlayerActivation", false);
+            SetPrivateField(echoSwitchComp, "allowEchoActivation", true);
+            SetPrivateField(echoSwitchComp, "holdGraceDuration", 3.0f);
+            SetPrivateField(echoSwitchComp, "latching", false);
+            SetPrivateField(echoSwitchComp, "isPowered", true);
+
+            // Moving Freezable Hazard Laser 2 (Across lower floor corridor at X: 4.8)
+            GameObject hazardObj2 = new GameObject("FreezableLaser_Barrier_2");
+            hazardObj2.transform.SetParent(refs.puzzleRoot.transform);
+            hazardObj2.transform.position = new Vector3(4.8f, 0.0f, 0f);
+
+            SpriteRenderer hazRend2 = hazardObj2.AddComponent<SpriteRenderer>();
+            hazRend2.sprite = hazardSp;
+            hazRend2.sortingOrder = 3;
+
+            GameObject hazLight2 = new GameObject("Hazard2_Glow");
+            hazLight2.transform.SetParent(hazardObj2.transform);
+            hazLight2.transform.localPosition = Vector3.zero;
+            Light2D hl2 = hazLight2.AddComponent<Light2D>();
+            hl2.lightType = Light2D.LightType.Point;
+            hl2.pointLightOuterRadius = 2.0f;
+            hl2.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            hl2.intensity = 0.8f;
+
+            BoxCollider2D hazCol2 = hazardObj2.AddComponent<BoxCollider2D>();
+            hazCol2.size = new Vector2(0.5f, 1.8f);
+            hazCol2.isTrigger = true;
+
+            FreezableHazard hazardComp2 = hazardObj2.AddComponent<FreezableHazard>();
+            SetPrivateField(hazardComp2, "offsetA", Vector3.zero);
+            SetPrivateField(hazardComp2, "offsetB", new Vector3(0f, -3.5f, 0f));
+            SetPrivateField(hazardComp2, "moveSpeed", 3.5f);
+            SetPrivateField(hazardComp2, "hazardRenderer", hazRend2);
+
+            // Security Barrier Exit at X: 6.0, Y: -2.7 (Controlled by EchoSwitch_Terminal)
+            GameObject exitBarrierObj = new GameObject("SecurityBarrier_Exit");
+            exitBarrierObj.transform.SetParent(refs.puzzleRoot.transform);
+            exitBarrierObj.transform.position = new Vector3(6.0f, -2.7f, 0f);
+
+            SpriteRenderer ebRend = exitBarrierObj.AddComponent<SpriteRenderer>();
+            ebRend.sprite = hazardSp;
+            ebRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            ebRend.sortingOrder = 8;
+            ebRend.drawMode = SpriteDrawMode.Sliced;
+            ebRend.size = new Vector2(0.35f, 2.4f);
+
+            BoxCollider2D ebCol = exitBarrierObj.AddComponent<BoxCollider2D>();
+            ebCol.size = new Vector2(0.35f, 2.4f);
+
+            GameObject ebLightObj = new GameObject("ExitBarrier_Light");
+            ebLightObj.transform.SetParent(exitBarrierObj.transform);
+            ebLightObj.transform.localPosition = Vector3.zero;
+            Light2D ebLight = ebLightObj.AddComponent<Light2D>();
+            ebLight.lightType = Light2D.LightType.Point;
+            ebLight.pointLightOuterRadius = 2.4f;
+            ebLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            ebLight.intensity = 1.3f;
+
+            SecurityBarrier exitBarrierComp = exitBarrierObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(exitBarrierComp, "barrierCollider", ebCol);
+            SetPrivateField(exitBarrierComp, "barrierRenderer", ebRend);
+            SetPrivateField(exitBarrierComp, "barrierLight", ebLight);
+
+            // Connect echo switch to exit security barrier
+            SetPrivateField(echoSwitchComp, "targetBarrier", exitBarrierComp);
+            echoSwitchComp.TargetBarrier = exitBarrierComp;
+
+            // Elevated Exit Doorway at (X: 8.5, Y: -2.5)
+            refs.exitDoor.transform.position = new Vector3(8.5f, -2.5f, 0f);
+
+            SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
 
             SetPrivateField(refs.hud, "pressurePlate", plateComp);
             SetPrivateField(refs.director, "pressurePlate", plateComp);
