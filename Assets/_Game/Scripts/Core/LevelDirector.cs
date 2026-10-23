@@ -102,6 +102,20 @@ namespace GlitchVerse.Core
             {
                 exitDoor.SetUnlocked(isActivated);
             }
+
+            var allDoors = FindObjectsByType<ExitDoor>(FindObjectsInactive.Include);
+            foreach (var d in allDoors)
+            {
+                if (d != null && d != exitDoor)
+                {
+                    d.SetUnlocked(isActivated);
+                }
+            }
+        }
+
+        public void CompleteChamber()
+        {
+            HandlePlayerReachedExit();
         }
 
         private void HandlePlayerReachedExit()

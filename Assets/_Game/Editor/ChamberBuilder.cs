@@ -10,6 +10,7 @@ using GlitchVerse.Interactables;
 using GlitchVerse.Echo;
 using GlitchVerse.Mechanics;
 using GlitchVerse.UI;
+using GlitchVerse.Narrative;
 
 namespace GlitchVerse.Editor
 {
@@ -269,6 +270,8 @@ namespace GlitchVerse.Editor
             public LevelHUD hud;
             public LevelDirector director;
             public ExitDoor exitDoor;
+            public ArchitectDialogue dialogue;
+            public ArchitectTriggers triggers;
             public GameObject envRoot;
             public GameObject puzzleRoot;
         }
@@ -630,6 +633,34 @@ namespace GlitchVerse.Editor
             SetPrivateField(director, "isFinalLevel", isFinal);
             SetPrivateField(hud, "levelDirector", director);
 
+            // 9. Narrative & Mind Games (Phase 07)
+            GameObject flashObj = new GameObject("GlitchFlashOverlay");
+            flashObj.transform.SetParent(uiRoot.transform, false);
+            RectTransform flashRt = flashObj.AddComponent<RectTransform>();
+            flashRt.anchorMin = Vector2.zero;
+            flashRt.anchorMax = Vector2.one;
+            flashRt.sizeDelta = Vector2.zero;
+            Image flashImg = flashObj.AddComponent<Image>();
+            flashImg.color = new Color(1f, 0f, 0.15f, 0f);
+            flashImg.raycastTarget = false;
+
+            Text subtitleTxt = CreateUIText(uiRoot.transform, "ArchitectSubtitleText", 
+                "", defaultFont, 22, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -120f), new Vector2(1000f, 60f), 
+                Color.white);
+            subtitleTxt.gameObject.SetActive(false);
+
+            ArchitectDialogue dialogue = uiRoot.AddComponent<ArchitectDialogue>();
+            SetPrivateField(dialogue, "subtitleText", subtitleTxt);
+            SetPrivateField(dialogue, "flashOverlay", flashImg);
+            SetPrivateField(dialogue, "monitorTextMesh", monTm);
+
+            ArchitectTriggers triggers = uiRoot.AddComponent<ArchitectTriggers>();
+            SetPrivateField(triggers, "levelDirector", director);
+            SetPrivateField(triggers, "abilityController", abilityCtrl);
+            SetPrivateField(triggers, "echoPlayback", echoPlay);
+            SetPrivateField(triggers, "exitDoor", exitComp);
+
             GameObject sessionObj = new GameObject("GameSession");
             sessionObj.AddComponent<GameSession>();
 
@@ -642,6 +673,8 @@ namespace GlitchVerse.Editor
                 hud = hud,
                 director = director,
                 exitDoor = exitComp,
+                dialogue = dialogue,
+                triggers = triggers,
                 envRoot = envRoot,
                 puzzleRoot = puzzleRoot
             };
@@ -736,6 +769,19 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.hud, "pressurePlate", plateComp);
             SetPrivateField(refs.director, "pressurePlate", plateComp);
 
+            // Checkpoint 2: Scripted Fake Exit Prank (Level 01)
+            // Decoy door stays at (8.5, -2.7). Real exit appears on Observation Platform A at (-3.0, 0.4).
+            GameObject realDoorObj = Object.Instantiate(refs.exitDoor.gameObject, refs.puzzleRoot.transform);
+            realDoorObj.name = "RealExitDoor_PlatformA";
+            realDoorObj.transform.position = new Vector3(-3.0f, 0.4f, 0f);
+            realDoorObj.SetActive(false);
+            ExitDoor realDoorComp = realDoorObj.GetComponent<ExitDoor>();
+
+            FakeExitPrank prank = refs.exitDoor.gameObject.AddComponent<FakeExitPrank>();
+            SetPrivateField(prank, "decoyDoor", refs.exitDoor);
+            SetPrivateField(prank, "realDoor", realDoorComp);
+            SetPrivateField(prank, "relocatedPosition", new Vector3(-3.0f, 0.4f, 0f));
+
             SaveChamberScene("Level01.unity");
         }
         #endregion
@@ -820,6 +866,11 @@ namespace GlitchVerse.Editor
 
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+
+            // Checkpoint 4: Fake Emergency Countdown Prank (Level 02)
+            GameObject emergencyPrankObj = new GameObject("FakeEmergencyPrankController");
+            emergencyPrankObj.transform.SetParent(refs.puzzleRoot.transform);
+            emergencyPrankObj.AddComponent<FakeEmergencyPrank>();
 
             SaveChamberScene("Level02.unity");
         }

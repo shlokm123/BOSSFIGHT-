@@ -107,8 +107,19 @@ namespace GlitchVerse.Interactables
             // Detect player passing through the exit
             if (other.GetComponent<PlayerController2D>() != null || other.CompareTag("Player"))
             {
+                // Check if a narrative prank intercepts this first attempt
+                var prank = GetComponent<GlitchVerse.Narrative.FakeExitPrank>();
+                if (prank != null && prank.TryInterceptExit(other))
+                {
+                    return;
+                }
+
                 Debug.Log("[ExitDoor] Player entered unlocked exit door.");
                 OnPlayerReachedExit?.Invoke();
+                if (GlitchVerse.Core.LevelDirector.Current != null)
+                {
+                    GlitchVerse.Core.LevelDirector.Current.CompleteChamber();
+                }
             }
         }
 
