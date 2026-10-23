@@ -76,6 +76,20 @@ namespace GlitchVerse.Core
                 {
                     chamberNumber = 4;
                     levelTitle = "CONTAINMENT 04";
+                    nextSceneName = "Level05";
+                    isFinalLevel = false;
+                }
+                else if (activeScene == "Level05")
+                {
+                    chamberNumber = 5;
+                    levelTitle = "CONTAINMENT 05";
+                    nextSceneName = "Level06";
+                    isFinalLevel = false;
+                }
+                else if (activeScene == "Level06")
+                {
+                    chamberNumber = 6;
+                    levelTitle = "CONTAINMENT 06";
                     nextSceneName = "";
                     isFinalLevel = true;
                 }

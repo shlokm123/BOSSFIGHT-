@@ -37,19 +37,37 @@ namespace GlitchVerse.Editor
             public Color architectMonitorColor;
         }
 
-        [MenuItem("GlitchVerse/Build All Four Levels")]
+        [MenuItem("GlitchVerse/Build All Six Levels")]
         public static void BuildAll()
         {
-            Debug.Log("[ChamberBuilder] Beginning autonomous build of all 4 levels (Phase 08 Upgrade)...");
+            Debug.Log("[ChamberBuilder] Beginning autonomous build of all 6 levels (Phase 09 Upgrade)...");
             GenerateProceduralSprites();
             
             ConstructLevel01Scene();
             ConstructLevel02Scene();
             ConstructLevel03Scene();
             ConstructLevel04Scene();
+            ConstructLevel05Scene();
+            ConstructLevel06Scene();
 
             RegisterScenesInBuildSettings();
-            Debug.Log("[ChamberBuilder] All four levels successfully built and registered!");
+            Debug.Log("[ChamberBuilder] All six levels successfully built and registered!");
+        }
+
+        [MenuItem("GlitchVerse/Build Level 05 (Paranoia)")]
+        public static void BuildLevel05()
+        {
+            GenerateProceduralSprites();
+            ConstructLevel05Scene();
+            RegisterScenesInBuildSettings();
+        }
+
+        [MenuItem("GlitchVerse/Build Level 06 (Truth)")]
+        public static void BuildLevel06()
+        {
+            GenerateProceduralSprites();
+            ConstructLevel06Scene();
+            RegisterScenesInBuildSettings();
         }
 
         #region Sprite Generation
@@ -1667,7 +1685,7 @@ namespace GlitchVerse.Editor
                 architectMonitorColor = new Color(1.0f, 0.25f, 0.20f, 0.95f)
             };
 
-            var refs = SetupBaseChamber("CONTAINMENT 04 // REALITY BREACH", 4, "", true, atmo);
+            var refs = SetupBaseChamber("CONTAINMENT 04 // REALITY BREACH", 4, "Level05", false, atmo);
 
             Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
             Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
@@ -1810,6 +1828,403 @@ namespace GlitchVerse.Editor
             SaveChamberScene("Level04.unity");
         }
 
+        public static void ConstructLevel05Scene()
+        {
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.12f, 0.05f, 0.18f, 1f), // Cold deep surveillance violet
+                ambientIntensity = 0.74f,
+                spawnLampColor = new Color(0.75f, 0.25f, 1.0f, 1f),
+                spawnLampIntensity = 1.1f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.SurveillanceGlow,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.SurveillanceMotes,
+                architectMonitorColor = new Color(0.78f, 0.22f, 1.0f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 05 // PARANOIA", 5, "Level06", false, atmo);
+
+            Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
+            Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
+            Sprite beamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ceiling_beam.png");
+            Sprite pipeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pipe_conduit.png");
+            Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
+            Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
+            Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
+            Sprite stripesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
+            Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
+            Sprite terminalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/lab_terminal.png");
+            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
+
+            // Powers: Gravity (G), Dimension Swap (Q), Echo (H/C)
+            refs.abilityCtrl.AllowGravity = true;
+            refs.abilityCtrl.AllowDimensionSwap = true;
+            refs.abilityCtrl.AllowTimeFreeze = false;
+
+            // Environmental Dressing: Surveillance Monitors & Cold Violet Lighting
+            float[] colXs = new float[] { -7.0f, -1.0f, 5.0f };
+            foreach (var cx in colXs)
+            {
+                GameObject col = new GameObject($"Deco_SurveillanceCol_{cx}");
+                col.transform.SetParent(refs.envRoot.transform);
+                col.transform.position = new Vector3(cx, 0.5f, 0f);
+                col.transform.localScale = new Vector3(1.5f, 2.0f, 1f);
+                SpriteRenderer colR = col.AddComponent<SpriteRenderer>();
+                colR.sprite = pillarSp;
+                colR.sortingOrder = -15;
+                colR.color = new Color(0.12f, 0.08f, 0.16f, 0.9f);
+            }
+
+            // Violet Surveillance Terminal
+            GameObject termObj = new GameObject("Deco_SurveillanceTerminal");
+            termObj.transform.SetParent(refs.envRoot.transform);
+            termObj.transform.position = new Vector3(-6.5f, -2.5f, 0f);
+            SpriteRenderer termR = termObj.AddComponent<SpriteRenderer>();
+            termR.sprite = terminalSp;
+            termR.sortingOrder = -5;
+            termR.color = new Color(0.8f, 0.4f, 1.0f, 1f);
+
+            // True Route Visual Clue: Intact Neon Conduits leading UP from spawn bulkhead
+            GameObject verticalConduit = new GameObject("Deco_TruePath_Conduit");
+            verticalConduit.transform.SetParent(refs.envRoot.transform);
+            verticalConduit.transform.position = new Vector3(-7.5f, 0f, 0f);
+            verticalConduit.transform.rotation = Quaternion.Euler(0, 0, 90f);
+            verticalConduit.transform.localScale = new Vector3(8f, 1.2f, 1f);
+            SpriteRenderer vcRend = verticalConduit.AddComponent<SpriteRenderer>();
+            vcRend.sprite = pipeSp;
+            vcRend.sortingOrder = -6;
+            vcRend.color = new Color(0.2f, 0.8f, 1.0f, 0.9f);
+
+            // Ceiling Bulkhead Pathway (Y = 3.8)
+            GameObject ceilPlat1 = new GameObject("Ceiling_Walkway_1");
+            ceilPlat1.transform.SetParent(refs.puzzleRoot.transform);
+            ceilPlat1.transform.position = new Vector3(-2.5f, 3.8f, 0f);
+            SpriteRenderer cpRend1 = ceilPlat1.AddComponent<SpriteRenderer>();
+            cpRend1.sprite = beamSp;
+            cpRend1.drawMode = SpriteDrawMode.Tiled;
+            cpRend1.size = new Vector2(6f, 0.6f);
+            cpRend1.sortingOrder = 2;
+            BoxCollider2D cpCol1 = ceilPlat1.AddComponent<BoxCollider2D>();
+            cpCol1.size = new Vector2(6f, 0.6f);
+
+            // EchoSwitch inverted on the ceiling walkway at (X: -2.0, Y: 3.4)
+            GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
+            echoSwitchObj.transform.SetParent(ceilPlat1.transform);
+            echoSwitchObj.transform.localPosition = new Vector3(0.5f, -0.35f, 0f);
+            echoSwitchObj.transform.localRotation = Quaternion.Euler(0, 0, 180f); // Inverted on ceiling
+
+            SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
+            switchRend.sprite = echoSwitchSp;
+            switchRend.sortingOrder = 4;
+
+            BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
+            switchCol.isTrigger = true;
+            switchCol.size = new Vector2(1.2f, 0.4f);
+
+            EchoSwitch echoSwitchComp = echoSwitchObj.AddComponent<EchoSwitch>();
+            SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+
+            // Dimension Alpha Platform (Ceiling mid-span, X: 1.5, Y: 3.0)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Ceiling_1",
+                new Vector3(1.5f, 3.0f, 0f), new Vector2(3.5f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            // Dimension Beta Platform (Ceiling bridge to vault, X: 4.8, Y: 3.2)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Ceiling_2",
+                new Vector3(4.8f, 3.2f, 0f), new Vector2(3.5f, 0.4f), betaSp, DimensionType.Beta);
+
+            // Exit Landing Platform (X: 8.5, Y: 1.8)
+            GameObject exitPlat = new GameObject("Exit_LandingPlatform");
+            exitPlat.transform.SetParent(refs.puzzleRoot.transform);
+            exitPlat.transform.position = new Vector3(8.5f, 1.8f, 0f);
+            SpriteRenderer epRend = exitPlat.AddComponent<SpriteRenderer>();
+            epRend.sprite = floorSp;
+            epRend.drawMode = SpriteDrawMode.Tiled;
+            epRend.size = new Vector2(4f, 0.6f);
+            epRend.sortingOrder = 2;
+            BoxCollider2D epCol = exitPlat.AddComponent<BoxCollider2D>();
+            epCol.size = new Vector2(4f, 0.6f);
+
+            // Position Exit Door on the high security upper landing
+            refs.exitDoor.transform.position = new Vector3(8.5f, 2.7f, 0f);
+
+            // Trap Route (Lower Floor): Visual deception & ParanoiaTrapPrank
+            GameObject trapBeacon = new GameObject("Deco_TrapWarningBeacon");
+            trapBeacon.transform.SetParent(refs.envRoot.transform);
+            trapBeacon.transform.position = new Vector3(1.5f, -2.8f, 0f);
+            SpriteRenderer tbRend = trapBeacon.AddComponent<SpriteRenderer>();
+            tbRend.sprite = beaconSp;
+            tbRend.sortingOrder = 5;
+
+            GameObject tbLightObj = new GameObject("TrapBeacon_Light");
+            tbLightObj.transform.SetParent(trapBeacon.transform);
+            tbLightObj.transform.localPosition = Vector3.zero;
+            Light2D tbLight = tbLightObj.AddComponent<Light2D>();
+            tbLight.lightType = Light2D.LightType.Point;
+            tbLight.pointLightOuterRadius = 3.0f;
+            tbLight.color = new Color(1.0f, 0.15f, 0.2f, 1f);
+            tbLight.intensity = 0.9f;
+            FlickeringLight2D tbFlicker = tbLightObj.AddComponent<FlickeringLight2D>();
+            tbFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
+
+            GameObject brokenCables = new GameObject("Deco_BrokenCables_Trap");
+            brokenCables.transform.SetParent(refs.envRoot.transform);
+            brokenCables.transform.position = new Vector3(1.0f, -3.7f, 0f);
+            SpriteRenderer bcRend = brokenCables.AddComponent<SpriteRenderer>();
+            bcRend.sprite = cableSp;
+            bcRend.sortingOrder = 1;
+            bcRend.color = new Color(0.8f, 0.2f, 0.2f, 0.8f);
+
+            GameObject hazardStripes = new GameObject("Deco_HazardStripes_Trap");
+            hazardStripes.transform.SetParent(refs.envRoot.transform);
+            hazardStripes.transform.position = new Vector3(2.5f, -3.7f, 0f);
+            hazardStripes.transform.localScale = new Vector3(3.0f, 0.4f, 1f);
+            SpriteRenderer hsRend = hazardStripes.AddComponent<SpriteRenderer>();
+            hsRend.sprite = stripesSp;
+            hsRend.sortingOrder = 3;
+
+            // Add ParanoiaTrapPrank
+            GameObject paranoiaPrankObj = new GameObject("ParanoiaTrapPrankController");
+            paranoiaPrankObj.transform.SetParent(refs.puzzleRoot.transform);
+            ParanoiaTrapPrank paranoiaPrank = paranoiaPrankObj.AddComponent<ParanoiaTrapPrank>();
+            SetPrivateField(paranoiaPrank, "triggerX", 1.8f);
+            SetPrivateField(paranoiaPrank, "maxY", -2.5f);
+            SetPrivateField(paranoiaPrank, "warningSignRenderer", hsRend);
+
+            // Wire ExitDoor and EchoSwitch into Director and HUD
+            SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
+
+            SaveChamberScene("Level05.unity");
+        }
+
+        public static void ConstructLevel06Scene()
+        {
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.20f, 0.04f, 0.06f, 1f), // Deep quarantine emergency crimson
+                ambientIntensity = 0.78f,
+                spawnLampColor = new Color(1.0f, 0.15f, 0.18f, 1f),
+                spawnLampIntensity = 1.25f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.QuarantineAlarm,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.QuarantineStatic,
+                architectMonitorColor = new Color(1.0f, 0.15f, 0.20f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 06 // TRUTH", 6, "", true, atmo);
+
+            Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
+            Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
+            Sprite beamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ceiling_beam.png");
+            Sprite hazardLaserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+            Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
+            Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
+            Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite plateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pressure_plate.png");
+            Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
+            Sprite quarantineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png");
+            Sprite reactorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_reactor.png");
+            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
+
+            // ALL 3 powers enabled for grand finale
+            refs.abilityCtrl.AllowGravity = true;
+            refs.abilityCtrl.AllowTimeFreeze = true;
+            refs.abilityCtrl.AllowDimensionSwap = true;
+
+            // Environmental Dressing: Ominous Dormant Containment Reactor
+            GameObject reactorObj = new GameObject("Deco_QuarantineCoreReactor");
+            reactorObj.transform.SetParent(refs.envRoot.transform);
+            reactorObj.transform.position = new Vector3(0.5f, 1.2f, 0f);
+            reactorObj.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
+            SpriteRenderer reactorRend = reactorObj.AddComponent<SpriteRenderer>();
+            reactorRend.sprite = reactorSp;
+            reactorRend.sortingOrder = -20;
+            reactorRend.color = new Color(0.8f, 0.15f, 0.2f, 0.7f);
+
+            // Cold White Sterile Core Floodlights contrasting the deep blood red
+            GameObject whiteCoreLightObj = new GameObject("Core_SterileFloodlight");
+            whiteCoreLightObj.transform.position = new Vector3(0.5f, 2.5f, 0f);
+            Light2D whiteLight = whiteCoreLightObj.AddComponent<Light2D>();
+            whiteLight.lightType = Light2D.LightType.Point;
+            whiteLight.pointLightOuterRadius = 6.5f;
+            whiteLight.color = new Color(0.9f, 0.95f, 1.0f, 1f); // Cold sterile white
+            whiteLight.intensity = 0.65f;
+
+            // Massive Brutalist Reinforced Bulkhead Pilasters
+            float[] pilasterXs = new float[] { -8.5f, -2.5f, 4.0f };
+            foreach (var px in pilasterXs)
+            {
+                GameObject pCol = new GameObject($"Deco_ReinforcedPilaster_{px}");
+                pCol.transform.SetParent(refs.envRoot.transform);
+                pCol.transform.position = new Vector3(px, 0.5f, 0f);
+                pCol.transform.localScale = new Vector3(1.6f, 2.4f, 1f);
+                SpriteRenderer pRend = pCol.AddComponent<SpriteRenderer>();
+                pRend.sprite = pillarSp;
+                pRend.sortingOrder = -15;
+                pRend.color = new Color(0.20f, 0.08f, 0.10f, 0.9f);
+            }
+
+            // Quarantine Decals
+            GameObject qDecal1 = new GameObject("Deco_QuarantineSign_1");
+            qDecal1.transform.SetParent(refs.envRoot.transform);
+            qDecal1.transform.position = new Vector3(-6.0f, -1.0f, 0f);
+            SpriteRenderer qdR1 = qDecal1.AddComponent<SpriteRenderer>();
+            qdR1.sprite = quarantineSp;
+            qdR1.sortingOrder = -5;
+
+            // Add Narrative Progression Trigger Controller
+            GameObject truthTriggersObj = new GameObject("TruthChamberNarrativeTriggers");
+            truthTriggersObj.transform.SetParent(refs.puzzleRoot.transform);
+            TruthChamberTriggers truthTriggers = truthTriggersObj.AddComponent<TruthChamberTriggers>();
+            SetPrivateField(truthTriggers, "stage2TriggerX", 1.0f);
+            SetPrivateField(truthTriggers, "stage3TriggerX", 6.5f);
+
+            // --- STAGE 1: Blast Gate & Elevated Echo Switch ---
+            // Elevated Platform at X: -5.5, Y: -1.2
+            GameObject echoPlat = new GameObject("Stage1_EchoPlatform");
+            echoPlat.transform.SetParent(refs.puzzleRoot.transform);
+            echoPlat.transform.position = new Vector3(-5.5f, -1.2f, 0f);
+            SpriteRenderer epRend = echoPlat.AddComponent<SpriteRenderer>();
+            epRend.sprite = floorSp;
+            epRend.drawMode = SpriteDrawMode.Tiled;
+            epRend.size = new Vector2(3f, 0.5f);
+            epRend.sortingOrder = 2;
+            BoxCollider2D epCol = echoPlat.AddComponent<BoxCollider2D>();
+            epCol.size = new Vector2(3f, 0.5f);
+
+            // EchoSwitch on elevated platform at (-5.5, -0.7)
+            GameObject echoSwitchObj = new GameObject("EchoSwitch_QuarantineGate");
+            echoSwitchObj.transform.SetParent(echoPlat.transform);
+            echoSwitchObj.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+
+            SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
+            switchRend.sprite = echoSwitchSp;
+            switchRend.sortingOrder = 4;
+
+            BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
+            switchCol.isTrigger = true;
+            switchCol.size = new Vector2(1.2f, 0.4f);
+
+            EchoSwitch echoSwitchComp = echoSwitchObj.AddComponent<EchoSwitch>();
+            SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+
+            // Stage 1 Retracting Blast Gate at X: -3.0
+            GameObject blastGateObj = new GameObject("Stage1_BlastGate");
+            blastGateObj.transform.SetParent(refs.puzzleRoot.transform);
+            blastGateObj.transform.position = new Vector3(-3.0f, -2.5f, 0f);
+            SpriteRenderer bgRend = blastGateObj.AddComponent<SpriteRenderer>();
+            bgRend.sprite = wallSp;
+            bgRend.drawMode = SpriteDrawMode.Tiled;
+            bgRend.size = new Vector2(0.8f, 3.2f);
+            bgRend.sortingOrder = 3;
+            bgRend.color = new Color(0.8f, 0.2f, 0.25f, 1f);
+            BoxCollider2D bgCol = blastGateObj.AddComponent<BoxCollider2D>();
+            bgCol.size = new Vector2(0.8f, 3.2f);
+
+            // Wire Stage 1 EchoSwitch to control retracting blast gate via TruthChamberTriggers
+            SetPrivateField(truthTriggers, "echoSwitch", echoSwitchComp);
+            SetPrivateField(truthTriggers, "blastGate", blastGateObj);
+
+            // --- STAGE 2: Electrified Pit & Freezable Moving Laser Hazard ---
+            // Create FreezableHazard that sweeps across the pit at Y = -2.5
+            GameObject hazardObj = new GameObject("Stage2_FreezableLaserHazard");
+            hazardObj.transform.SetParent(refs.puzzleRoot.transform);
+            hazardObj.transform.position = new Vector3(-1.0f, -2.5f, 0f);
+
+            SpriteRenderer hzRend = hazardObj.AddComponent<SpriteRenderer>();
+            hzRend.sprite = hazardLaserSp;
+            hzRend.drawMode = SpriteDrawMode.Tiled;
+            hzRend.size = new Vector2(1.8f, 0.8f);
+            hzRend.sortingOrder = 4;
+            hzRend.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+
+            BoxCollider2D hzCol = hazardObj.AddComponent<BoxCollider2D>();
+            hzCol.size = new Vector2(1.8f, 0.8f);
+
+            FreezableHazard fHazard = hazardObj.AddComponent<FreezableHazard>();
+            SetPrivateField(fHazard, "offsetA", new Vector3(-1.2f, 0f, 0f));
+            SetPrivateField(fHazard, "offsetB", new Vector3(2.5f, 0f, 0f));
+            SetPrivateField(fHazard, "moveSpeed", 3.2f);
+            SetPrivateField(fHazard, "hazardRenderer", hzRend);
+
+            // Ground platform after the pit at X: 3.2, Y: -4.0
+            GameObject pitExitPlat = new GameObject("Stage2_PitExitFloor");
+            pitExitPlat.transform.SetParent(refs.puzzleRoot.transform);
+            pitExitPlat.transform.position = new Vector3(3.2f, -4.0f, 0f);
+            SpriteRenderer peRend = pitExitPlat.AddComponent<SpriteRenderer>();
+            peRend.sprite = floorSp;
+            peRend.drawMode = SpriteDrawMode.Tiled;
+            peRend.size = new Vector2(2.5f, 1.0f);
+            peRend.sortingOrder = 2;
+            BoxCollider2D peCol = pitExitPlat.AddComponent<BoxCollider2D>();
+            peCol.size = new Vector2(2.5f, 1.0f);
+
+            // --- STAGE 3: Massive Lower Barrier & Inverted Ceiling Dimension Shaft ---
+            // Huge vertical bulkhead from floor up to Y: 1.5 at X: 4.5
+            GameObject vaultBulkhead = new GameObject("Stage3_VaultBarrier");
+            vaultBulkhead.transform.SetParent(refs.puzzleRoot.transform);
+            vaultBulkhead.transform.position = new Vector3(4.5f, -1.5f, 0f);
+            SpriteRenderer vbRend = vaultBulkhead.AddComponent<SpriteRenderer>();
+            vbRend.sprite = wallSp;
+            vbRend.drawMode = SpriteDrawMode.Tiled;
+            vbRend.size = new Vector2(1.0f, 5.5f);
+            vbRend.sortingOrder = 3;
+            vbRend.color = new Color(0.2f, 0.22f, 0.28f, 1f);
+            BoxCollider2D vbCol = vaultBulkhead.AddComponent<BoxCollider2D>();
+            vbCol.size = new Vector2(1.0f, 5.5f);
+
+            // Upper Ceiling Dimension Platforms (requires Gravity Inversion [G] to walk on ceiling):
+            // Dimension Alpha Platform (Ceiling, X: 4.2, Y: 2.8)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Ceiling_Stage3",
+                new Vector3(4.2f, 2.8f, 0f), new Vector2(3.0f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            // Dimension Beta Platform (Ceiling, X: 7.0, Y: 2.8)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Ceiling_Stage3",
+                new Vector3(7.0f, 2.8f, 0f), new Vector2(3.0f, 0.4f), betaSp, DimensionType.Beta);
+
+            // --- STAGE 4: Final Quarantine Vault & Exit Door ---
+            // Floor of final vault at X: 8.5, Y: -2.0
+            GameObject vaultFloor = new GameObject("Stage4_VaultFloor");
+            vaultFloor.transform.SetParent(refs.puzzleRoot.transform);
+            vaultFloor.transform.position = new Vector3(8.5f, -2.0f, 0f);
+            SpriteRenderer vfRend = vaultFloor.AddComponent<SpriteRenderer>();
+            vfRend.sprite = floorSp;
+            vfRend.drawMode = SpriteDrawMode.Tiled;
+            vfRend.size = new Vector2(4.5f, 0.6f);
+            vfRend.sortingOrder = 2;
+            BoxCollider2D vfCol = vaultFloor.AddComponent<BoxCollider2D>();
+            vfCol.size = new Vector2(4.5f, 0.6f);
+
+            // Final Quarantine Exit Door at X: 8.5, Y: -1.0
+            refs.exitDoor.transform.position = new Vector3(8.5f, -1.1f, 0f);
+            refs.exitDoor.SetUnlocked(true); // Reaching vault door allows breach into ending sequence
+
+            // Pressure Plate inside vault to trigger door seal
+            GameObject plateObj = new GameObject("Vault_FinalTriggerPlate");
+            plateObj.transform.SetParent(refs.puzzleRoot.transform);
+            plateObj.transform.position = new Vector3(7.0f, -1.6f, 0f);
+            SpriteRenderer plateRend = plateObj.AddComponent<SpriteRenderer>();
+            plateRend.sprite = plateSp;
+            plateRend.sortingOrder = 2;
+            BoxCollider2D plateCol = plateObj.AddComponent<BoxCollider2D>();
+            plateCol.isTrigger = true;
+            plateCol.size = new Vector2(1.2f, 0.3f);
+            PressurePlate vaultPlate = plateObj.AddComponent<PressurePlate>();
+            SetPrivateField(vaultPlate, "plateRenderer", plateRend);
+            SetPrivateField(vaultPlate, "depressVisual", plateObj.transform);
+
+            // Wire Director and HUD
+            SetPrivateField(refs.hud, "pressurePlate", vaultPlate);
+            SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.director, "pressurePlate", vaultPlate);
+            SetPrivateField(refs.director, "echoSwitch", null);
+            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
+
+            SaveChamberScene("Level06.unity");
+        }
+
         private static GameObject CreateDimensionPlatform(Transform parent, string name, Vector3 pos, Vector2 size, Sprite sp, DimensionType dim)
         {
             GameObject plat = new GameObject(name);
@@ -1852,7 +2267,9 @@ namespace GlitchVerse.Editor
                 "Assets/_Game/Scenes/Levels/Level01.unity",
                 "Assets/_Game/Scenes/Levels/Level02.unity",
                 "Assets/_Game/Scenes/Levels/Level03.unity",
-                "Assets/_Game/Scenes/Levels/Level04.unity"
+                "Assets/_Game/Scenes/Levels/Level04.unity",
+                "Assets/_Game/Scenes/Levels/Level05.unity",
+                "Assets/_Game/Scenes/Levels/Level06.unity"
             };
 
             EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[scenePaths.Length];

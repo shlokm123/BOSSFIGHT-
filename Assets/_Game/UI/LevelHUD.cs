@@ -219,7 +219,7 @@ namespace GlitchVerse.UI
                 if (completionTitleText != null)
                 {
                     completionTitleText.text = (levelDirector != null && levelDirector.IsFinalLevel)
-                        ? "SIMULATION TERMINATED // REALITY BREACHED"
+                        ? "CONTAINMENT CORE UNLOCKED"
                         : "CONTAINMENT PROTOCOL CLEARED";
                 }
 
@@ -228,7 +228,7 @@ namespace GlitchVerse.UI
                     int minutes = Mathf.FloorToInt(roomTimer / 60f);
                     float seconds = roomTimer % 60f;
                     int restarts = GameSession.Instance != null ? GameSession.Instance.ResetCount : 0;
-                    completionStatsText.text = $"ELAPSED TIME: {minutes:00}:{seconds:04.1f}   TOTAL RESTARTS: {restarts}";
+                    completionStatsText.text = $"ELAPSED TIME: {minutes:00}:{seconds:00.0}   TOTAL RESTARTS: {restarts}";
                 }
 
                 if (completionPromptText != null)
@@ -255,9 +255,9 @@ namespace GlitchVerse.UI
                 if (levelDirector != null && levelDirector.IsFinalLevel)
                 {
                     completionBannerText.text = 
-                        "<color=#00F0FF><size=44>SIMULATION BREACHED</size></color>\n" +
-                        "<size=22>ALL TIMELINE ECHOES SYNCHRONIZED — ARCHITECT DEFEATED</size>\n" +
-                        $"<size=18><color=#FFAA00>FINAL TIME: {Mathf.FloorToInt(roomTimer / 60f):00}:{roomTimer % 60f:04.1f}   RESTARTS: {(GameSession.Instance != null ? GameSession.Instance.ResetCount : 0)}</color></size>";
+                        "<color=#FF1E40><size=44>CONTAINMENT CORE UNLOCKED</size></color>\n" +
+                        "<size=24><color=#FFFFFF>CHAPTER VII — JUDGMENT: COMING NEXT</color></size>\n" +
+                        $"<size=18><color=#FFAA00>FINAL TIME: {Mathf.FloorToInt(roomTimer / 60f):00}:{(roomTimer % 60f):00.0}   RESTARTS: {(GameSession.Instance != null ? GameSession.Instance.ResetCount : 0)}</color></size>";
                 }
                 else
                 {

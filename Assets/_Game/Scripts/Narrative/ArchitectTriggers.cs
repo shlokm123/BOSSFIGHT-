@@ -287,6 +287,25 @@ namespace GlitchVerse.Narrative
                         priority: true
                     );
                     break;
+                case 5:
+                    ArchitectDialogue.Current.Speak(
+                        "You still think choosing is the same as being free?",
+                        "CHOICE: ILLUSION",
+                        3.2f,
+                        "entry_lvl5",
+                        30f
+                    );
+                    break;
+                case 6:
+                    ArchitectDialogue.Current.Speak(
+                        "You've spent six chambers proving you can escape.",
+                        "QUARANTINE BREACH",
+                        3.4f,
+                        "entry_lvl6",
+                        30f,
+                        priority: true
+                    );
+                    break;
             }
         }
 

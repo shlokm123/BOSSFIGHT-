@@ -8,6 +8,7 @@ using GlitchVerse.Player;
 using GlitchVerse.Interactables;
 using GlitchVerse.Narrative;
 using GlitchVerse.UI;
+using GlitchVerse.Mechanics;
 
 namespace GlitchVerse.Editor
 {
@@ -23,9 +24,9 @@ namespace GlitchVerse.Editor
             // 1. Build Settings Verification
             sb.AppendLine("\n--- 1. Build Settings Verification ---");
             var scenes = EditorBuildSettings.scenes;
-            if (scenes.Length < 4)
+            if (scenes.Length < 6)
             {
-                sb.AppendLine($"[FAIL] Less than 4 scenes in BuildSettings: {scenes.Length}");
+                sb.AppendLine($"[FAIL] Less than 6 scenes in BuildSettings: {scenes.Length}");
                 allPassed = false;
             }
             else
@@ -43,11 +44,11 @@ namespace GlitchVerse.Editor
 
             // 2. Scene Field & Narrative Wiring Verification
             sb.AppendLine("\n--- 2. Scene Field & Narrative Wiring Verification ---");
-            string[] expectedScenes = { "Level01", "Level02", "Level03", "Level04" };
-            string[] expectedNext = { "Level02", "Level03", "Level04", "" };
-            bool[] expectedFinal = { false, false, false, true };
+            string[] expectedScenes = { "Level01", "Level02", "Level03", "Level04", "Level05", "Level06" };
+            string[] expectedNext = { "Level02", "Level03", "Level04", "Level05", "Level06", "" };
+            bool[] expectedFinal = { false, false, false, false, false, true };
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 6; i++)
             {
                 int levelNum = i + 1;
                 string scenePath = $"Assets/_Game/Scenes/Levels/{expectedScenes[i]}.unity";
@@ -120,7 +121,7 @@ namespace GlitchVerse.Editor
                     }
                 }
 
-                // Check specific pranks per level
+                // Check specific pranks and mechanics per level
                 if (levelNum == 1)
                 {
                     var prank = Object.FindAnyObjectByType<FakeExitPrank>();
@@ -182,6 +183,37 @@ namespace GlitchVerse.Editor
                     else
                     {
                         sb.AppendLine($"[FAIL] Level 04: FakeCheckpointPrank missing.");
+                        allPassed = false;
+                    }
+                }
+                else if (levelNum == 5)
+                {
+                    var paranoia = Object.FindAnyObjectByType<ParanoiaTrapPrank>();
+                    var eSwitch = Object.FindAnyObjectByType<GlitchVerse.Echo.EchoSwitch>();
+                    var dimObjs = Object.FindObjectsByType<DimensionObject>(FindObjectsInactive.Include);
+                    if (paranoia != null && eSwitch != null && dimObjs.Length >= 2)
+                    {
+                        sb.AppendLine($"[PASS] Level 05: ParanoiaTrapPrank, EchoSwitch, and {dimObjs.Length} Dimension Platforms confirmed.");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"[FAIL] Level 05 missing components (prank={paranoia != null}, switch={eSwitch != null}, dimObjs={dimObjs.Length})");
+                        allPassed = false;
+                    }
+                }
+                else if (levelNum == 6)
+                {
+                    var truth = Object.FindAnyObjectByType<TruthChamberTriggers>();
+                    var hazard = Object.FindAnyObjectByType<FreezableHazard>();
+                    var eSwitch = Object.FindAnyObjectByType<GlitchVerse.Echo.EchoSwitch>();
+                    var plate = Object.FindAnyObjectByType<PressurePlate>();
+                    if (truth != null && hazard != null && eSwitch != null && plate != null)
+                    {
+                        sb.AppendLine($"[PASS] Level 06: TruthChamberTriggers, FreezableHazard, EchoSwitch, and VaultPlate confirmed.");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"[FAIL] Level 06 missing components (truth={truth != null}, hazard={hazard != null}, switch={eSwitch != null}, plate={plate != null})");
                         allPassed = false;
                     }
                 }

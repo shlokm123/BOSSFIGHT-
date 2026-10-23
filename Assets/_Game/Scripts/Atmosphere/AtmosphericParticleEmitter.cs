@@ -14,7 +14,9 @@ namespace GlitchVerse.Atmosphere
             ContainmentDust,     // Chapter I: Amber dust motes drifting gently in abandoned air
             GravityAnomalies,    // Chapter II: Anti-gravity motes drifting upwards
             CryoStasisMist,      // Chapter III: Cold cyan temporal crystal mist
-            EmergencyEmbers      // Chapter IV: Quarantine alarm embers & steam particles
+            EmergencyEmbers,     // Chapter IV: Quarantine alarm embers & steam particles
+            SurveillanceMotes,   // Chapter V: Violet surveillance static motes
+            QuarantineStatic     // Chapter VI: Blood red / sterile white quarantine static
         }
 
         [SerializeField] private AtmosphereType atmosphereType = AtmosphereType.ContainmentDust;
@@ -105,6 +107,22 @@ namespace GlitchVerse.Atmosphere
                     main.startSize = 0.09f;
                     main.startColor = new Color(1.0f, 0.25f, 0.15f, 0.35f); // Emergency crimson/amber
                     main.gravityModifier = -0.03f; // Rises like faint embers
+                    break;
+
+                case AtmosphereType.SurveillanceMotes:
+                    main.startLifetime = 6.5f;
+                    main.startSpeed = 0.20f;
+                    main.startSize = 0.10f;
+                    main.startColor = new Color(0.75f, 0.25f, 1.0f, 0.28f); // Surveillance violet
+                    main.gravityModifier = 0.005f;
+                    break;
+
+                case AtmosphereType.QuarantineStatic:
+                    main.startLifetime = 4.5f;
+                    main.startSpeed = 0.32f;
+                    main.startSize = 0.09f;
+                    main.startColor = new Color(1.0f, 0.18f, 0.22f, 0.38f); // Intense crimson/white sparks
+                    main.gravityModifier = -0.04f;
                     break;
             }
         }

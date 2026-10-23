@@ -16,7 +16,9 @@ namespace GlitchVerse.Atmosphere
             SubtleFluorescent,  // Chapter I: Abandoned facility fluorescent fixture hum
             MalfunctioningArc,  // Chapter II: Malfunctioning gravity chamber conduit spark
             SlowBreathing,      // Chapter III: Cold cryogenic stasis / containment core pulse
-            EmergencyStrobe     // Chapter IV: Quarantine emergency warning siren
+            EmergencyStrobe,    // Chapter IV: Quarantine emergency warning siren
+            SurveillanceGlow,   // Chapter V: Paranoia surveillance complex pulse
+            QuarantineAlarm     // Chapter VI: Quarantine Core pulsating alarm
         }
 
         [Header("Flicker Configuration")]
@@ -100,6 +102,19 @@ namespace GlitchVerse.Atmosphere
                     {
                         intensityModifier = 0.15f;
                     }
+                    break;
+
+                case FlickerMode.SurveillanceGlow:
+                    // Subtle nervous twitch / surveillance sweep
+                    float sWave = Mathf.Sin(timer * 3.5f) * 0.2f;
+                    float sNoise = (Mathf.PerlinNoise(seed + 99f, timer * 8f) - 0.5f) * 0.15f;
+                    intensityModifier = 1.0f + sWave + sNoise;
+                    break;
+
+                case FlickerMode.QuarantineAlarm:
+                    // Heavy deep pulsing dread alarm
+                    float qPulse = (Mathf.Sin(timer * 2.5f) + 1f) * 0.5f;
+                    intensityModifier = Mathf.Lerp(0.35f, 1.4f, qPulse);
                     break;
             }
 
