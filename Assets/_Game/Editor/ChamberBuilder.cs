@@ -11,23 +11,36 @@ using GlitchVerse.Echo;
 using GlitchVerse.Mechanics;
 using GlitchVerse.UI;
 using GlitchVerse.Narrative;
+using GlitchVerse.Atmosphere;
 
 namespace GlitchVerse.Editor
 {
     /// <summary>
     /// Autonomous Builder that procedurally creates stylized 2D sci-fi containment assets
     /// and constructs all four playable levels (Level01 to Level04) for GlitchVerse: Echo Protocol.
-    /// Follows emergency completion directive requirements.
+    /// PHASE 08: Atmospheric Environment Upgrade (The Last City) with chapter-distinct lighting,
+    /// cosmetic squash/stretch visual animation, rich layered depth, and environmental storytelling.
     /// </summary>
     public static class ChamberBuilder
     {
         private const string ArtPath = "Assets/_Game/Art";
         private const string LevelsPath = "Assets/_Game/Scenes/Levels";
 
+        public struct ChapterAtmosphereConfig
+        {
+            public Color ambientColor;
+            public float ambientIntensity;
+            public Color spawnLampColor;
+            public float spawnLampIntensity;
+            public FlickeringLight2D.FlickerMode spawnLampFlicker;
+            public AtmosphericParticleEmitter.AtmosphereType particleType;
+            public Color architectMonitorColor;
+        }
+
         [MenuItem("GlitchVerse/Build All Four Levels")]
         public static void BuildAll()
         {
-            Debug.Log("[ChamberBuilder] Beginning autonomous build of all 4 levels...");
+            Debug.Log("[ChamberBuilder] Beginning autonomous build of all 4 levels (Phase 08 Upgrade)...");
             GenerateProceduralSprites();
             
             ConstructLevel01Scene();
@@ -111,7 +124,7 @@ namespace GlitchVerse.Editor
             {
                 if (y <= 2) return new Color(0.08f, 0.09f, 0.12f, 1f);
                 if (x <= 4 || x >= 59) return new Color(0.35f, 0.15f, 0.40f, 1f);
-                if (y >= 6 && y <= 14 && x >= 10 && x <= 53) return new Color(0.85f, 0f, 1f, 1f); // Magenta glow
+                if (y >= 6 && y <= 14 && x >= 10 && x <= 53) return new Color(0.85f, 0f, 1f, 1f);
                 return new Color(0.18f, 0.12f, 0.22f, 1f);
             });
 
@@ -128,16 +141,16 @@ namespace GlitchVerse.Editor
             // 9. Freezable Hazard Laser (32x64) - Pulsing security laser
             CreateSpriteAsset("hazard_laser.png", 32, 64, (x, y) =>
             {
-                if (y <= 4 || y >= 59) return new Color(0.2f, 0.2f, 0.25f, 1f); // Metal emitter housing
-                if (x >= 12 && x <= 19) return new Color(1.0f, 0.2f, 0.3f, 1f); // Core laser beam
-                if (x >= 8 && x <= 23) return new Color(1.0f, 0.1f, 0.2f, 0.5f); // Red hazard aura
+                if (y <= 4 || y >= 59) return new Color(0.2f, 0.2f, 0.25f, 1f);
+                if (x >= 12 && x <= 19) return new Color(1.0f, 0.2f, 0.3f, 1f);
+                if (x >= 8 && x <= 23) return new Color(1.0f, 0.1f, 0.2f, 0.5f);
                 return Color.clear;
             });
 
             // 10. Dimension Alpha Platform (64x16) - Electric Cyan
             CreateSpriteAsset("dim_alpha_platform.png", 64, 16, (x, y) =>
             {
-                if (y >= 13) return new Color(0f, 0.94f, 1f, 1f); // Neon top edge
+                if (y >= 13) return new Color(0f, 0.94f, 1f, 1f);
                 if (x <= 2 || x >= 61 || y <= 2) return new Color(0f, 0.6f, 0.8f, 1f);
                 return new Color(0.08f, 0.20f, 0.28f, 1f);
             });
@@ -145,7 +158,7 @@ namespace GlitchVerse.Editor
             // 11. Dimension Beta Platform (64x16) - Vibrant Magenta
             CreateSpriteAsset("dim_beta_platform.png", 64, 16, (x, y) =>
             {
-                if (y >= 13) return new Color(1.0f, 0.15f, 0.85f, 1f); // Neon top edge
+                if (y >= 13) return new Color(1.0f, 0.15f, 0.85f, 1f);
                 if (x <= 2 || x >= 61 || y <= 2) return new Color(0.8f, 0.1f, 0.6f, 1f);
                 return new Color(0.28f, 0.08f, 0.24f, 1f);
             });
@@ -227,23 +240,211 @@ namespace GlitchVerse.Editor
             // 17. Trap Floor (64x64) - Floor tile with subtle warning hairline fissure cracks
             CreateSpriteAsset("trap_floor.png", 64, 64, (x, y) =>
             {
-                // Subtle jagged hairline fracture running across the tile
                 bool isCrack = (x >= 20 && x <= 22 && y >= 48 && y <= 59) ||
                                (x >= 22 && x <= 25 && y >= 38 && y <= 48) ||
                                (x >= 25 && x <= 28 && y >= 25 && y <= 38) ||
                                (x >= 28 && x <= 33 && y >= 12 && y <= 25) ||
                                (x >= 33 && x <= 36 && y >= 4 && y <= 12);
 
-                if (isCrack)
-                {
-                    return new Color(0.42f, 0.12f, 0.15f, 1f); // Faint crimson fracture
-                }
-
-                if (y >= 60) return new Color(0f, 0.94f, 1f, 1f); // Cyan top edge
+                if (isCrack) return new Color(0.42f, 0.12f, 0.15f, 1f);
+                if (y >= 60) return new Color(0f, 0.94f, 1f, 1f);
                 if (y == 59) return new Color(0f, 0.5f, 0.6f, 1f);
                 if (x % 16 == 0 || y % 16 == 0) return new Color(0.10f, 0.12f, 0.16f, 1f);
                 if ((x + y) % 8 == 0) return new Color(0.18f, 0.22f, 0.28f, 1f);
                 return new Color(0.14f, 0.17f, 0.22f, 1f);
+            });
+
+            // 18. Wall Grate (64x64) - Industrial ventilation grate with metallic louvers
+            CreateSpriteAsset("wall_grate.png", 64, 64, (x, y) =>
+            {
+                if (x <= 3 || x >= 60 || y <= 3 || y >= 60) return new Color(0.10f, 0.12f, 0.15f, 1f);
+                if ((x == 6 || x == 57) && (y == 6 || y == 57)) return new Color(0.45f, 0.50f, 0.58f, 1f);
+                if (x <= 6 || x >= 57 || y <= 6 || y >= 57) return new Color(0.06f, 0.08f, 0.10f, 1f);
+                int louverY = y % 8;
+                if (louverY == 0 || louverY == 1) return new Color(0.04f, 0.05f, 0.07f, 1f);
+                if (louverY == 2) return new Color(0.18f, 0.22f, 0.27f, 1f);
+                if (louverY >= 3 && louverY <= 6) return new Color(0.12f, 0.15f, 0.19f, 1f);
+                return new Color(0.08f, 0.10f, 0.13f, 1f);
+            });
+
+            // 19. Cable Bundle (64x32) - Sagging high-voltage industrial cables draped from ceiling
+            CreateSpriteAsset("cable_bundle.png", 64, 32, (x, y) =>
+            {
+                float t = (x - 32f) / 32f;
+                float sag1 = 28f - (t * t * 14f);
+                if (Mathf.Abs(y - sag1) <= 1.2f) return new Color(0.20f, 0.24f, 0.30f, 1f);
+
+                float sag2 = 24f - (t * t * 18f);
+                if (Mathf.Abs(y - sag2) <= 1.5f)
+                {
+                    if ((x / 4) % 2 == 0) return new Color(0.85f, 0.55f, 0.10f, 1f);
+                    return new Color(0.10f, 0.11f, 0.14f, 1f);
+                }
+
+                float sag3 = 20f - (t * t * 16f);
+                if (Mathf.Abs(y - sag3) <= 1.2f) return new Color(0.14f, 0.16f, 0.20f, 1f);
+
+                if ((x <= 6 || x >= 57) && y >= 22) return new Color(0.35f, 0.40f, 0.48f, 1f);
+                return Color.clear;
+            });
+
+            // 20. Hazard Stripes (64x16) - 45-degree angled containment caution stripes
+            CreateSpriteAsset("hazard_stripes.png", 64, 16, (x, y) =>
+            {
+                if (y == 0 || y == 15) return new Color(0.08f, 0.10f, 0.12f, 1f);
+                if (y == 14) return new Color(0.30f, 0.35f, 0.42f, 1f);
+                int diagonal = (x + y) % 16;
+                if (diagonal < 8) return new Color(0.88f, 0.58f, 0.08f, 1f);
+                return new Color(0.10f, 0.11f, 0.14f, 1f);
+            });
+
+            // 21. Subject 075 Wall Decal (64x32) - Stenciled containment identification
+            CreateSpriteAsset("decal_subject075.png", 64, 32, (x, y) =>
+            {
+                bool isCorner = ((x <= 4 || x >= 59) && (y <= 4 || y >= 27));
+                if (isCorner) return new Color(0.30f, 0.50f, 0.65f, 0.8f);
+
+                if (y >= 14 && y <= 18 && x >= 8 && x <= 55)
+                {
+                    if (x % 5 == 0) return Color.clear;
+                    return new Color(0.35f, 0.60f, 0.75f, 0.75f);
+                }
+                if (y >= 8 && y <= 10 && x >= 12 && x <= 51)
+                {
+                    if (x % 4 == 0) return Color.clear;
+                    return new Color(0.25f, 0.40f, 0.52f, 0.60f);
+                }
+                return Color.clear;
+            });
+
+            // 22. Quarantine Warning Decal (64x32) - Stenciled hazard symbol & biohazard alert
+            CreateSpriteAsset("decal_quarantine.png", 64, 32, (x, y) =>
+            {
+                if ((x == 4 || x == 59) && y >= 6 && y <= 25) return new Color(0.9f, 0.3f, 0.15f, 0.8f);
+                int dx = x - 18;
+                int dy = y - 16;
+                if (dx * dx + dy * dy <= 48)
+                {
+                    if (dx * dx + dy * dy <= 8) return Color.clear;
+                    return new Color(0.95f, 0.45f, 0.1f, 0.85f);
+                }
+                if (x >= 30 && x <= 58)
+                {
+                    if (y >= 18 && y <= 21 && (x % 4 != 0)) return new Color(0.9f, 0.35f, 0.15f, 0.8f);
+                    if (y >= 10 && y <= 13 && (x % 4 != 0)) return new Color(0.7f, 0.25f, 0.15f, 0.6f);
+                }
+                return Color.clear;
+            });
+
+            // 23. Lab Server Terminal (32x64) - Damaged scientific monitoring equipment
+            CreateSpriteAsset("lab_terminal.png", 32, 64, (x, y) =>
+            {
+                if (x <= 2 || x >= 29 || y <= 2 || y >= 61) return new Color(0.12f, 0.14f, 0.18f, 1f);
+                if (y >= 40 && y <= 57 && x >= 5 && x <= 26)
+                {
+                    if (x == 5 || x == 26 || y == 40 || y == 57) return new Color(0f, 0.94f, 1f, 0.7f);
+                    int waveY = 48 + (int)(Mathf.Sin(x * 0.6f) * 4f);
+                    if (y == waveY) return new Color(0f, 0.94f, 1f, 1f);
+                    return new Color(0.04f, 0.12f, 0.16f, 1f);
+                }
+                if (y >= 22 && y <= 36 && x >= 5 && x <= 26)
+                {
+                    if (y == 28 && (x == 8 || x == 14 || x == 20))
+                    {
+                        if (x == 8) return new Color(0f, 1f, 0.4f, 1f);
+                        if (x == 14) return new Color(1f, 0.7f, 0f, 1f);
+                        return new Color(0f, 0.8f, 1f, 1f);
+                    }
+                    if (y % 4 == 0) return new Color(0.08f, 0.10f, 0.12f, 1f);
+                    return new Color(0.16f, 0.19f, 0.24f, 1f);
+                }
+                if (y >= 6 && y <= 18 && x >= 6 && x <= 25)
+                {
+                    if (x % 4 == 0) return new Color(0.10f, 0.12f, 0.15f, 1f);
+                    return new Color(0.20f, 0.25f, 0.32f, 1f);
+                }
+                return new Color(0.10f, 0.12f, 0.15f, 1f);
+            });
+
+            // 24. Cryo Containment Pod (48x96) - Vertical specimen capsule
+            CreateSpriteAsset("containment_pod.png", 48, 96, (x, y) =>
+            {
+                if (y <= 12 || y >= 83)
+                {
+                    if (x <= 3 || x >= 44) return new Color(0.10f, 0.12f, 0.15f, 1f);
+                    if (y == 6 || y == 89) return new Color(0.35f, 0.40f, 0.48f, 1f);
+                    return new Color(0.18f, 0.22f, 0.28f, 1f);
+                }
+                if (x <= 6 || x >= 41) return new Color(0.14f, 0.18f, 0.24f, 1f);
+                if (x == 7 || x == 40) return new Color(0f, 0.8f, 0.95f, 0.6f);
+                float cy = (y - 48f) / 35f;
+                float alpha = 0.55f - (Mathf.Abs(cy) * 0.15f);
+                if (x >= 20 && x <= 27 && y >= 32 && y <= 64)
+                {
+                    return new Color(0.04f, 0.18f, 0.24f, 0.85f);
+                }
+                return new Color(0.02f, 0.30f, 0.40f, alpha);
+            });
+
+            // 25. Floor Debris (32x16) - Scrap metal, severed conduits, broken clamps
+            CreateSpriteAsset("floor_debris.png", 32, 16, (x, y) =>
+            {
+                if (x >= 4 && x <= 12 && y >= 2 && y <= 8 && (x + y <= 16))
+                {
+                    if (y == 7 || x == 11) return new Color(0.35f, 0.40f, 0.46f, 1f);
+                    return new Color(0.16f, 0.19f, 0.23f, 1f);
+                }
+                if (x >= 15 && x <= 22 && y >= 1 && y <= 5)
+                {
+                    if (x == 18) return new Color(0.85f, 0.55f, 0.1f, 1f);
+                    return new Color(0.24f, 0.28f, 0.34f, 1f);
+                }
+                if (x >= 24 && x <= 29 && y >= 2 && y <= 10 && ((x - 24) == (y - 2) || (x - 24) == (y - 3)))
+                {
+                    return new Color(0.28f, 0.32f, 0.38f, 1f);
+                }
+                return Color.clear;
+            });
+
+            // 26. Warning Beacon (24x24) - Wall-mounted alarm light with protective wire cage
+            CreateSpriteAsset("warning_beacon.png", 24, 24, (x, y) =>
+            {
+                if (y <= 5) return new Color(0.12f, 0.14f, 0.18f, 1f);
+                int dx = x - 12;
+                int dy = y - 14;
+                if (dx * dx + dy * dy <= 50)
+                {
+                    if (x == 8 || x == 12 || x == 16 || y == 14) return new Color(0.20f, 0.24f, 0.30f, 1f);
+                    return new Color(1.0f, 0.25f, 0.15f, 0.9f);
+                }
+                return Color.clear;
+            });
+
+            // 27. Distant Skyline Slit View (128x64) - Reinforced observation slit showing The Last City
+            CreateSpriteAsset("distant_skyline_vent.png", 128, 64, (x, y) =>
+            {
+                if (x <= 5 || x >= 122 || y <= 5 || y >= 58) return new Color(0.07f, 0.08f, 0.11f, 1f);
+                if (x == 42 || x == 85) return new Color(0.12f, 0.14f, 0.18f, 1f);
+                
+                float skyT = (float)(y - 6) / 52f;
+                Color skyColor = Color.Lerp(new Color(0.18f, 0.04f, 0.06f, 1f), new Color(0.04f, 0.02f, 0.04f, 1f), skyT);
+
+                bool isTower = (x >= 12 && x <= 26 && y <= 35) ||
+                               (x >= 32 && x <= 39 && y <= 45) ||
+                               (x >= 50 && x <= 68 && y <= 40) ||
+                               (x >= 75 && x <= 82 && y <= 30) ||
+                               (x >= 92 && x <= 116 && y <= 48);
+
+                if (isTower)
+                {
+                    if ((y == 35 && x == 19) || (y == 45 && x == 35) || (y == 40 && x == 59) || (y == 48 && x == 104))
+                    {
+                        return new Color(1.0f, 0.1f, 0.15f, 1f);
+                    }
+                    return new Color(0.05f, 0.03f, 0.05f, 1f);
+                }
+
+                return Color.Lerp(skyColor, new Color(0.05f, 0.10f, 0.14f, 1f), 0.25f);
             });
 
             AssetDatabase.Refresh();
@@ -299,7 +500,7 @@ namespace GlitchVerse.Editor
             public Text questionPromptText;
         }
 
-        private static BaseSceneRefs SetupBaseChamber(string sceneTitle, int chamberNum, string nextScene, bool isFinal, float? collapsingFloorGapX = null)
+        private static BaseSceneRefs SetupBaseChamber(string sceneTitle, int chamberNum, string nextScene, bool isFinal, ChapterAtmosphereConfig atmo, float? collapsingFloorGapX = null)
         {
             var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -325,16 +526,16 @@ namespace GlitchVerse.Editor
             cam.orthographic = true;
             cam.orthographicSize = 6.0f;
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.03f, 0.04f, 0.07f, 1f);
+            cam.backgroundColor = new Color(0.02f, 0.03f, 0.05f, 1f);
             camObj.AddComponent<AudioListener>();
             camObj.AddComponent<UniversalAdditionalCameraData>();
 
-            // 2. Lighting Rig
+            // 2. Lighting Rig (Chapter-specific atmospheric calibration)
             GameObject globalLightObj = new GameObject("Global Light 2D");
             Light2D globalLight = globalLightObj.AddComponent<Light2D>();
             globalLight.lightType = Light2D.LightType.Global;
-            globalLight.color = new Color(0.08f, 0.13f, 0.22f, 1f);
-            globalLight.intensity = 0.32f;
+            globalLight.color = atmo.ambientColor;
+            globalLight.intensity = atmo.ambientIntensity;
 
             GameObject architectSpotObj = new GameObject("Architect_Spotlight");
             architectSpotObj.transform.position = new Vector3(0f, 4.2f, 0f);
@@ -349,11 +550,36 @@ namespace GlitchVerse.Editor
             Light2D spawnLamp = spawnLampObj.AddComponent<Light2D>();
             spawnLamp.lightType = Light2D.LightType.Point;
             spawnLamp.pointLightOuterRadius = 4.5f;
-            spawnLamp.color = new Color(1.0f, 0.65f, 0.2f, 1f);
-            spawnLamp.intensity = 0.65f;
+            spawnLamp.color = atmo.spawnLampColor;
+            spawnLamp.intensity = atmo.spawnLampIntensity;
 
-            // 3. Background Architecture
+            FlickeringLight2D spawnFlicker = spawnLampObj.AddComponent<FlickeringLight2D>();
+            spawnFlicker.Mode = atmo.spawnLampFlicker;
+            spawnFlicker.BaseIntensity = atmo.spawnLampIntensity;
+
+            // 3. Background Architecture (Deep BG: -25, Mid BG: -15)
             GameObject bgRoot = new GameObject("--- BACKGROUND ---");
+
+            // Full industrial bulkhead background wall
+            GameObject bgWallGrid = new GameObject("BG_BackWallGrid");
+            bgWallGrid.transform.SetParent(bgRoot.transform);
+            bgWallGrid.transform.position = Vector3.zero;
+
+            for (float wx = -10f; wx <= 10f; wx += 2f)
+            {
+                for (float wy = -3f; wy <= 4f; wy += 2f)
+                {
+                    GameObject bgt = new GameObject($"BGTile_{wx}_{wy}");
+                    bgt.transform.SetParent(bgWallGrid.transform);
+                    bgt.transform.position = new Vector3(wx, wy, 0f);
+                    bgt.transform.localScale = new Vector3(2f, 2f, 1f);
+                    SpriteRenderer r = bgt.AddComponent<SpriteRenderer>();
+                    r.sprite = wallSp;
+                    r.sortingOrder = -22;
+                    r.color = new Color(0.20f, 0.24f, 0.30f, 0.55f);
+                }
+            }
+
             GameObject reactorObj = new GameObject("BG_ReactorCore");
             reactorObj.transform.SetParent(bgRoot.transform);
             reactorObj.transform.position = new Vector3(2.5f, 1.0f, 5.0f);
@@ -361,7 +587,7 @@ namespace GlitchVerse.Editor
             SpriteRenderer reactorRend = reactorObj.AddComponent<SpriteRenderer>();
             reactorRend.sprite = reactorSp;
             reactorRend.sortingOrder = -20;
-            reactorRend.color = new Color(1f, 1f, 1f, 0.45f);
+            reactorRend.color = new Color(1f, 1f, 1f, 0.40f);
 
             float[] pillarXs = new float[] { -7f, -1.5f, 4.5f };
             foreach (var px in pillarXs)
@@ -379,6 +605,13 @@ namespace GlitchVerse.Editor
             // 4. Perimeter Environment (Floor, Ceiling, Bulkheads)
             GameObject envRoot = new GameObject("--- ENVIRONMENT ---");
 
+            // Atmospheric Particle Emitter (Non-colliding, sortingOrder -5)
+            GameObject particleObj = new GameObject("Atmospheric_Particles");
+            particleObj.transform.SetParent(envRoot.transform);
+            particleObj.transform.position = Vector3.zero;
+            AtmosphericParticleEmitter emitter = particleObj.AddComponent<AtmosphericParticleEmitter>();
+            emitter.CurrentAtmosphere = atmo.particleType;
+
             // Floor
             GameObject floorComposite = new GameObject("Chamber_Floor");
             floorComposite.transform.SetParent(envRoot.transform);
@@ -387,8 +620,7 @@ namespace GlitchVerse.Editor
             if (collapsingFloorGapX.HasValue)
             {
                 float gapX = collapsingFloorGapX.Value;
-                float gapHalfWidth = 0.6f; // total gap 1.2m
-                // Left floor collider: from -12 to (gapX - gapHalfWidth)
+                float gapHalfWidth = 0.6f;
                 float leftMin = -12f;
                 float leftMax = gapX - gapHalfWidth;
                 float leftWidth = leftMax - leftMin;
@@ -398,7 +630,6 @@ namespace GlitchVerse.Editor
                 leftFloorCol.size = new Vector2(leftWidth, 1.0f);
                 leftFloorCol.offset = new Vector2(leftCenterX, 0f);
 
-                // Right floor collider: from (gapX + gapHalfWidth) to 12
                 float rightMin = gapX + gapHalfWidth;
                 float rightMax = 12f;
                 float rightWidth = rightMax - rightMin;
@@ -418,7 +649,7 @@ namespace GlitchVerse.Editor
             {
                 if (collapsingFloorGapX.HasValue && Mathf.Abs(x - collapsingFloorGapX.Value) < 0.6f)
                 {
-                    continue; // Skip static floor tile in the gap
+                    continue;
                 }
                 GameObject tile = new GameObject($"FloorTile_{x}");
                 tile.transform.SetParent(floorComposite.transform);
@@ -510,8 +741,26 @@ namespace GlitchVerse.Editor
             monTm.font = defaultFont;
             monTm.alignment = TextAlignment.Center;
             monTm.anchor = TextAnchor.MiddleCenter;
-            monTm.color = new Color(0f, 0.94f, 1f, 0.95f);
+            monTm.color = atmo.architectMonitorColor;
             monTextObj.GetComponent<MeshRenderer>().sortingOrder = 3;
+
+            // Foreground Framing Silhouettes (Corner Girders at sortingOrder 12, outside active play)
+            GameObject fgRoot = new GameObject("--- FOREGROUND ---");
+            GameObject tlGirder = new GameObject("FG_CornerGirder_TL");
+            tlGirder.transform.SetParent(fgRoot.transform);
+            tlGirder.transform.position = new Vector3(-10.5f, 5.2f, 0f);
+            SpriteRenderer tlRend = tlGirder.AddComponent<SpriteRenderer>();
+            tlRend.sprite = beamSp;
+            tlRend.sortingOrder = 12;
+            tlRend.color = new Color(0.10f, 0.12f, 0.15f, 0.85f);
+
+            GameObject trGirder = new GameObject("FG_CornerGirder_TR");
+            trGirder.transform.SetParent(fgRoot.transform);
+            trGirder.transform.position = new Vector3(10.5f, 5.2f, 0f);
+            SpriteRenderer trRend = trGirder.AddComponent<SpriteRenderer>();
+            trRend.sprite = beamSp;
+            trRend.sortingOrder = 12;
+            trRend.color = new Color(0.10f, 0.12f, 0.15f, 0.85f);
 
             // 5. Exit Blast Door
             GameObject puzzleRoot = new GameObject("--- PUZZLE ---");
@@ -550,7 +799,7 @@ namespace GlitchVerse.Editor
             SetPrivateField(exitComp, "doorStatusLightRenderer", doorRend);
             SetPrivateField(exitComp, "statusLight2D", doorLight);
 
-            // 6. Player Character
+            // 6. Player Character (Physics preserved 100%, cosmetic squash/stretch on Player_Visual)
             GameObject playerRoot = new GameObject("--- PLAYER ---");
             GameObject spawnObj = new GameObject("PlayerSpawnPoint");
             spawnObj.transform.SetParent(playerRoot.transform);
@@ -561,10 +810,6 @@ namespace GlitchVerse.Editor
             playerObj.transform.position = spawnObj.transform.position;
             playerObj.tag = "Player";
 
-            SpriteRenderer playerRend = playerObj.AddComponent<SpriteRenderer>();
-            playerRend.sprite = playerSp;
-            playerRend.sortingOrder = 5;
-
             BoxCollider2D playerCol = playerObj.AddComponent<BoxCollider2D>();
             playerCol.size = new Vector2(0.5f, 0.85f);
 
@@ -574,8 +819,17 @@ namespace GlitchVerse.Editor
             playerRb.freezeRotation = true;
             playerRb.mass = 1.0f;
 
+            // Visual representation child
+            GameObject visualObj = new GameObject("Player_Visual");
+            visualObj.transform.SetParent(playerObj.transform, false);
+            visualObj.transform.localPosition = Vector3.zero;
+
+            SpriteRenderer playerRend = visualObj.AddComponent<SpriteRenderer>();
+            playerRend.sprite = playerSp;
+            playerRend.sortingOrder = 5;
+
             GameObject visorLightObj = new GameObject("Player_VisorLight");
-            visorLightObj.transform.SetParent(playerObj.transform);
+            visorLightObj.transform.SetParent(visualObj.transform, false);
             visorLightObj.transform.localPosition = new Vector3(0.2f, 0.25f, 0f);
             Light2D visorLight = visorLightObj.AddComponent<Light2D>();
             visorLight.lightType = Light2D.LightType.Point;
@@ -593,6 +847,11 @@ namespace GlitchVerse.Editor
             SetPrivateField(playerCtrl, "moveSpeed", 6.5f);
             SetPrivateField(playerCtrl, "jumpForce", 11.5f);
 
+            PlayerVisualAnimator visualAnim = playerObj.AddComponent<PlayerVisualAnimator>();
+            visualAnim.VisualTransform = visualObj.transform;
+            visualAnim.SpriteRend = playerRend;
+            visualAnim.VisorLight = visorLight;
+
             AbilityController abilityCtrl = playerObj.AddComponent<AbilityController>();
 
             EchoRecorder echoRec = playerObj.AddComponent<EchoRecorder>();
@@ -602,7 +861,7 @@ namespace GlitchVerse.Editor
             SetPrivateField(echoPlay, "recorder", echoRec);
             SetPrivateField(echoPlay, "ghostSprite", ghostSp);
 
-            // 7. UI Canvas & HUD
+            // 7. UI Canvas & HUD (Preserved without redesign)
             GameObject uiRoot = new GameObject("--- UI_CANVAS ---");
             Canvas canvas = uiRoot.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
@@ -639,84 +898,104 @@ namespace GlitchVerse.Editor
                 new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 75f), new Vector2(800f, 35f), 
                 new Color(0f, 0.94f, 1f, 1f));
 
-            Text echoTxt = CreateUIText(uiRoot.transform, "EchoHintText", 
-                "[H] Replay Echo   [C] Clear", defaultFont, 18, TextAnchor.LowerRight,
-                new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-40f, 40f), new Vector2(400f, 35f), 
+            Text echoTxt = CreateUIText(uiRoot.transform, "EchoStatusText", 
+                "ECHO: READY [SPACE RECORD / C PLAY / H CLEAR]", defaultFont, 16, TextAnchor.LowerLeft,
+                new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 110f), new Vector2(800f, 35f), 
+                new Color(0.85f, 0f, 1f, 1f));
+
+            // Architect Subtitle Banner (Phase 07)
+            GameObject subBannerObj = new GameObject("ArchitectSubtitleBanner");
+            subBannerObj.transform.SetParent(uiRoot.transform, false);
+            RectTransform bannerRt = subBannerObj.AddComponent<RectTransform>();
+            bannerRt.anchorMin = new Vector2(0.15f, 0.78f);
+            bannerRt.anchorMax = new Vector2(0.85f, 0.88f);
+            bannerRt.offsetMin = Vector2.zero;
+            bannerRt.offsetMax = Vector2.zero;
+
+            Image bannerBg = subBannerObj.AddComponent<Image>();
+            bannerBg.color = new Color(0.02f, 0.04f, 0.08f, 0.88f);
+
+            Text subSpeakerTxt = CreateUIText(subBannerObj.transform, "SpeakerNameText",
+                "// THE ARCHITECT //", defaultFont, 14, TextAnchor.UpperLeft,
+                new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(16f, -6f), new Vector2(300f, 20f),
                 new Color(0f, 0.94f, 1f, 1f));
 
-            Text puzzleTxt = CreateUIText(uiRoot.transform, "PuzzleStatusText", 
-                "○ SENSOR: INACTIVE", defaultFont, 18, TextAnchor.UpperRight,
-                new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-40f, -35f), new Vector2(400f, 35f), 
-                new Color(0.6f, 0.65f, 0.72f, 1f));
-
-            Text doorTxt = CreateUIText(uiRoot.transform, "DoorStatusText", 
-                "EXIT DOOR: LOCKED", defaultFont, 18, TextAnchor.UpperRight,
-                new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-40f, -65f), new Vector2(400f, 35f), 
-                new Color(1.0f, 0.2f, 0.3f, 1f));
-
-            Text completeTxt = CreateUIText(uiRoot.transform, "CompletionBanner", 
-                "TEST COMPLETE\n<size=20><color=#00F0FF>SIMULATION PROTOCOL VALIDATED</color></size>", 
-                defaultFont, 36, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 140f), 
+            Text subContentTxt = CreateUIText(subBannerObj.transform, "SubtitleContentText",
+                "", defaultFont, 20, TextAnchor.MiddleLeft,
+                new Vector2(0f, 0f), new Vector2(1f, 0.75f), new Vector2(20f, 0f), new Vector2(-40f, 0f),
                 Color.white);
-            completeTxt.gameObject.SetActive(false);
-
-            LevelHUD hud = uiRoot.AddComponent<LevelHUD>();
-            SetPrivateField(hud, "titleText", titleTxt);
-            SetPrivateField(hud, "levelLabelText", levelTxt);
-            SetPrivateField(hud, "timerText", timerTxt);
-            SetPrivateField(hud, "instructionsText", instTxt);
-            SetPrivateField(hud, "abilityStatusText", abilityTxt);
-            SetPrivateField(hud, "puzzleStatusText", puzzleTxt);
-            SetPrivateField(hud, "doorStatusText", doorTxt);
-            SetPrivateField(hud, "echoHintText", echoTxt);
-            SetPrivateField(hud, "completionBannerText", completeTxt);
-            SetPrivateField(hud, "exitDoor", exitComp);
-            SetPrivateField(hud, "echoPlayback", echoPlay);
-            SetPrivateField(hud, "abilityController", abilityCtrl);
-
-            // 8. Core Management
-            GameObject coreRoot = new GameObject("--- CORE_MANAGEMENT ---");
-            GameObject directorObj = new GameObject("LevelDirector");
-            directorObj.transform.SetParent(coreRoot.transform);
-            LevelDirector director = directorObj.AddComponent<LevelDirector>();
-            SetPrivateField(director, "spawnPoint", spawnObj.transform);
-            SetPrivateField(director, "exitDoor", exitComp);
-            SetPrivateField(director, "levelTitle", sceneTitle);
-            SetPrivateField(director, "chamberNumber", chamberNum);
-            SetPrivateField(director, "nextSceneName", nextScene);
-            SetPrivateField(director, "isFinalLevel", isFinal);
-            SetPrivateField(hud, "levelDirector", director);
-
-            // 9. Narrative & Mind Games (Phase 07)
-            GameObject flashObj = new GameObject("GlitchFlashOverlay");
-            flashObj.transform.SetParent(uiRoot.transform, false);
-            RectTransform flashRt = flashObj.AddComponent<RectTransform>();
-            flashRt.anchorMin = Vector2.zero;
-            flashRt.anchorMax = Vector2.one;
-            flashRt.sizeDelta = Vector2.zero;
-            Image flashImg = flashObj.AddComponent<Image>();
-            flashImg.color = new Color(1f, 0f, 0.15f, 0f);
-            flashImg.raycastTarget = false;
-
-            Text subtitleTxt = CreateUIText(uiRoot.transform, "ArchitectSubtitleText", 
-                "", defaultFont, 22, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -120f), new Vector2(1000f, 60f), 
-                Color.white);
-            subtitleTxt.gameObject.SetActive(false);
+            subContentTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
 
             ArchitectDialogue dialogue = uiRoot.AddComponent<ArchitectDialogue>();
-            SetPrivateField(dialogue, "subtitleText", subtitleTxt);
-            SetPrivateField(dialogue, "flashOverlay", flashImg);
-            SetPrivateField(dialogue, "monitorTextMesh", monTm);
+            SetPrivateField(dialogue, "subtitleBannerPanel", subBannerObj);
+            SetPrivateField(dialogue, "speakerNameText", subSpeakerTxt);
+            SetPrivateField(dialogue, "dialogueContentText", subContentTxt);
 
-            ArchitectTriggers triggers = uiRoot.AddComponent<ArchitectTriggers>();
-            SetPrivateField(triggers, "levelDirector", director);
-            SetPrivateField(triggers, "abilityController", abilityCtrl);
-            SetPrivateField(triggers, "echoPlayback", echoPlay);
-            SetPrivateField(triggers, "exitDoor", exitComp);
+            GameObject completePanelObj = new GameObject("CompletionPanel");
+            completePanelObj.transform.SetParent(uiRoot.transform, false);
+            RectTransform compRt = completePanelObj.AddComponent<RectTransform>();
+            compRt.anchorMin = new Vector2(0.2f, 0.2f);
+            compRt.anchorMax = new Vector2(0.8f, 0.8f);
+            compRt.offsetMin = Vector2.zero;
+            compRt.offsetMax = Vector2.zero;
 
-            // 10. Chapter Intro System (Phase 07.5 Checkpoint 1)
+            Image compBg = completePanelObj.AddComponent<Image>();
+            compBg.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
+
+            Text compTitle = CreateUIText(completePanelObj.transform, "CompletionTitle", 
+                isFinal ? "SIMULATION TERMINATED // REALITY BREACHED" : "CONTAINMENT PROTOCOL CLEARED", 
+                defaultFont, 28, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f), Vector2.zero, new Vector2(800f, 50f), 
+                new Color(0f, 0.94f, 1f, 1f));
+
+            Text compStats = CreateUIText(completePanelObj.transform, "CompletionStats", 
+                "", defaultFont, 18, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), Vector2.zero, new Vector2(600f, 80f), 
+                Color.white);
+
+            Text compPrompt = CreateUIText(completePanelObj.transform, "CompletionPrompt", 
+                isFinal ? "[R] RESTART FROM CHAMBER 1" : "[SPACE] ADVANCE TO NEXT CHAMBER", 
+                defaultFont, 20, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), Vector2.zero, new Vector2(600f, 40f), 
+                new Color(1f, 0.7f, 0.2f, 1f));
+
+            completePanelObj.SetActive(false);
+
+            // 8. Level HUD Controller
+            LevelHUD hud = uiRoot.AddComponent<LevelHUD>();
+            SetPrivateField(hud, "titleText", titleTxt);
+            SetPrivateField(hud, "chamberText", levelTxt);
+            SetPrivateField(hud, "timerText", timerTxt);
+            SetPrivateField(hud, "abilityStatusText", abilityTxt);
+            SetPrivateField(hud, "echoStatusText", echoTxt);
+            SetPrivateField(hud, "instructionsText", instTxt);
+            SetPrivateField(hud, "completionPanel", completePanelObj);
+            SetPrivateField(hud, "completionTitleText", compTitle);
+            SetPrivateField(hud, "completionStatsText", compStats);
+            SetPrivateField(hud, "completionPromptText", compPrompt);
+            SetPrivateField(hud, "playerController", playerCtrl);
+            SetPrivateField(hud, "abilityController", abilityCtrl);
+            SetPrivateField(hud, "echoRecorder", echoRec);
+            SetPrivateField(hud, "echoPlayback", echoPlay);
+            SetPrivateField(hud, "exitDoor", exitComp);
+
+            // 9. Director and Triggers
+            GameObject directorObj = new GameObject("LevelDirector");
+            LevelDirector director = directorObj.AddComponent<LevelDirector>();
+            SetPrivateField(director, "currentChamberNumber", chamberNum);
+            SetPrivateField(director, "nextChamberSceneName", nextScene);
+            SetPrivateField(director, "isFinalChamber", isFinal);
+            SetPrivateField(director, "exitDoor", exitComp);
+            SetPrivateField(director, "player", playerCtrl);
+            SetPrivateField(director, "hud", hud);
+
+            ArchitectTriggers triggers = directorObj.AddComponent<ArchitectTriggers>();
+            SetPrivateField(triggers, "dialogueSystem", dialogue);
+            SetPrivateField(triggers, "player", playerCtrl);
+            SetPrivateField(triggers, "director", director);
+            SetPrivateField(triggers, "currentChamber", chamberNum);
+
+            // 10. Horror Chapter Introduction Overlay (Phase 07.5)
             GameObject introPanelObj = new GameObject("ChapterIntroPanel");
             introPanelObj.transform.SetParent(uiRoot.transform, false);
             RectTransform introRt = introPanelObj.AddComponent<RectTransform>();
@@ -724,15 +1003,13 @@ namespace GlitchVerse.Editor
             introRt.anchorMax = Vector2.one;
             introRt.offsetMin = Vector2.zero;
             introRt.offsetMax = Vector2.zero;
+
             Image introBg = introPanelObj.AddComponent<Image>();
             introBg.color = Color.black;
-            introBg.raycastTarget = true;
-            introPanelObj.AddComponent<CanvasGroup>();
-            introPanelObj.SetActive(false);
 
             Text introTitle = CreateUIText(introPanelObj.transform, "ChapterTitleText",
-                "", defaultFont, 44, TextAnchor.MiddleCenter,
-                new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.75f), Vector2.zero, Vector2.zero,
+                "", defaultFont, 48, TextAnchor.MiddleCenter,
+                new Vector2(0.1f, 0.48f), new Vector2(0.9f, 0.68f), Vector2.zero, Vector2.zero,
                 Color.white);
             introTitle.rectTransform.offsetMin = Vector2.zero;
             introTitle.rectTransform.offsetMax = Vector2.zero;
@@ -762,7 +1039,7 @@ namespace GlitchVerse.Editor
             SetPrivateField(introCtrl, "levelDirector", director);
             SetPrivateField(introCtrl, "player", playerCtrl);
 
-            // 11. Impossible Question Prompt UI (Phase 07.5 Checkpoint 3)
+            // 11. Impossible Question Prompt UI
             Text questionTxt = CreateUIText(uiRoot.transform, "ImpossibleQuestionPromptText",
                 "", defaultFont, 28, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(800f, 140f),
@@ -793,11 +1070,101 @@ namespace GlitchVerse.Editor
         #region Level 01: The First Lie (Tutorial & Basic Push)
         public static void ConstructLevel01Scene()
         {
-            var refs = SetupBaseChamber("CONTAINMENT 01 // FIRST LIE", 1, "Level02", false);
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.85f, 0.62f, 0.38f, 1f), // Warm amber emergency lighting
+                ambientIntensity = 0.78f,
+                spawnLampColor = new Color(1.0f, 0.68f, 0.22f, 1f),
+                spawnLampIntensity = 1.1f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.SubtleFluorescent,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.ContainmentDust,
+                architectMonitorColor = new Color(1.0f, 0.70f, 0.20f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 01 // FIRST LIE", 1, "Level02", false, atmo);
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite cubeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cube_crate.png");
             Sprite plateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pressure_plate.png");
+            Sprite grateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_grate.png");
+            Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
+            Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
+            Sprite subjDecalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_subject075.png");
+            Sprite debrisSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_debris.png");
+            Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
+
+            // Environmental Dressing: Ceiling Cables
+            float[] cableXs = new float[] { -6f, -2f, 2f, 6f };
+            foreach (var cx in cableXs)
+            {
+                GameObject cableObj = new GameObject($"Ceiling_Cables_{cx}");
+                cableObj.transform.SetParent(refs.envRoot.transform);
+                cableObj.transform.position = new Vector3(cx, 4.4f, 0f);
+                cableObj.transform.localScale = new Vector3(1.5f, 1.0f, 1f);
+                SpriteRenderer cRend = cableObj.AddComponent<SpriteRenderer>();
+                cRend.sprite = cableSp;
+                cRend.sortingOrder = -5;
+            }
+
+            // Wall Grate & Subject 075 Identification Decal near spawn
+            GameObject grateObj = new GameObject("Deco_WallGrate");
+            grateObj.transform.SetParent(refs.envRoot.transform);
+            grateObj.transform.position = new Vector3(-8.0f, -0.6f, 0f);
+            SpriteRenderer gRend = grateObj.AddComponent<SpriteRenderer>();
+            gRend.sprite = grateSp;
+            gRend.sortingOrder = -5;
+
+            GameObject subjDecalObj = new GameObject("Deco_Subject075_Decal");
+            subjDecalObj.transform.SetParent(refs.envRoot.transform);
+            subjDecalObj.transform.position = new Vector3(-8.0f, 1.2f, 0f);
+            SpriteRenderer sdRend = subjDecalObj.AddComponent<SpriteRenderer>();
+            sdRend.sprite = subjDecalSp;
+            sdRend.sortingOrder = -5;
+
+            // Hazard Warning Stripes on floor beneath Platform A
+            GameObject hazardObj = new GameObject("Deco_HazardStripes");
+            hazardObj.transform.SetParent(refs.envRoot.transform);
+            hazardObj.transform.position = new Vector3(-3.0f, -3.88f, 0f);
+            hazardObj.transform.localScale = new Vector3(3.2f, 0.25f, 1f);
+            SpriteRenderer hzRend = hazardObj.AddComponent<SpriteRenderer>();
+            hzRend.sprite = hazardSp;
+            hzRend.sortingOrder = 1;
+
+            // Floor Debris
+            GameObject debris1 = new GameObject("Deco_FloorDebris_1");
+            debris1.transform.SetParent(refs.envRoot.transform);
+            debris1.transform.position = new Vector3(-9.2f, -3.9f, 0f);
+            SpriteRenderer debRend1 = debris1.AddComponent<SpriteRenderer>();
+            debRend1.sprite = debrisSp;
+            debRend1.sortingOrder = 1;
+
+            GameObject debris2 = new GameObject("Deco_FloorDebris_2");
+            debris2.transform.SetParent(refs.envRoot.transform);
+            debris2.transform.position = new Vector3(5.5f, -3.9f, 0f);
+            SpriteRenderer debRend2 = debris2.AddComponent<SpriteRenderer>();
+            debRend2.sprite = debrisSp;
+            debRend2.sortingOrder = 1;
+
+            // Warning Beacon above Decoy Exit
+            GameObject beaconObj = new GameObject("Deco_WarningBeacon_Exit");
+            beaconObj.transform.SetParent(refs.puzzleRoot.transform);
+            beaconObj.transform.position = new Vector3(8.5f, -1.2f, 0f);
+            SpriteRenderer bRend = beaconObj.AddComponent<SpriteRenderer>();
+            bRend.sprite = beaconSp;
+            bRend.sortingOrder = 5;
+
+            GameObject beaconLightObj = new GameObject("Beacon_Light");
+            beaconLightObj.transform.SetParent(beaconObj.transform);
+            beaconLightObj.transform.localPosition = Vector3.zero;
+            Light2D bLight = beaconLightObj.AddComponent<Light2D>();
+            bLight.lightType = Light2D.LightType.Point;
+            bLight.pointLightOuterRadius = 2.2f;
+            bLight.color = new Color(1.0f, 0.65f, 0.15f, 1f);
+            bLight.intensity = 0.55f;
+
+            FlickeringLight2D bFlicker = beaconLightObj.AddComponent<FlickeringLight2D>();
+            bFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
+            bFlicker.BaseIntensity = 0.55f;
 
             // Observation Platform A (X: -4.5 to -1.5, Y: -1.0)
             GameObject platformA = new GameObject("Observation_Platform_A");
@@ -879,7 +1246,6 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.director, "pressurePlate", plateComp);
 
             // Checkpoint 2: Scripted Fake Exit Prank (Level 01)
-            // Decoy door stays at (8.5, -2.7). Real exit appears on Observation Platform A at (-3.0, 0.4).
             GameObject realDoorObj = Object.Instantiate(refs.exitDoor.gameObject, refs.puzzleRoot.transform);
             realDoorObj.name = "RealExitDoor_PlatformA";
             realDoorObj.transform.position = new Vector3(-3.0f, 0.4f, 0f);
@@ -898,13 +1264,28 @@ namespace GlitchVerse.Editor
         #region Level 02: Gravity Is A Suggestion (Gravity Inversion & Echo Replay)
         public static void ConstructLevel02Scene()
         {
-            var refs = SetupBaseChamber("CONTAINMENT 02 // GRAVITY ECHO", 2, "Level03", false, collapsingFloorGapX: 1.0f);
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.38f, 0.68f, 0.82f, 1f), // Cool desaturated slate-blue/teal
+                ambientIntensity = 0.72f,
+                spawnLampColor = new Color(0.40f, 0.85f, 1.0f, 1f),
+                spawnLampIntensity = 1.0f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.MalfunctioningArc,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.GravityAnomalies,
+                architectMonitorColor = new Color(0.25f, 0.85f, 1.0f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 02 // GRAVITY ECHO", 2, "Level03", false, atmo, collapsingFloorGapX: 1.0f);
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite trapFloorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/trap_floor.png");
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
+            Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
+            Sprite debrisSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_debris.png");
+            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
 
-            // Checkpoint 2: Collapsing Floor Betrayal Trap (Level 02)
+            // Collapsing Floor Betrayal Trap (Level 02)
             GameObject trapTileObj = new GameObject("CollapsingFloorTrap");
             trapTileObj.transform.SetParent(refs.puzzleRoot.transform);
             trapTileObj.transform.position = new Vector3(1.0f, -4.0f, 0f);
@@ -922,6 +1303,48 @@ namespace GlitchVerse.Editor
 
             // Enable Gravity Inversion power on player
             refs.abilityCtrl.AllowGravity = true;
+
+            // Environmental Dressing: Suspended inverted machinery in mid-air background
+            GameObject floatDebris1 = new GameObject("Deco_FloatingMachinery_1");
+            floatDebris1.transform.SetParent(refs.envRoot.transform);
+            floatDebris1.transform.position = new Vector3(-1.5f, 1.8f, 0f);
+            floatDebris1.transform.localScale = new Vector3(1.2f, -1.2f, 1f);
+            SpriteRenderer fdRend1 = floatDebris1.AddComponent<SpriteRenderer>();
+            fdRend1.sprite = pillarSp;
+            fdRend1.sortingOrder = -15;
+            fdRend1.color = new Color(0.6f, 0.75f, 0.85f, 0.35f);
+
+            GameObject floatDebris2 = new GameObject("Deco_FloatingMachinery_2");
+            floatDebris2.transform.SetParent(refs.envRoot.transform);
+            floatDebris2.transform.position = new Vector3(2.5f, 2.4f, 0f);
+            floatDebris2.transform.localScale = new Vector3(0.8f, -0.8f, 1f);
+            SpriteRenderer fdRend2 = floatDebris2.AddComponent<SpriteRenderer>();
+            fdRend2.sprite = debrisSp;
+            fdRend2.sortingOrder = -15;
+            fdRend2.color = new Color(0.7f, 0.85f, 0.95f, 0.45f);
+
+            // Inverted Ceiling Cable Bundles
+            GameObject ceilCables = new GameObject("Deco_CeilingCables_Inverted");
+            ceilCables.transform.SetParent(refs.envRoot.transform);
+            ceilCables.transform.position = new Vector3(-4.0f, 4.3f, 0f);
+            ceilCables.transform.localScale = new Vector3(1.6f, -1.0f, 1f);
+            SpriteRenderer ccRend = ceilCables.AddComponent<SpriteRenderer>();
+            ccRend.sprite = cableSp;
+            ccRend.sortingOrder = -5;
+
+            // Malfunctioning light fixture near ceiling catwalk
+            GameObject malfLightObj = new GameObject("Malf_CeilingLamp");
+            malfLightObj.transform.SetParent(refs.envRoot.transform);
+            malfLightObj.transform.position = new Vector3(-4.0f, 2.8f, 0f);
+            Light2D malfLight = malfLightObj.AddComponent<Light2D>();
+            malfLight.lightType = Light2D.LightType.Point;
+            malfLight.pointLightOuterRadius = 3.5f;
+            malfLight.color = new Color(0.3f, 0.8f, 1.0f, 1f);
+            malfLight.intensity = 0.5f;
+
+            FlickeringLight2D malfFlicker = malfLightObj.AddComponent<FlickeringLight2D>();
+            malfFlicker.Mode = FlickeringLight2D.FlickerMode.MalfunctioningArc;
+            malfFlicker.BaseIntensity = 0.5f;
 
             // Elevated Exit Doorway at (X: 8.5, Y: 0.5)
             refs.exitDoor.transform.position = new Vector3(8.5f, 0.5f, 0f);
@@ -962,11 +1385,20 @@ namespace GlitchVerse.Editor
                 rend.sortingOrder = 1;
             }
 
+            // Hazard stripe trim on ceiling catwalk
+            GameObject ceilHazard = new GameObject("Deco_CeilCatwalk_Hazard");
+            ceilHazard.transform.SetParent(ceilingCatwalk.transform);
+            ceilHazard.transform.position = new Vector3(-4.0f, 3.98f, 0f);
+            ceilHazard.transform.localScale = new Vector3(4.2f, -0.2f, 1f);
+            SpriteRenderer chRend = ceilHazard.AddComponent<SpriteRenderer>();
+            chRend.sprite = hazardSp;
+            chRend.sortingOrder = 2;
+
             // EchoSwitch mounted on the ceiling catwalk at (-4.0, 3.5)
             GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
             echoSwitchObj.transform.SetParent(refs.puzzleRoot.transform);
             echoSwitchObj.transform.position = new Vector3(-4.0f, 3.5f, 0f);
-            echoSwitchObj.transform.localScale = new Vector3(1.0f, -1.0f, 1f); // Inverted mounting
+            echoSwitchObj.transform.localScale = new Vector3(1.0f, -1.0f, 1f);
 
             SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
             switchRend.sprite = echoSwitchSp;
@@ -1005,15 +1437,91 @@ namespace GlitchVerse.Editor
         #region Level 03: The Past Is Your Enemy (Time Freeze & Moving Hazards)
         public static void ConstructLevel03Scene()
         {
-            var refs = SetupBaseChamber("CONTAINMENT 03 // TEMPORAL FREEZE", 3, "Level04", false);
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.30f, 0.72f, 0.90f, 1f), // Cold cobalt/cyan laboratory lighting
+                ambientIntensity = 0.70f,
+                spawnLampColor = new Color(0f, 0.94f, 1f, 1f),
+                spawnLampIntensity = 1.05f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.SlowBreathing,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.CryoStasisMist,
+                architectMonitorColor = new Color(0f, 0.94f, 1f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 03 // TEMPORAL FREEZE", 3, "Level04", false, atmo);
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
             Sprite plateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pressure_plate.png");
             Sprite cubeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cube_crate.png");
+            Sprite terminalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/lab_terminal.png");
+            Sprite podSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/containment_pod.png");
+            Sprite quarantineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png");
+            Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
 
             // Enable Time Freeze (F)
             refs.abilityCtrl.AllowTimeFreeze = true;
+
+            // Environmental Dressing: Damaged Scientific Terminals
+            GameObject terminal1 = new GameObject("Deco_LabTerminal_1");
+            terminal1.transform.SetParent(refs.envRoot.transform);
+            terminal1.transform.position = new Vector3(-7.5f, -2.5f, 0f);
+            SpriteRenderer termRend1 = terminal1.AddComponent<SpriteRenderer>();
+            termRend1.sprite = terminalSp;
+            termRend1.sortingOrder = -5;
+
+            GameObject terminal2 = new GameObject("Deco_LabTerminal_2");
+            terminal2.transform.SetParent(refs.envRoot.transform);
+            terminal2.transform.position = new Vector3(8.5f, -0.5f, 0f);
+            SpriteRenderer termRend2 = terminal2.AddComponent<SpriteRenderer>();
+            termRend2.sprite = terminalSp;
+            termRend2.sortingOrder = -5;
+
+            // Cryo Containment Specimen Pods
+            GameObject pod1 = new GameObject("Deco_CryoPod_1");
+            pod1.transform.SetParent(refs.envRoot.transform);
+            pod1.transform.position = new Vector3(-4.8f, -2.0f, 0f);
+            SpriteRenderer podRend1 = pod1.AddComponent<SpriteRenderer>();
+            podRend1.sprite = podSp;
+            podRend1.sortingOrder = -8;
+
+            GameObject podLight1Obj = new GameObject("Pod_Glow_1");
+            podLight1Obj.transform.SetParent(pod1.transform);
+            podLight1Obj.transform.localPosition = Vector3.zero;
+            Light2D podLight1 = podLight1Obj.AddComponent<Light2D>();
+            podLight1.lightType = Light2D.LightType.Point;
+            podLight1.pointLightOuterRadius = 2.2f;
+            podLight1.color = new Color(0f, 0.94f, 1f, 1f);
+            podLight1.intensity = 0.45f;
+
+            FlickeringLight2D podFlicker1 = podLight1Obj.AddComponent<FlickeringLight2D>();
+            podFlicker1.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
+            podFlicker1.BaseIntensity = 0.45f;
+
+            GameObject pod2 = new GameObject("Deco_CryoPod_2");
+            pod2.transform.SetParent(refs.envRoot.transform);
+            pod2.transform.position = new Vector3(4.5f, -2.0f, 0f);
+            SpriteRenderer podRend2 = pod2.AddComponent<SpriteRenderer>();
+            podRend2.sprite = podSp;
+            podRend2.sortingOrder = -8;
+
+            // Quarantine Warning Decal
+            GameObject guarDecal = new GameObject("Deco_QuarantineAlert");
+            guarDecal.transform.SetParent(refs.envRoot.transform);
+            guarDecal.transform.position = new Vector3(0f, 2.5f, 0f);
+            SpriteRenderer qdRend = guarDecal.AddComponent<SpriteRenderer>();
+            qdRend.sprite = quarantineSp;
+            qdRend.sortingOrder = -5;
+
+            // High Contrast Dark Backdrop behind the Echo puzzle flight path (X: -2 to 3)
+            GameObject echoContrastBackdrop = new GameObject("EchoPath_ContrastBackdrop");
+            echoContrastBackdrop.transform.SetParent(refs.envRoot.transform);
+            echoContrastBackdrop.transform.position = new Vector3(0.5f, -1.5f, 0f);
+            echoContrastBackdrop.transform.localScale = new Vector3(5.5f, 3.5f, 1f);
+            SpriteRenderer ecbRend = echoContrastBackdrop.AddComponent<SpriteRenderer>();
+            ecbRend.sprite = wallSp;
+            ecbRend.sortingOrder = -12;
+            ecbRend.color = new Color(0.04f, 0.06f, 0.09f, 0.95f); // Deep dark backdrop ensures Echo ghost stands out!
 
             // Checkpoint 3: Impossible Question Forced-Death Prank (Level 03)
             GameObject questionPrankObj = new GameObject("ImpossibleQuestionPrankController");
@@ -1022,7 +1530,7 @@ namespace GlitchVerse.Editor
             SetPrivateField(questionPrank, "questionPromptText", refs.questionPromptText);
             SetPrivateField(questionPrank, "triggerX", -4.0f);
 
-            // Moving Freezable Hazard Laser 1 patrolling X = -1.5, sweeping Y between -3.5 and 0.5
+            // Moving Freezable Hazard Laser 1
             GameObject hazardObj1 = new GameObject("FreezableLaser_Barrier_1");
             hazardObj1.transform.SetParent(refs.puzzleRoot.transform);
             hazardObj1.transform.position = new Vector3(-2.0f, -3.5f, 0f);
@@ -1030,6 +1538,15 @@ namespace GlitchVerse.Editor
             SpriteRenderer hazRend1 = hazardObj1.AddComponent<SpriteRenderer>();
             hazRend1.sprite = hazardSp;
             hazRend1.sortingOrder = 3;
+
+            GameObject hazLight1 = new GameObject("Hazard1_Glow");
+            hazLight1.transform.SetParent(hazardObj1.transform);
+            hazLight1.transform.localPosition = Vector3.zero;
+            Light2D hl1 = hazLight1.AddComponent<Light2D>();
+            hl1.lightType = Light2D.LightType.Point;
+            hl1.pointLightOuterRadius = 1.8f;
+            hl1.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            hl1.intensity = 0.6f;
 
             BoxCollider2D hazCol1 = hazardObj1.AddComponent<BoxCollider2D>();
             hazCol1.size = new Vector2(0.5f, 1.8f);
@@ -1041,7 +1558,7 @@ namespace GlitchVerse.Editor
             SetPrivateField(hazardComp1, "moveSpeed", 2.8f);
             SetPrivateField(hazardComp1, "hazardRenderer", hazRend1);
 
-            // Moving Freezable Hazard Laser 2 patrolling X = +2.5, sweeping vertically opposite
+            // Moving Freezable Hazard Laser 2
             GameObject hazardObj2 = new GameObject("FreezableLaser_Barrier_2");
             hazardObj2.transform.SetParent(refs.puzzleRoot.transform);
             hazardObj2.transform.position = new Vector3(2.0f, 0.5f, 0f);
@@ -1049,6 +1566,15 @@ namespace GlitchVerse.Editor
             SpriteRenderer hazRend2 = hazardObj2.AddComponent<SpriteRenderer>();
             hazRend2.sprite = hazardSp;
             hazRend2.sortingOrder = 3;
+
+            GameObject hazLight2 = new GameObject("Hazard2_Glow");
+            hazLight2.transform.SetParent(hazardObj2.transform);
+            hazLight2.transform.localPosition = Vector3.zero;
+            Light2D hl2 = hazLight2.AddComponent<Light2D>();
+            hl2.lightType = Light2D.LightType.Point;
+            hl2.pointLightOuterRadius = 1.8f;
+            hl2.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            hl2.intensity = 0.6f;
 
             BoxCollider2D hazCol2 = hazardObj2.AddComponent<BoxCollider2D>();
             hazCol2.size = new Vector2(0.5f, 1.8f);
@@ -1108,16 +1634,110 @@ namespace GlitchVerse.Editor
         #region Level 04: Break The System (Dimension Shift & Grand Finale)
         public static void ConstructLevel04Scene()
         {
-            var refs = SetupBaseChamber("CONTAINMENT 04 // REALITY BREACH", 4, "", true);
+            var atmo = new ChapterAtmosphereConfig
+            {
+                ambientColor = new Color(0.92f, 0.32f, 0.36f, 1f), // Deep emergency crimson/red
+                ambientIntensity = 0.76f,
+                spawnLampColor = new Color(1.0f, 0.22f, 0.18f, 1f),
+                spawnLampIntensity = 1.2f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.EmergencyStrobe,
+                particleType = AtmosphericParticleEmitter.AtmosphereType.EmergencyEmbers,
+                architectMonitorColor = new Color(1.0f, 0.25f, 0.20f, 0.95f)
+            };
+
+            var refs = SetupBaseChamber("CONTAINMENT 04 // REALITY BREACH", 4, "", true, atmo);
 
             Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
             Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite skylineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/distant_skyline_vent.png");
+            Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
+            Sprite quarantineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png");
+            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
 
             // Unlock ALL powers for the finale: Gravity (G), Time Freeze (F), Dimension Swap (Q)
             refs.abilityCtrl.AllowGravity = true;
             refs.abilityCtrl.AllowTimeFreeze = true;
             refs.abilityCtrl.AllowDimensionSwap = true;
+
+            // Environmental Storytelling: Distant Skyline Observation Slit (The Last City)
+            GameObject skylineObj = new GameObject("Deco_DistantSkyline_Vent");
+            skylineObj.transform.SetParent(refs.envRoot.transform);
+            skylineObj.transform.position = new Vector3(0f, 2.2f, 0f);
+            skylineObj.transform.localScale = new Vector3(1.8f, 1.4f, 1f);
+            SpriteRenderer skyRend = skylineObj.AddComponent<SpriteRenderer>();
+            skyRend.sprite = skylineSp;
+            skyRend.sortingOrder = -25; // Deepest background layer
+
+            // Heavy Brutalist Bulkhead Columns
+            float[] colXs = new float[] { -8.5f, -2.5f, 3.5f };
+            foreach (var cx in colXs)
+            {
+                GameObject col = new GameObject($"Deco_BulkheadCol_{cx}");
+                col.transform.SetParent(refs.envRoot.transform);
+                col.transform.position = new Vector3(cx, 1.0f, 0f);
+                col.transform.localScale = new Vector3(1.6f, 2.2f, 1f);
+                SpriteRenderer colR = col.AddComponent<SpriteRenderer>();
+                colR.sprite = pillarSp;
+                colR.sortingOrder = -15;
+                colR.color = new Color(0.18f, 0.12f, 0.14f, 0.85f);
+            }
+
+            // Stenciled Quarantine Warning Decals
+            GameObject qd1 = new GameObject("Deco_Quarantine_1");
+            qd1.transform.SetParent(refs.envRoot.transform);
+            qd1.transform.position = new Vector3(-6.0f, -1.0f, 0f);
+            SpriteRenderer qdR1 = qd1.AddComponent<SpriteRenderer>();
+            qdR1.sprite = quarantineSp;
+            qdR1.sortingOrder = -5;
+
+            GameObject qd2 = new GameObject("Deco_Quarantine_2");
+            qd2.transform.SetParent(refs.envRoot.transform);
+            qd2.transform.position = new Vector3(5.0f, -0.5f, 0f);
+            SpriteRenderer qdR2 = qd2.AddComponent<SpriteRenderer>();
+            qdR2.sprite = quarantineSp;
+            qdR2.sortingOrder = -5;
+
+            // Flashing Emergency Wall Alarm Beacons
+            GameObject leftBeacon = new GameObject("Deco_EmergencyBeacon_L");
+            leftBeacon.transform.SetParent(refs.envRoot.transform);
+            leftBeacon.transform.position = new Vector3(-9.5f, 1.0f, 0f);
+            SpriteRenderer lbRend = leftBeacon.AddComponent<SpriteRenderer>();
+            lbRend.sprite = beaconSp;
+            lbRend.sortingOrder = 5;
+
+            GameObject lbLightObj = new GameObject("Beacon_Light_L");
+            lbLightObj.transform.SetParent(leftBeacon.transform);
+            lbLightObj.transform.localPosition = Vector3.zero;
+            Light2D lbLight = lbLightObj.AddComponent<Light2D>();
+            lbLight.lightType = Light2D.LightType.Point;
+            lbLight.pointLightOuterRadius = 3.5f;
+            lbLight.color = new Color(1.0f, 0.12f, 0.15f, 1f);
+            lbLight.intensity = 0.8f;
+
+            FlickeringLight2D lbFlicker = lbLightObj.AddComponent<FlickeringLight2D>();
+            lbFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
+            lbFlicker.BaseIntensity = 0.8f;
+
+            GameObject rightBeacon = new GameObject("Deco_EmergencyBeacon_R");
+            rightBeacon.transform.SetParent(refs.envRoot.transform);
+            rightBeacon.transform.position = new Vector3(9.5f, 1.0f, 0f);
+            SpriteRenderer rbRend = rightBeacon.AddComponent<SpriteRenderer>();
+            rbRend.sprite = beaconSp;
+            rbRend.sortingOrder = 5;
+
+            GameObject rbLightObj = new GameObject("Beacon_Light_R");
+            rbLightObj.transform.SetParent(rightBeacon.transform);
+            rbLightObj.transform.localPosition = Vector3.zero;
+            Light2D rbLight = rbLightObj.AddComponent<Light2D>();
+            rbLight.lightType = Light2D.LightType.Point;
+            rbLight.pointLightOuterRadius = 3.5f;
+            rbLight.color = new Color(1.0f, 0.12f, 0.15f, 1f);
+            rbLight.intensity = 0.8f;
+
+            FlickeringLight2D rbFlicker = rbLightObj.AddComponent<FlickeringLight2D>();
+            rbFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
+            rbFlicker.BaseIntensity = 0.8f;
 
             // Checkpoint 4: Fake Checkpoint Dialogue Prank (Level 04)
             GameObject fakeCheckpointObj = new GameObject("FakeCheckpointPrankController");
