@@ -63,6 +63,27 @@ namespace GlitchVerse.Editor
             ConstructLevel01Scene();
         }
 
+        [MenuItem("GlitchVerse/Build Level 02 (Inversion Upgrade)")]
+        public static void BuildLevel02()
+        {
+            GenerateProceduralSprites();
+            ConstructLevel02Scene();
+        }
+
+        [MenuItem("GlitchVerse/Build Level 03 (Betrayal Upgrade)")]
+        public static void BuildLevel03()
+        {
+            GenerateProceduralSprites();
+            ConstructLevel03Scene();
+        }
+
+        [MenuItem("GlitchVerse/Build Level 04 (Revelation Upgrade)")]
+        public static void BuildLevel04()
+        {
+            GenerateProceduralSprites();
+            ConstructLevel04Scene();
+        }
+
         [MenuItem("GlitchVerse/Build Level 05 (Paranoia)")]
         public static void BuildLevel05()
         {
@@ -272,17 +293,19 @@ namespace GlitchVerse.Editor
                 return new Color(0.07f, 0.08f, 0.11f, 0.9f);
             });
 
-            // 17. Trap Floor (64x64) - Floor tile with subtle warning hairline fissure cracks
+            // 17. Trap Floor (64x64) - Floor tile with visible amber stress fissure cracks
             CreateSpriteAsset("trap_floor.png", 64, 64, (x, y) =>
             {
-                bool isCrack = (x >= 20 && x <= 22 && y >= 48 && y <= 59) ||
-                               (x >= 22 && x <= 25 && y >= 38 && y <= 48) ||
-                               (x >= 25 && x <= 28 && y >= 25 && y <= 38) ||
-                               (x >= 28 && x <= 33 && y >= 12 && y <= 25) ||
+                bool isCrack = (x >= 20 && x <= 23 && y >= 46 && y <= 59) ||
+                               (x >= 23 && x <= 26 && y >= 36 && y <= 46) ||
+                               (x >= 26 && x <= 29 && y >= 24 && y <= 36) ||
+                               (x >= 29 && x <= 33 && y >= 12 && y <= 24) ||
                                (x >= 33 && x <= 36 && y >= 4 && y <= 12);
 
-                if (isCrack) return new Color(0.42f, 0.12f, 0.15f, 1f);
-                if (y >= 60) return new Color(0f, 0.94f, 1f, 1f);
+                if (isCrack) return new Color(1.0f, 0.55f, 0.12f, 1f); // Distinct glowing amber fissure
+                if (y >= 60 && (x < 19 || x > 24)) return new Color(0f, 0.94f, 1f, 1f);
+                if (y >= 60) return new Color(1.0f, 0.45f, 0.1f, 1f); // Faulty/fractured top edge at crack
+                if (y == 59 && (x >= 19 && x <= 24)) return new Color(1.0f, 0.35f, 0.1f, 1f);
                 if (y == 59) return new Color(0f, 0.5f, 0.6f, 1f);
                 if (x % 16 == 0 || y % 16 == 0) return new Color(0.10f, 0.12f, 0.16f, 1f);
                 if ((x + y) % 8 == 0) return new Color(0.18f, 0.22f, 0.28f, 1f);
@@ -1674,10 +1697,19 @@ namespace GlitchVerse.Editor
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
             Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
             Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
+            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
             Sprite debrisSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_debris.png");
             Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
 
-            // Collapsing Floor Betrayal Trap (Level 02)
+            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") 
+                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+
+            // Enable Gravity Inversion power on player
+            refs.abilityCtrl.AllowGravity = true;
+
+            // =========================================================
+            // 1. COLLAPSING FLOOR BETRAYAL TRAP WITH VISUAL WARNING CLUE
+            // =========================================================
             GameObject trapTileObj = new GameObject("CollapsingFloorTrap");
             trapTileObj.transform.SetParent(refs.puzzleRoot.transform);
             trapTileObj.transform.position = new Vector3(1.0f, -4.0f, 0f);
@@ -1689,14 +1721,280 @@ namespace GlitchVerse.Editor
             BoxCollider2D trapCol = trapTileObj.AddComponent<BoxCollider2D>();
             trapCol.size = new Vector2(1.2f, 1.0f);
 
+            // Visual clue: Caution light glowing with amber structural stress pulse
+            GameObject trapLightObj = new GameObject("Trap_CautionLight");
+            trapLightObj.transform.SetParent(trapTileObj.transform);
+            trapLightObj.transform.localPosition = new Vector3(0f, 0.3f, 0f);
+            Light2D trapLight = trapLightObj.AddComponent<Light2D>();
+            trapLight.lightType = Light2D.LightType.Point;
+            trapLight.pointLightOuterRadius = 1.6f;
+            trapLight.color = new Color(1.0f, 0.55f, 0.12f, 1f);
+            trapLight.intensity = 0.75f;
+
+            FlickeringLight2D trapFlicker = trapLightObj.AddComponent<FlickeringLight2D>();
+            trapFlicker.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
+            trapFlicker.BaseIntensity = 0.75f;
+
             CollapsingFloor trapComp = trapTileObj.AddComponent<CollapsingFloor>();
             SetPrivateField(trapComp, "floorRenderer", trapRend);
             SetPrivateField(trapComp, "solidCollider", trapCol);
+            SetPrivateField(trapComp, "cautionLight", trapLight);
 
-            // Enable Gravity Inversion power on player
-            refs.abilityCtrl.AllowGravity = true;
+            // =========================================================
+            // 2. ZONE 1: FLOOR HAZARD (TEACHES "FLOOR IS DANGER, FLIP UP")
+            // =========================================================
+            // Blocks walking forward along floor between X: -4.8 and -1.8
+            GameObject floorHazardObj = new GameObject("FloorHazard_Zone1");
+            floorHazardObj.transform.SetParent(refs.puzzleRoot.transform);
+            floorHazardObj.transform.position = new Vector3(-3.3f, -3.6f, 0f);
 
-            // Environmental Dressing: Suspended inverted machinery in mid-air background
+            SpriteRenderer fhRend = floorHazardObj.AddComponent<SpriteRenderer>();
+            fhRend.sprite = laserSp;
+            fhRend.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            fhRend.sortingOrder = 7;
+            fhRend.drawMode = SpriteDrawMode.Sliced;
+            fhRend.size = new Vector2(3.2f, 0.8f);
+
+            BoxCollider2D fhCol = floorHazardObj.AddComponent<BoxCollider2D>();
+            fhCol.isTrigger = true;
+            fhCol.size = new Vector2(3.2f, 0.8f);
+
+            GameObject fhLightObj = new GameObject("FloorHazard_Light");
+            fhLightObj.transform.SetParent(floorHazardObj.transform);
+            fhLightObj.transform.localPosition = Vector3.zero;
+            Light2D fhLight = fhLightObj.AddComponent<Light2D>();
+            fhLight.lightType = Light2D.LightType.Point;
+            fhLight.pointLightOuterRadius = 3.2f;
+            fhLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
+            fhLight.intensity = 1.3f;
+
+            MovingLaserHazard fhComp = floorHazardObj.AddComponent<MovingLaserHazard>();
+            fhComp.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(-3.3f, -3.6f, 0f), new Vector3(-3.3f, -3.6f, 0f), 0f, 0f, startActive: true);
+            SetPrivateField(fhComp, "laserRenderer", fhRend);
+            SetPrivateField(fhComp, "laserLight", fhLight);
+            SetPrivateField(fhComp, "activeOnStart", true);
+            fhComp.SetHazardActive(true);
+
+            // =========================================================
+            // 3. INVERTED CEILING CATWALK & ECHO SWITCH (X: -6.0 to -1.5, Y: 3.8)
+            // =========================================================
+            GameObject ceilingCatwalk = new GameObject("Ceiling_Catwalk");
+            ceilingCatwalk.transform.SetParent(refs.envRoot.transform);
+            ceilingCatwalk.transform.position = new Vector3(-3.75f, 3.8f, 0f);
+            BoxCollider2D ceilCatCol = ceilingCatwalk.AddComponent<BoxCollider2D>();
+            ceilCatCol.size = new Vector2(4.8f, 0.4f);
+
+            for (float px = -6.0f; px <= -1.5f; px += 1.0f)
+            {
+                GameObject seg = new GameObject($"CeilSeg_{px}");
+                seg.transform.SetParent(ceilingCatwalk.transform);
+                seg.transform.position = new Vector3(px, 3.8f, 0f);
+                seg.transform.localScale = new Vector3(1.0f, -0.4f, 1f);
+                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
+                rend.sprite = floorSp;
+                rend.sortingOrder = 1;
+            }
+
+            GameObject ceilHazard = new GameObject("Deco_CeilCatwalk_Hazard");
+            ceilHazard.transform.SetParent(ceilingCatwalk.transform);
+            ceilHazard.transform.position = new Vector3(-3.75f, 3.98f, 0f);
+            ceilHazard.transform.localScale = new Vector3(4.5f, -0.2f, 1f);
+            SpriteRenderer chRend = ceilHazard.AddComponent<SpriteRenderer>();
+            chRend.sprite = hazardSp;
+            chRend.sortingOrder = 2;
+
+            // EchoSwitch mounted inverted on the ceiling catwalk at (-3.8, 3.5)
+            GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
+            echoSwitchObj.transform.SetParent(refs.puzzleRoot.transform);
+            echoSwitchObj.transform.position = new Vector3(-3.8f, 3.5f, 0f);
+            echoSwitchObj.transform.localScale = new Vector3(1.0f, -1.0f, 1f);
+
+            SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
+            switchRend.sprite = echoSwitchSp;
+            switchRend.sortingOrder = 2;
+
+            BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
+            switchCol.isTrigger = true;
+            switchCol.size = new Vector2(1.2f, 0.4f);
+
+            GameObject switchLightObj = new GameObject("Switch_Light");
+            switchLightObj.transform.SetParent(echoSwitchObj.transform);
+            switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            Light2D switchLight = switchLightObj.AddComponent<Light2D>();
+            switchLight.lightType = Light2D.LightType.Point;
+            switchLight.pointLightOuterRadius = 3.0f;
+            switchLight.color = new Color(0.85f, 0f, 1f, 1f);
+            switchLight.intensity = 0.7f;
+
+            SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
+            SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "glowLight", switchLight);
+            SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+            SetPrivateField(echoSwitchComp, "allowPlayerActivation", false);
+            SetPrivateField(echoSwitchComp, "allowEchoActivation", true);
+            SetPrivateField(echoSwitchComp, "holdGraceDuration", 3.5f);
+            SetPrivateField(echoSwitchComp, "latching", false);
+            SetPrivateField(echoSwitchComp, "isPowered", true);
+
+            // =========================================================
+            // 4. ZONE 3: HANGING CEILING LASER HAZARD (TEACHES "UP IS DANGER, FLIP DOWN")
+            // =========================================================
+            // Hangs down from ceiling at X: 1.3, covering Y: 2.3 to 5.2 (height 2.9m)
+            GameObject ceilLaserObj = new GameObject("CeilingHazard_Zone3");
+            ceilLaserObj.transform.SetParent(refs.puzzleRoot.transform);
+            ceilLaserObj.transform.position = new Vector3(1.3f, 3.75f, 0f);
+
+            SpriteRenderer clRend = ceilLaserObj.AddComponent<SpriteRenderer>();
+            clRend.sprite = laserSp;
+            clRend.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            clRend.sortingOrder = 7;
+            clRend.drawMode = SpriteDrawMode.Sliced;
+            clRend.size = new Vector2(0.4f, 2.9f);
+
+            BoxCollider2D clCol = ceilLaserObj.AddComponent<BoxCollider2D>();
+            clCol.isTrigger = true;
+            clCol.size = new Vector2(0.4f, 2.9f);
+
+            GameObject clLightObj = new GameObject("CeilLaser_Light");
+            clLightObj.transform.SetParent(ceilLaserObj.transform);
+            clLightObj.transform.localPosition = Vector3.zero;
+            Light2D clLight = clLightObj.AddComponent<Light2D>();
+            clLight.lightType = Light2D.LightType.Point;
+            clLight.pointLightOuterRadius = 3.0f;
+            clLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
+            clLight.intensity = 1.4f;
+
+            MovingLaserHazard clComp = ceilLaserObj.AddComponent<MovingLaserHazard>();
+            clComp.ConfigurePath(MovingLaserHazard.MotionAxis.Vertical, new Vector3(1.3f, 3.6f, 0f), new Vector3(1.3f, 3.9f, 0f), 0.6f, 0f, startActive: true);
+            SetPrivateField(clComp, "laserRenderer", clRend);
+            SetPrivateField(clComp, "laserLight", clLight);
+            SetPrivateField(clComp, "activeOnStart", true);
+            clComp.SetHazardActive(true);
+
+            // =========================================================
+            // 5. MID TRANSITION CATWALK (SAFE LANDING ZONE AT X: -0.8, Y: -1.4)
+            // =========================================================
+            GameObject midCatwalk = new GameObject("Mid_TransitionCatwalk");
+            midCatwalk.transform.SetParent(refs.envRoot.transform);
+            midCatwalk.transform.position = new Vector3(-0.8f, -1.4f, 0f);
+            BoxCollider2D midCol = midCatwalk.AddComponent<BoxCollider2D>();
+            midCol.size = new Vector2(1.8f, 0.35f);
+
+            for (float px = -1.6f; px <= 0.0f; px += 0.8f)
+            {
+                GameObject seg = new GameObject($"MidSeg_{px}");
+                seg.transform.SetParent(midCatwalk.transform);
+                seg.transform.position = new Vector3(px, -1.4f, 0f);
+                seg.transform.localScale = new Vector3(0.8f, 0.35f, 1f);
+                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
+                rend.sprite = floorSp;
+                rend.sortingOrder = 1;
+            }
+
+            // =========================================================
+            // 6. STEP CATWALK (TRANSITION UP TO EXIT CATWALK AT X: 4.2, Y: -2.4)
+            // =========================================================
+            GameObject stepCatwalk = new GameObject("Step_Catwalk");
+            stepCatwalk.transform.SetParent(refs.envRoot.transform);
+            stepCatwalk.transform.position = new Vector3(4.2f, -2.4f, 0f);
+            BoxCollider2D stepCol = stepCatwalk.AddComponent<BoxCollider2D>();
+            stepCol.size = new Vector2(1.4f, 0.35f);
+
+            for (float px = 3.6f; px <= 4.8f; px += 0.6f)
+            {
+                GameObject seg = new GameObject($"StepSeg_{px}");
+                seg.transform.SetParent(stepCatwalk.transform);
+                seg.transform.position = new Vector3(px, -2.4f, 0f);
+                seg.transform.localScale = new Vector3(0.6f, 0.35f, 1f);
+                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
+                rend.sprite = floorSp;
+                rend.sortingOrder = 1;
+            }
+
+            // =========================================================
+            // 7. EXIT CATWALK, SECURITY BARRIER, & ELEVATED EXIT DOOR
+            // =========================================================
+            refs.exitDoor.transform.position = new Vector3(8.5f, 0.5f, 0f);
+
+            GameObject exitCatwalk = new GameObject("Exit_Catwalk");
+            exitCatwalk.transform.SetParent(refs.envRoot.transform);
+            exitCatwalk.transform.position = new Vector3(8.0f, -0.8f, 0f);
+            BoxCollider2D catCol = exitCatwalk.AddComponent<BoxCollider2D>();
+            catCol.size = new Vector2(5.5f, 0.4f);
+
+            for (float px = 5.5f; px <= 10.5f; px += 1.0f)
+            {
+                GameObject seg = new GameObject($"CatwalkSeg_{px}");
+                seg.transform.SetParent(exitCatwalk.transform);
+                seg.transform.position = new Vector3(px, -0.8f, 0f);
+                seg.transform.localScale = new Vector3(1.0f, 0.4f, 1f);
+                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
+                rend.sprite = floorSp;
+                rend.sortingOrder = 1;
+            }
+
+            // Security Barrier in front of the exit door on the catwalk at X: 6.2, Y: 0.3
+            GameObject barrierObj = new GameObject("SecurityBarrier_Exit");
+            barrierObj.transform.SetParent(refs.puzzleRoot.transform);
+            barrierObj.transform.position = new Vector3(6.2f, 0.35f, 0f);
+
+            SpriteRenderer barRend = barrierObj.AddComponent<SpriteRenderer>();
+            barRend.sprite = laserSp;
+            barRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            barRend.sortingOrder = 8;
+            barRend.drawMode = SpriteDrawMode.Sliced;
+            barRend.size = new Vector2(0.35f, 2.3f);
+
+            BoxCollider2D barCol = barrierObj.AddComponent<BoxCollider2D>();
+            barCol.size = new Vector2(0.35f, 2.3f);
+
+            GameObject barLightObj = new GameObject("Barrier_Light");
+            barLightObj.transform.SetParent(barrierObj.transform);
+            barLightObj.transform.localPosition = Vector3.zero;
+            Light2D barLight = barLightObj.AddComponent<Light2D>();
+            barLight.lightType = Light2D.LightType.Point;
+            barLight.pointLightOuterRadius = 2.4f;
+            barLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            barLight.intensity = 1.3f;
+
+            // Barrier status sign
+            GameObject signCanvasObj = new GameObject("BarrierSignCanvas");
+            signCanvasObj.transform.SetParent(barrierObj.transform);
+            signCanvasObj.transform.localPosition = new Vector3(0f, 1.35f, 0f);
+            Canvas signCanvas = signCanvasObj.AddComponent<Canvas>();
+            signCanvas.renderMode = RenderMode.WorldSpace;
+            RectTransform signRect = signCanvasObj.GetComponent<RectTransform>();
+            signRect.sizeDelta = new Vector2(250f, 60f);
+            signCanvasObj.transform.localScale = new Vector3(0.01f, 0.01f, 1f);
+
+            GameObject signTextObj = new GameObject("SignText");
+            signTextObj.transform.SetParent(signCanvasObj.transform);
+            signTextObj.transform.localPosition = Vector3.zero;
+            Text signText = signTextObj.AddComponent<Text>();
+            signText.font = defaultFont;
+            signText.fontSize = 14;
+            signText.alignment = TextAnchor.MiddleCenter;
+            signText.text = "<color=#FF1E40>[GRAVITY INTERLOCK: ACTIVE]</color>\n<size=12><color=#D600FF>TEMPORAL ECHO OVERRIDE REQUIRED</color></size>";
+            RectTransform textRect = signTextObj.GetComponent<RectTransform>();
+            textRect.sizeDelta = new Vector2(250f, 60f);
+
+            SecurityBarrier barrierComp = barrierObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(barrierComp, "barrierCollider", barCol);
+            SetPrivateField(barrierComp, "barrierRenderer", barRend);
+            SetPrivateField(barrierComp, "barrierLight", barLight);
+            SetPrivateField(barrierComp, "signText", signText);
+
+            // Connect ceiling switch to security barrier
+            SetPrivateField(echoSwitchComp, "targetBarrier", barrierComp);
+            echoSwitchComp.TargetBarrier = barrierComp;
+
+            SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
+
+            // =========================================================
+            // 8. ENVIRONMENTAL DRESSING & LIGHTING
+            // =========================================================
             GameObject floatDebris1 = new GameObject("Deco_FloatingMachinery_1");
             floatDebris1.transform.SetParent(refs.envRoot.transform);
             floatDebris1.transform.position = new Vector3(-1.5f, 1.8f, 0f);
@@ -1715,7 +2013,6 @@ namespace GlitchVerse.Editor
             fdRend2.sortingOrder = -15;
             fdRend2.color = new Color(0.7f, 0.85f, 0.95f, 0.45f);
 
-            // Inverted Ceiling Cable Bundles
             GameObject ceilCables = new GameObject("Deco_CeilingCables_Inverted");
             ceilCables.transform.SetParent(refs.envRoot.transform);
             ceilCables.transform.position = new Vector3(-4.0f, 4.3f, 0f);
@@ -1724,7 +2021,6 @@ namespace GlitchVerse.Editor
             ccRend.sprite = cableSp;
             ccRend.sortingOrder = -5;
 
-            // Malfunctioning light fixture near ceiling catwalk
             GameObject malfLightObj = new GameObject("Malf_CeilingLamp");
             malfLightObj.transform.SetParent(refs.envRoot.transform);
             malfLightObj.transform.position = new Vector3(-4.0f, 2.8f, 0f);
@@ -1738,87 +2034,9 @@ namespace GlitchVerse.Editor
             malfFlicker.Mode = FlickeringLight2D.FlickerMode.MalfunctioningArc;
             malfFlicker.BaseIntensity = 0.5f;
 
-            // Elevated Exit Doorway at (X: 8.5, Y: 0.5)
-            refs.exitDoor.transform.position = new Vector3(8.5f, 0.5f, 0f);
-
-            // Midground Access Catwalk under Exit Door (X: 5.5 to 10.5, Y: -0.8)
-            GameObject exitCatwalk = new GameObject("Exit_Catwalk");
-            exitCatwalk.transform.SetParent(refs.envRoot.transform);
-            exitCatwalk.transform.position = new Vector3(8.0f, -0.8f, 0f);
-            BoxCollider2D catCol = exitCatwalk.AddComponent<BoxCollider2D>();
-            catCol.size = new Vector2(5.5f, 0.4f);
-
-            for (float px = 5.5f; px <= 10.5f; px += 1.0f)
-            {
-                GameObject seg = new GameObject($"CatwalkSeg_{px}");
-                seg.transform.SetParent(exitCatwalk.transform);
-                seg.transform.position = new Vector3(px, -0.8f, 0f);
-                seg.transform.localScale = new Vector3(1.0f, 0.4f, 1f);
-                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
-                rend.sortingOrder = 1;
-            }
-
-            // Inverted Ceiling Catwalk where the EchoSwitch is mounted (X: -6.0 to -2.0, Y: 3.8)
-            GameObject ceilingCatwalk = new GameObject("Ceiling_Catwalk");
-            ceilingCatwalk.transform.SetParent(refs.envRoot.transform);
-            ceilingCatwalk.transform.position = new Vector3(-4.0f, 3.8f, 0f);
-            BoxCollider2D ceilCatCol = ceilingCatwalk.AddComponent<BoxCollider2D>();
-            ceilCatCol.size = new Vector2(4.5f, 0.4f);
-
-            for (float px = -6.0f; px <= -2.0f; px += 1.0f)
-            {
-                GameObject seg = new GameObject($"CeilSeg_{px}");
-                seg.transform.SetParent(ceilingCatwalk.transform);
-                seg.transform.position = new Vector3(px, 3.8f, 0f);
-                seg.transform.localScale = new Vector3(1.0f, -0.4f, 1f);
-                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
-                rend.sortingOrder = 1;
-            }
-
-            // Hazard stripe trim on ceiling catwalk
-            GameObject ceilHazard = new GameObject("Deco_CeilCatwalk_Hazard");
-            ceilHazard.transform.SetParent(ceilingCatwalk.transform);
-            ceilHazard.transform.position = new Vector3(-4.0f, 3.98f, 0f);
-            ceilHazard.transform.localScale = new Vector3(4.2f, -0.2f, 1f);
-            SpriteRenderer chRend = ceilHazard.AddComponent<SpriteRenderer>();
-            chRend.sprite = hazardSp;
-            chRend.sortingOrder = 2;
-
-            // EchoSwitch mounted on the ceiling catwalk at (-4.0, 3.5)
-            GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
-            echoSwitchObj.transform.SetParent(refs.puzzleRoot.transform);
-            echoSwitchObj.transform.position = new Vector3(-4.0f, 3.5f, 0f);
-            echoSwitchObj.transform.localScale = new Vector3(1.0f, -1.0f, 1f);
-
-            SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
-            switchRend.sprite = echoSwitchSp;
-            switchRend.sortingOrder = 2;
-
-            BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
-            switchCol.isTrigger = true;
-            switchCol.size = new Vector2(1.2f, 0.4f);
-
-            GameObject switchLightObj = new GameObject("Switch_Light");
-            switchLightObj.transform.SetParent(echoSwitchObj.transform);
-            switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
-            Light2D switchLight = switchLightObj.AddComponent<Light2D>();
-            switchLight.lightType = Light2D.LightType.Point;
-            switchLight.pointLightOuterRadius = 3.0f;
-            switchLight.color = new Color(0.85f, 0f, 1f, 1f);
-            switchLight.intensity = 0.5f;
-
-            EchoSwitch echoSwitchComp = echoSwitchObj.AddComponent<EchoSwitch>();
-            SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
-            SetPrivateField(echoSwitchComp, "glowLight", switchLight);
-            SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
-
-            SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
-            SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
-            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
-
-            // Checkpoint 4: Fake Emergency Countdown Prank (Level 02)
+            // =========================================================
+            // 9. CHECKPOINT 4: FAKE EMERGENCY COUNTDOWN PRANK (LEVEL 02)
+            // =========================================================
             GameObject emergencyPrankObj = new GameObject("FakeEmergencyPrankController");
             emergencyPrankObj.transform.SetParent(refs.puzzleRoot.transform);
             emergencyPrankObj.AddComponent<FakeEmergencyPrank>();

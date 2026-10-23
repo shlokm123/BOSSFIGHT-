@@ -24,6 +24,7 @@ namespace GlitchVerse.Narrative
         [Header("Components")]
         [SerializeField] private SpriteRenderer floorRenderer;
         [SerializeField] private BoxCollider2D solidCollider;
+        [SerializeField] private UnityEngine.Rendering.Universal.Light2D cautionLight;
 
         private Vector3 initialPosition;
         private Color initialColor;
@@ -38,6 +39,11 @@ namespace GlitchVerse.Narrative
             if (floorRenderer == null)
             {
                 floorRenderer = GetComponent<SpriteRenderer>();
+            }
+
+            if (cautionLight == null)
+            {
+                cautionLight = GetComponentInChildren<UnityEngine.Rendering.Universal.Light2D>();
             }
 
             if (floorRenderer != null)
@@ -57,6 +63,14 @@ namespace GlitchVerse.Narrative
                     c.a = Mathf.Max(0f, c.a - Time.deltaTime * 2.5f);
                     floorRenderer.color = c;
                 }
+                if (cautionLight != null && cautionLight.enabled)
+                {
+                    cautionLight.enabled = false;
+                }
+            }
+            else if (!hasTriggered && cautionLight != null)
+            {
+                cautionLight.intensity = 0.55f + 0.35f * Mathf.PingPong(Time.time * 2.2f, 1f);
             }
         }
 
@@ -154,6 +168,7 @@ namespace GlitchVerse.Narrative
             transform.position = initialPosition;
             if (solidCollider != null) solidCollider.enabled = true;
             if (floorRenderer != null) floorRenderer.color = initialColor;
+            if (cautionLight != null) cautionLight.enabled = true;
         }
 
         public static void ResetSessionFlag()

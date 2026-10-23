@@ -42,8 +42,6 @@ namespace GlitchVerse.Interactables
             allowPlayerActivation = false;
             allowEchoActivation = true;
             latching = false;
-            holdGraceDuration = 2.0f; // 2-second grace hold window for fair traversal
-            isPowered = false;
 
             inactiveColor = poweredColor;
             activeColor = activatedColor;

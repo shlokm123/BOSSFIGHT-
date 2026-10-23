@@ -79,6 +79,7 @@ namespace GlitchVerse.Echo
 
         private void FixedUpdate()
         {
+            if (triggerCol == null) triggerCol = GetComponent<BoxCollider2D>();
             if (triggerCol == null || !isPowered) return;
 
             // Continuous overlap check for both Live Player and Echo Ghost
