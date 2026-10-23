@@ -210,8 +210,8 @@ namespace GlitchVerse.Narrative
             if (chamber == 3 && ImpossibleQuestionPrank.HasExperiencedQuestion)
             {
                 ArchitectDialogue.Current.Speak(
-                    "No further interrogations. The chamber is open.",
-                    "QUERY DISARMED",
+                    "Relax. You've already failed this interview.",
+                    "INTERVIEW FAILED",
                     2.8f,
                     "retry_question_trap",
                     5f,

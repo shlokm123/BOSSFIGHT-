@@ -1055,9 +1055,11 @@ namespace GlitchVerse.Editor
 
             // 11. Impossible Question Prompt UI
             Text questionTxt = CreateUIText(uiRoot.transform, "ImpossibleQuestionPromptText",
-                "", defaultFont, 28, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(800f, 140f),
+                "", defaultFont, 24, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(850f, 220f),
                 Color.white);
+            questionTxt.verticalOverflow = VerticalWrapMode.Overflow;
+            questionTxt.horizontalOverflow = HorizontalWrapMode.Overflow;
             questionTxt.gameObject.SetActive(false);
 
             GameObject sessionObj = new GameObject("GameSession");
