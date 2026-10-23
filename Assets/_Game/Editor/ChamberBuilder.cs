@@ -224,6 +224,28 @@ namespace GlitchVerse.Editor
                 return new Color(0.07f, 0.08f, 0.11f, 0.9f);
             });
 
+            // 17. Trap Floor (64x64) - Floor tile with subtle warning hairline fissure cracks
+            CreateSpriteAsset("trap_floor.png", 64, 64, (x, y) =>
+            {
+                // Subtle jagged hairline fracture running across the tile
+                bool isCrack = (x >= 20 && x <= 22 && y >= 48 && y <= 59) ||
+                               (x >= 22 && x <= 25 && y >= 38 && y <= 48) ||
+                               (x >= 25 && x <= 28 && y >= 25 && y <= 38) ||
+                               (x >= 28 && x <= 33 && y >= 12 && y <= 25) ||
+                               (x >= 33 && x <= 36 && y >= 4 && y <= 12);
+
+                if (isCrack)
+                {
+                    return new Color(0.42f, 0.12f, 0.15f, 1f); // Faint crimson fracture
+                }
+
+                if (y >= 60) return new Color(0f, 0.94f, 1f, 1f); // Cyan top edge
+                if (y == 59) return new Color(0f, 0.5f, 0.6f, 1f);
+                if (x % 16 == 0 || y % 16 == 0) return new Color(0.10f, 0.12f, 0.16f, 1f);
+                if ((x + y) % 8 == 0) return new Color(0.18f, 0.22f, 0.28f, 1f);
+                return new Color(0.14f, 0.17f, 0.22f, 1f);
+            });
+
             AssetDatabase.Refresh();
         }
 
@@ -274,9 +296,10 @@ namespace GlitchVerse.Editor
             public ArchitectTriggers triggers;
             public GameObject envRoot;
             public GameObject puzzleRoot;
+            public Text questionPromptText;
         }
 
-        private static BaseSceneRefs SetupBaseChamber(string sceneTitle, int chamberNum, string nextScene, bool isFinal)
+        private static BaseSceneRefs SetupBaseChamber(string sceneTitle, int chamberNum, string nextScene, bool isFinal, float? collapsingFloorGapX = null)
         {
             var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -360,11 +383,43 @@ namespace GlitchVerse.Editor
             GameObject floorComposite = new GameObject("Chamber_Floor");
             floorComposite.transform.SetParent(envRoot.transform);
             floorComposite.transform.position = new Vector3(0f, -4.5f, 0f);
-            BoxCollider2D floorCol = floorComposite.AddComponent<BoxCollider2D>();
-            floorCol.size = new Vector2(24f, 1.0f);
+
+            if (collapsingFloorGapX.HasValue)
+            {
+                float gapX = collapsingFloorGapX.Value;
+                float gapHalfWidth = 0.6f; // total gap 1.2m
+                // Left floor collider: from -12 to (gapX - gapHalfWidth)
+                float leftMin = -12f;
+                float leftMax = gapX - gapHalfWidth;
+                float leftWidth = leftMax - leftMin;
+                float leftCenterX = (leftMin + leftMax) * 0.5f;
+
+                BoxCollider2D leftFloorCol = floorComposite.AddComponent<BoxCollider2D>();
+                leftFloorCol.size = new Vector2(leftWidth, 1.0f);
+                leftFloorCol.offset = new Vector2(leftCenterX, 0f);
+
+                // Right floor collider: from (gapX + gapHalfWidth) to 12
+                float rightMin = gapX + gapHalfWidth;
+                float rightMax = 12f;
+                float rightWidth = rightMax - rightMin;
+                float rightCenterX = (rightMin + rightMax) * 0.5f;
+
+                BoxCollider2D rightFloorCol = floorComposite.AddComponent<BoxCollider2D>();
+                rightFloorCol.size = new Vector2(rightWidth, 1.0f);
+                rightFloorCol.offset = new Vector2(rightCenterX, 0f);
+            }
+            else
+            {
+                BoxCollider2D floorCol = floorComposite.AddComponent<BoxCollider2D>();
+                floorCol.size = new Vector2(24f, 1.0f);
+            }
 
             for (float x = -11f; x <= 11f; x += 1.0f)
             {
+                if (collapsingFloorGapX.HasValue && Mathf.Abs(x - collapsingFloorGapX.Value) < 0.6f)
+                {
+                    continue; // Skip static floor tile in the gap
+                }
                 GameObject tile = new GameObject($"FloorTile_{x}");
                 tile.transform.SetParent(floorComposite.transform);
                 tile.transform.position = new Vector3(x, -4.0f, 0f);
@@ -661,6 +716,59 @@ namespace GlitchVerse.Editor
             SetPrivateField(triggers, "echoPlayback", echoPlay);
             SetPrivateField(triggers, "exitDoor", exitComp);
 
+            // 10. Chapter Intro System (Phase 07.5 Checkpoint 1)
+            GameObject introPanelObj = new GameObject("ChapterIntroPanel");
+            introPanelObj.transform.SetParent(uiRoot.transform, false);
+            RectTransform introRt = introPanelObj.AddComponent<RectTransform>();
+            introRt.anchorMin = Vector2.zero;
+            introRt.anchorMax = Vector2.one;
+            introRt.offsetMin = Vector2.zero;
+            introRt.offsetMax = Vector2.zero;
+            Image introBg = introPanelObj.AddComponent<Image>();
+            introBg.color = Color.black;
+            introBg.raycastTarget = true;
+            introPanelObj.AddComponent<CanvasGroup>();
+            introPanelObj.SetActive(false);
+
+            Text introTitle = CreateUIText(introPanelObj.transform, "ChapterTitleText",
+                "", defaultFont, 44, TextAnchor.MiddleCenter,
+                new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.75f), Vector2.zero, Vector2.zero,
+                Color.white);
+            introTitle.rectTransform.offsetMin = Vector2.zero;
+            introTitle.rectTransform.offsetMax = Vector2.zero;
+            introTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            introTitle.verticalOverflow = VerticalWrapMode.Overflow;
+
+            Text introSubtitle = CreateUIText(introPanelObj.transform, "ChapterSubtitleText",
+                "", defaultFont, 24, TextAnchor.MiddleCenter,
+                new Vector2(0.1f, 0.32f), new Vector2(0.9f, 0.44f), Vector2.zero, Vector2.zero,
+                new Color(0.6f, 0.65f, 0.72f, 1f));
+            introSubtitle.rectTransform.offsetMin = Vector2.zero;
+            introSubtitle.rectTransform.offsetMax = Vector2.zero;
+            introSubtitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            introSubtitle.verticalOverflow = VerticalWrapMode.Overflow;
+
+            Text introSkip = CreateUIText(introPanelObj.transform, "SkipHintText",
+                "[SPACE] CONTINUE", defaultFont, 16, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0f, 30f), new Vector2(300f, 30f),
+                new Color(0.45f, 0.45f, 0.45f, 1f));
+
+            ChapterIntroController introCtrl = uiRoot.AddComponent<ChapterIntroController>();
+            SetPrivateField(introCtrl, "introPanel", introPanelObj);
+            SetPrivateField(introCtrl, "backgroundOverlay", introBg);
+            SetPrivateField(introCtrl, "chapterTitleText", introTitle);
+            SetPrivateField(introCtrl, "chapterSubtitleText", introSubtitle);
+            SetPrivateField(introCtrl, "skipHintText", introSkip);
+            SetPrivateField(introCtrl, "levelDirector", director);
+            SetPrivateField(introCtrl, "player", playerCtrl);
+
+            // 11. Impossible Question Prompt UI (Phase 07.5 Checkpoint 3)
+            Text questionTxt = CreateUIText(uiRoot.transform, "ImpossibleQuestionPromptText",
+                "", defaultFont, 28, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(800f, 140f),
+                Color.white);
+            questionTxt.gameObject.SetActive(false);
+
             GameObject sessionObj = new GameObject("GameSession");
             sessionObj.AddComponent<GameSession>();
 
@@ -676,7 +784,8 @@ namespace GlitchVerse.Editor
                 dialogue = dialogue,
                 triggers = triggers,
                 envRoot = envRoot,
-                puzzleRoot = puzzleRoot
+                puzzleRoot = puzzleRoot,
+                questionPromptText = questionTxt
             };
         }
         #endregion
@@ -789,10 +898,27 @@ namespace GlitchVerse.Editor
         #region Level 02: Gravity Is A Suggestion (Gravity Inversion & Echo Replay)
         public static void ConstructLevel02Scene()
         {
-            var refs = SetupBaseChamber("CONTAINMENT 02 // GRAVITY ECHO", 2, "Level03", false);
+            var refs = SetupBaseChamber("CONTAINMENT 02 // GRAVITY ECHO", 2, "Level03", false, collapsingFloorGapX: 1.0f);
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
+            Sprite trapFloorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/trap_floor.png");
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+
+            // Checkpoint 2: Collapsing Floor Betrayal Trap (Level 02)
+            GameObject trapTileObj = new GameObject("CollapsingFloorTrap");
+            trapTileObj.transform.SetParent(refs.puzzleRoot.transform);
+            trapTileObj.transform.position = new Vector3(1.0f, -4.0f, 0f);
+
+            SpriteRenderer trapRend = trapTileObj.AddComponent<SpriteRenderer>();
+            trapRend.sprite = trapFloorSp != null ? trapFloorSp : floorSp;
+            trapRend.sortingOrder = 1;
+
+            BoxCollider2D trapCol = trapTileObj.AddComponent<BoxCollider2D>();
+            trapCol.size = new Vector2(1.2f, 1.0f);
+
+            CollapsingFloor trapComp = trapTileObj.AddComponent<CollapsingFloor>();
+            SetPrivateField(trapComp, "floorRenderer", trapRend);
+            SetPrivateField(trapComp, "solidCollider", trapCol);
 
             // Enable Gravity Inversion power on player
             refs.abilityCtrl.AllowGravity = true;
@@ -888,6 +1014,13 @@ namespace GlitchVerse.Editor
 
             // Enable Time Freeze (F)
             refs.abilityCtrl.AllowTimeFreeze = true;
+
+            // Checkpoint 3: Impossible Question Forced-Death Prank (Level 03)
+            GameObject questionPrankObj = new GameObject("ImpossibleQuestionPrankController");
+            questionPrankObj.transform.SetParent(refs.puzzleRoot.transform);
+            ImpossibleQuestionPrank questionPrank = questionPrankObj.AddComponent<ImpossibleQuestionPrank>();
+            SetPrivateField(questionPrank, "questionPromptText", refs.questionPromptText);
+            SetPrivateField(questionPrank, "triggerX", -4.0f);
 
             // Moving Freezable Hazard Laser 1 patrolling X = -1.5, sweeping Y between -3.5 and 0.5
             GameObject hazardObj1 = new GameObject("FreezableLaser_Barrier_1");
@@ -986,6 +1119,12 @@ namespace GlitchVerse.Editor
             refs.abilityCtrl.AllowTimeFreeze = true;
             refs.abilityCtrl.AllowDimensionSwap = true;
 
+            // Checkpoint 4: Fake Checkpoint Dialogue Prank (Level 04)
+            GameObject fakeCheckpointObj = new GameObject("FakeCheckpointPrankController");
+            fakeCheckpointObj.transform.SetParent(refs.puzzleRoot.transform);
+            FakeCheckpointPrank fakeCheckpoint = fakeCheckpointObj.AddComponent<FakeCheckpointPrank>();
+            SetPrivateField(fakeCheckpoint, "triggerX", 0.0f);
+
             // Dimension Alpha Platform 1 (X: -4.0, Y: -1.5)
             CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Platform_1", 
                 new Vector3(-4.0f, -1.5f, 0f), new Vector2(3.5f, 0.4f), alphaSp, DimensionType.Alpha);
@@ -1067,7 +1206,6 @@ namespace GlitchVerse.Editor
         {
             string[] scenePaths = new string[]
             {
-                "Assets/Scenes/SampleScene.unity",
                 "Assets/_Game/Scenes/Levels/Level01.unity",
                 "Assets/_Game/Scenes/Levels/Level02.unity",
                 "Assets/_Game/Scenes/Levels/Level03.unity",

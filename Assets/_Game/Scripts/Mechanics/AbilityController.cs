@@ -59,6 +59,8 @@ namespace GlitchVerse.Mechanics
 
         private void Update()
         {
+            if (player != null && player.InputLocked) return;
+
             var kb = Keyboard.current;
             if (kb == null) return;
 

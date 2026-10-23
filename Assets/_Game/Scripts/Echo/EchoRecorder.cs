@@ -25,6 +25,7 @@ namespace GlitchVerse.Echo
 
         public bool IsRecording => isRecording;
         public int FrameCount => recordedFrames.Count;
+        public PlayerController2D TargetPlayer => targetPlayer;
         public event Action<EchoFrame[]> OnSnapshotReady;
 
         private void Awake()

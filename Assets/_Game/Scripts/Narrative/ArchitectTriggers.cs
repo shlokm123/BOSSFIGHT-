@@ -5,6 +5,7 @@ using GlitchVerse.Core;
 using GlitchVerse.Echo;
 using GlitchVerse.Interactables;
 using GlitchVerse.Mechanics;
+using GlitchVerse.Player;
 
 namespace GlitchVerse.Narrative
 {
@@ -90,12 +91,62 @@ namespace GlitchVerse.Narrative
             }
         }
 
+        private static bool hasCommentedOnPassingFloor = false;
+        private static bool hasCommentedOnPassingQuestion = false;
+        private PlayerController2D cachedPlayer;
+
         private void Update()
         {
+            if (cachedPlayer == null)
+            {
+                cachedPlayer = FindAnyObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
+            }
+
+            // Context-aware passing lines
+            if (cachedPlayer != null && levelDirector != null)
+            {
+                if (levelDirector.ChamberNumber == 2 && CollapsingFloor.HasDiedToFloor && !hasCommentedOnPassingFloor)
+                {
+                    if (cachedPlayer.transform.position.x > 2.5f)
+                    {
+                        hasCommentedOnPassingFloor = true;
+                        if (ArchitectDialogue.Current != null)
+                        {
+                            ArchitectDialogue.Current.Speak(
+                                "Remarkable. You managed to step over a hole.",
+                                "TRAP EVADED",
+                                2.6f,
+                                "passed_floor_roast",
+                                10f
+                            );
+                        }
+                    }
+                }
+                else if (levelDirector.ChamberNumber == 3 && ImpossibleQuestionPrank.HasExperiencedQuestion && !hasCommentedOnPassingQuestion)
+                {
+                    if (cachedPlayer.transform.position.x > -2.0f)
+                    {
+                        hasCommentedOnPassingQuestion = true;
+                        if (ArchitectDialogue.Current != null)
+                        {
+                            ArchitectDialogue.Current.Speak(
+                                "Silence suits you. Proceed with the chamber.",
+                                "SUBJECT PASSING",
+                                2.6f,
+                                "passed_question_roast",
+                                10f
+                            );
+                        }
+                    }
+                }
+            }
+
             // Listen for Echo clear [C] key
             var kb = Keyboard.current;
             if (kb != null && kb.cKey.wasPressedThisFrame)
             {
+                if (cachedPlayer != null && cachedPlayer.InputLocked) return;
+
                 if (ArchitectDialogue.Current != null)
                 {
                     ArchitectDialogue.Current.Speak(
@@ -112,6 +163,34 @@ namespace GlitchVerse.Narrative
         private void TriggerEntryCommentary()
         {
             if (ArchitectDialogue.Current == null) return;
+
+            int chamber = levelDirector != null ? levelDirector.ChamberNumber : 1;
+
+            // Checkpoint 5: Context-aware retry lines after traps
+            if (chamber == 2 && CollapsingFloor.HasDiedToFloor)
+            {
+                ArchitectDialogue.Current.Speak(
+                    "Floor integrity remains unverified. Step lightly.",
+                    "ADVISORY: WATCH STEP",
+                    2.8f,
+                    "retry_floor_trap",
+                    5f,
+                    priority: true
+                );
+                return;
+            }
+            if (chamber == 3 && ImpossibleQuestionPrank.HasExperiencedQuestion)
+            {
+                ArchitectDialogue.Current.Speak(
+                    "No further interrogations. The chamber is open.",
+                    "QUERY DISARMED",
+                    2.8f,
+                    "retry_question_trap",
+                    5f,
+                    priority: true
+                );
+                return;
+            }
 
             int restarts = GameSession.Instance != null ? GameSession.Instance.ResetCount : 0;
 
@@ -141,7 +220,6 @@ namespace GlitchVerse.Narrative
             }
 
             // Level entry lines
-            int chamber = levelDirector != null ? levelDirector.ChamberNumber : 1;
             switch (chamber)
             {
                 case 1:
@@ -272,6 +350,8 @@ namespace GlitchVerse.Narrative
         private void HandlePlayerDied()
         {
             if (ArchitectDialogue.Current == null) return;
+            if (ArchitectDialogue.Current.IsSpeaking) return; // Preserve active trap roast dialogue
+
             ArchitectDialogue.Current.FlashScreenRed(0.45f, 0.35f);
             ArchitectDialogue.Current.Speak(
                 "Another biological iteration terminated.",

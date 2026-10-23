@@ -39,6 +39,7 @@ namespace GlitchVerse.Player
         public bool FacingRight => facingRight;
         public bool IsGravityInverted => isGravityInverted;
         public float HorizontalInput => horizontalInput;
+        public bool InputLocked { get; set; } = false;
 
         public event Action OnJumped;
         public event Action OnLanded;
@@ -74,6 +75,12 @@ namespace GlitchVerse.Player
 
         private void Update()
         {
+            if (InputLocked)
+            {
+                horizontalInput = 0f;
+                return;
+            }
+
             // Input gathering using Unity Input System
             float input = 0f;
             var kb = Keyboard.current;

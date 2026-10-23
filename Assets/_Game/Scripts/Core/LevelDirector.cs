@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using GlitchVerse.Interactables;
+using GlitchVerse.Player;
 
 namespace GlitchVerse.Core
 {
@@ -29,6 +30,8 @@ namespace GlitchVerse.Core
 
         [Header("State")]
         [SerializeField] private bool isLevelCompleted = false;
+
+        private PlayerController2D localPlayer;
 
         public string LevelTitle => levelTitle;
         public int ChamberNumber => chamberNumber;
@@ -88,6 +91,17 @@ namespace GlitchVerse.Core
 
         private void Update()
         {
+            if (localPlayer == null)
+            {
+                localPlayer = FindAnyObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
+            }
+
+            if (localPlayer != null && localPlayer.transform.position.y < -7.0f)
+            {
+                KillPlayer();
+                return;
+            }
+
             // If GameSession is not yet present, allow local R restart
             var kb = Keyboard.current;
             if (kb != null && kb.rKey.wasPressedThisFrame && GameSession.Instance == null)

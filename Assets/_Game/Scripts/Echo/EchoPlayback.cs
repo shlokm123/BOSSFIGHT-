@@ -44,6 +44,8 @@ namespace GlitchVerse.Echo
 
         private void Update()
         {
+            if (recorder != null && recorder.TargetPlayer != null && recorder.TargetPlayer.InputLocked) return;
+
             // Requirement: H key to replay the most recent completed recording
             var kb = Keyboard.current;
             if (kb != null && kb.hKey.wasPressedThisFrame)

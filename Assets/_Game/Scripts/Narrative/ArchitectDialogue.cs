@@ -41,6 +41,8 @@ namespace GlitchVerse.Narrative
 
         private static readonly char[] GlitchChars = new char[] { '░', '█', '▒', '▓', '#', '$', '%', '&', '/', '<', '>', '?' };
 
+        public bool IsSpeaking => activeDialogueRoutine != null;
+
         private void Awake()
         {
             Current = this;
