@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using GlitchVerse.Player;
 
 namespace GlitchVerse.Interactables
 {
@@ -47,7 +48,7 @@ namespace GlitchVerse.Interactables
                 foreach (var hit in hits)
                 {
                     if (hit != null && hit.gameObject != gameObject && 
-                        (hit.GetComponent<MovableCube>() != null || hit.CompareTag("Interactive")))
+                        (hit.GetComponent<MovableCube>() != null || hit.GetComponent<PlayerController2D>() != null))
                     {
                         count++;
                     }
@@ -66,8 +67,7 @@ namespace GlitchVerse.Interactables
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            // Specifically look for the puzzle cube (or player weight)
-            if (other.GetComponent<MovableCube>() != null || other.CompareTag("Interactive"))
+            if (other != null && (other.GetComponent<MovableCube>() != null || other.GetComponent<PlayerController2D>() != null))
             {
                 objectCount++;
                 EvaluateState();
@@ -76,7 +76,7 @@ namespace GlitchVerse.Interactables
 
         private void OnTriggerExit2D(Collider2D other)
         {
-            if (other.GetComponent<MovableCube>() != null || other.CompareTag("Interactive"))
+            if (other != null && (other.GetComponent<MovableCube>() != null || other.GetComponent<PlayerController2D>() != null))
             {
                 objectCount = Mathf.Max(0, objectCount - 1);
                 EvaluateState();

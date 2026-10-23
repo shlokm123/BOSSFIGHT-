@@ -32,7 +32,7 @@ namespace GlitchVerse.Echo
             maxFrames = Mathf.CeilToInt(maxDuration / sampleInterval);
             if (targetPlayer == null)
             {
-                targetPlayer = FindFirstObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
+                targetPlayer = FindAnyObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
             }
         }
 

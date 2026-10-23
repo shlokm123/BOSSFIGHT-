@@ -18,10 +18,13 @@ namespace GlitchVerse.Core
         [Header("Chamber Identity")]
         [SerializeField] private string levelTitle = "CONTAINMENT 01";
         [SerializeField] private int chamberNumber = 1;
+        [SerializeField] private string nextSceneName = "";
+        [SerializeField] private bool isFinalLevel = false;
 
         [Header("Scene References")]
         [SerializeField] private Transform spawnPoint;
         [SerializeField] private PressurePlate pressurePlate;
+        [SerializeField] private GlitchVerse.Echo.EchoSwitch echoSwitch;
         [SerializeField] private ExitDoor exitDoor;
 
         [Header("State")]
@@ -30,6 +33,8 @@ namespace GlitchVerse.Core
         public string LevelTitle => levelTitle;
         public int ChamberNumber => chamberNumber;
         public bool IsLevelCompleted => isLevelCompleted;
+        public bool IsFinalLevel => isFinalLevel;
+        public string NextSceneName => nextSceneName;
         public Transform SpawnPoint => spawnPoint;
 
         public event Action OnLevelComplete;
@@ -44,8 +49,12 @@ namespace GlitchVerse.Core
         {
             if (pressurePlate != null && exitDoor != null)
             {
-                // Subscribe door unlock to pressure plate status
                 pressurePlate.OnPlateStateChanged += HandlePlateStateChanged;
+            }
+
+            if (echoSwitch != null && exitDoor != null)
+            {
+                echoSwitch.OnSwitchStateChanged += HandlePlateStateChanged;
             }
 
             if (exitDoor != null)
@@ -59,6 +68,11 @@ namespace GlitchVerse.Core
             if (pressurePlate != null)
             {
                 pressurePlate.OnPlateStateChanged -= HandlePlateStateChanged;
+            }
+
+            if (echoSwitch != null)
+            {
+                echoSwitch.OnSwitchStateChanged -= HandlePlateStateChanged;
             }
 
             if (exitDoor != null)
@@ -97,6 +111,18 @@ namespace GlitchVerse.Core
             isLevelCompleted = true;
             Debug.Log($"[LevelDirector] Chamber '{levelTitle}' successfully completed!");
             OnLevelComplete?.Invoke();
+
+            if (!string.IsNullOrEmpty(nextSceneName))
+            {
+                StartCoroutine(LoadNextLevelDelayed(1.4f));
+            }
+        }
+
+        private System.Collections.IEnumerator LoadNextLevelDelayed(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            Debug.Log($"[LevelDirector] Loading next chamber: {nextSceneName}");
+            SceneManager.LoadScene(nextSceneName);
         }
 
         public void KillPlayer()

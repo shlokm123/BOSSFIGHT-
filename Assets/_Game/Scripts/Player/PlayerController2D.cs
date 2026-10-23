@@ -30,12 +30,14 @@ namespace GlitchVerse.Player
         private float horizontalInput;
         private bool isGrounded;
         private bool facingRight = true;
+        private bool isGravityInverted = false;
         private bool jumpRequested = false;
 
         public Vector2 Position => rb != null ? rb.position : (Vector2)transform.position;
         public Vector2 Velocity => rb != null ? rb.linearVelocity : Vector2.zero;
         public bool IsGrounded => isGrounded;
         public bool FacingRight => facingRight;
+        public bool IsGravityInverted => isGravityInverted;
         public float HorizontalInput => horizontalInput;
 
         public event Action OnJumped;
@@ -55,6 +57,19 @@ namespace GlitchVerse.Player
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
             rb.freezeRotation = true;
+        }
+
+        public void SetGravityInverted(bool inverted)
+        {
+            isGravityInverted = inverted;
+            if (rb != null)
+            {
+                rb.gravityScale = isGravityInverted ? -1f : 1f;
+            }
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.flipY = isGravityInverted;
+            }
         }
 
         private void Update()
@@ -96,7 +111,7 @@ namespace GlitchVerse.Player
             // Jump execution
             if (jumpRequested)
             {
-                currentVelocity.y = jumpForce;
+                currentVelocity.y = isGravityInverted ? -jumpForce : jumpForce;
                 jumpRequested = false;
                 OnJumped?.Invoke();
             }
@@ -108,9 +123,10 @@ namespace GlitchVerse.Player
         {
             bool wasGrounded = isGrounded;
 
+            Vector2 checkDir = isGravityInverted ? Vector2.up : Vector2.down;
             Vector2 checkPos = groundCheckPoint != null 
-                ? (Vector2)groundCheckPoint.position 
-                : (Vector2)transform.position + Vector2.down * (col.bounds.extents.y);
+                ? (Vector2)transform.position + checkDir * 0.45f
+                : (Vector2)transform.position + checkDir * (col.bounds.extents.y);
 
             // If groundLayers mask is zero (layers not configured yet), check anything except player itself
             Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, groundCheckRadius);
@@ -137,6 +153,7 @@ namespace GlitchVerse.Player
             if (spriteRenderer != null)
             {
                 spriteRenderer.flipX = !facingRight;
+                spriteRenderer.flipY = isGravityInverted;
             }
             else
             {

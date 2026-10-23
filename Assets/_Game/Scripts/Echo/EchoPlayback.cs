@@ -36,7 +36,7 @@ namespace GlitchVerse.Echo
         {
             if (recorder == null)
             {
-                recorder = FindFirstObjectByType<EchoRecorder>(FindObjectsInactive.Exclude);
+                recorder = FindAnyObjectByType<EchoRecorder>(FindObjectsInactive.Exclude);
             }
 
             CreateGhostVisualInstance();
@@ -51,6 +51,12 @@ namespace GlitchVerse.Echo
                 TriggerReplay();
             }
 
+            // Key C: Clear and re-record trajectory
+            if (kb != null && kb.cKey.wasPressedThisFrame && recorder != null)
+            {
+                recorder.ResetRecording();
+            }
+
             if (isReplaying)
             {
                 UpdatePlayback();
@@ -62,6 +68,8 @@ namespace GlitchVerse.Echo
             if (ghostInstance != null) return;
 
             ghostInstance = new GameObject("EchoGhost_Visual");
+            ghostInstance.AddComponent<EchoGhostMarker>();
+
             ghostRenderer = ghostInstance.AddComponent<SpriteRenderer>();
             if (ghostSprite != null)
             {
@@ -70,12 +78,10 @@ namespace GlitchVerse.Echo
             ghostRenderer.color = ghostCyanColor;
             ghostRenderer.sortingOrder = ghostSortingOrder;
 
-            // Ensure no physics colliders exist on the visual ghost
-            var colliders = ghostInstance.GetComponentsInChildren<Collider2D>();
-            foreach (var col in colliders)
-            {
-                Destroy(col);
-            }
+            // Trigger collider specifically for activating EchoSwitches without blocking movement
+            var triggerCol = ghostInstance.AddComponent<BoxCollider2D>();
+            triggerCol.isTrigger = true;
+            triggerCol.size = new Vector2(0.6f, 0.9f);
 
             ghostInstance.SetActive(false);
         }
