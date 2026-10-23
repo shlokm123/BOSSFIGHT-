@@ -21,6 +21,7 @@ namespace GlitchVerse.Narrative
 
         // Tracks seen chapters across scenes in this play session
         private static readonly HashSet<int> SeenChapters = new HashSet<int>();
+        public static event Action OnIntroConcluded;
 
         [Header("UI Canvas Elements")]
         [SerializeField] private GameObject introPanel;
@@ -40,6 +41,8 @@ namespace GlitchVerse.Narrative
         private bool isIntroPlaying = false;
         private bool canSkip = false;
         private Coroutine introRoutine;
+
+        public bool IsIntroPlaying => isIntroPlaying;
 
         private static readonly char[] GlitchChars = new char[] { '░', '█', '▒', '▓', '†', '‡', '§', '#', 'Ø', 'X' };
 
@@ -69,6 +72,7 @@ namespace GlitchVerse.Narrative
             {
                 if (introPanel != null) introPanel.SetActive(false);
                 if (player != null) player.InputLocked = false;
+                OnIntroConcluded?.Invoke();
                 return;
             }
 
@@ -116,7 +120,11 @@ namespace GlitchVerse.Narrative
 
         public void PlayChapterIntro(int chamberNum)
         {
-            if (introPanel == null) return;
+            if (introPanel == null)
+            {
+                OnIntroConcluded?.Invoke();
+                return;
+            }
 
             string chapterRom = "I";
             string titleName = "DECEPTION";
@@ -242,12 +250,18 @@ namespace GlitchVerse.Narrative
             group.alpha = 1f;
 
             // Restore gameplay physics and player input
+            if (player == null)
+            {
+                player = FindAnyObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
+            }
+
             if (player != null)
             {
                 player.InputLocked = false;
             }
 
             Debug.Log("[ChapterIntroController] Intro concluded. Gameplay restored.");
+            OnIntroConcluded?.Invoke();
         }
 
         /// <summary>

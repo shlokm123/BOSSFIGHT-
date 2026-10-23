@@ -903,17 +903,29 @@ namespace GlitchVerse.Editor
                 new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 110f), new Vector2(800f, 35f), 
                 new Color(0.85f, 0f, 1f, 1f));
 
+            // 7.5 Emergency Fullscreen Flash Overlay (Phase 07)
+            GameObject flashObj = new GameObject("EmergencyFlashOverlay");
+            flashObj.transform.SetParent(uiRoot.transform, false);
+            RectTransform flashRt = flashObj.AddComponent<RectTransform>();
+            flashRt.anchorMin = Vector2.zero;
+            flashRt.anchorMax = Vector2.one;
+            flashRt.offsetMin = Vector2.zero;
+            flashRt.offsetMax = Vector2.zero;
+            Image flashImg = flashObj.AddComponent<Image>();
+            flashImg.color = new Color(1f, 0f, 0.15f, 0f);
+            flashImg.raycastTarget = false;
+
             // Architect Subtitle Banner (Phase 07)
             GameObject subBannerObj = new GameObject("ArchitectSubtitleBanner");
             subBannerObj.transform.SetParent(uiRoot.transform, false);
             RectTransform bannerRt = subBannerObj.AddComponent<RectTransform>();
             bannerRt.anchorMin = new Vector2(0.15f, 0.78f);
-            bannerRt.anchorMax = new Vector2(0.85f, 0.88f);
+            bannerRt.anchorMax = new Vector2(0.85f, 0.90f);
             bannerRt.offsetMin = Vector2.zero;
             bannerRt.offsetMax = Vector2.zero;
 
             Image bannerBg = subBannerObj.AddComponent<Image>();
-            bannerBg.color = new Color(0.02f, 0.04f, 0.08f, 0.88f);
+            bannerBg.color = new Color(0.02f, 0.04f, 0.08f, 0.92f);
 
             Text subSpeakerTxt = CreateUIText(subBannerObj.transform, "SpeakerNameText",
                 "// THE ARCHITECT //", defaultFont, 14, TextAnchor.UpperLeft,
@@ -930,6 +942,8 @@ namespace GlitchVerse.Editor
             SetPrivateField(dialogue, "subtitleBannerPanel", subBannerObj);
             SetPrivateField(dialogue, "speakerNameText", subSpeakerTxt);
             SetPrivateField(dialogue, "dialogueContentText", subContentTxt);
+            SetPrivateField(dialogue, "subtitleText", subContentTxt);
+            SetPrivateField(dialogue, "flashOverlay", flashImg);
 
             GameObject completePanelObj = new GameObject("CompletionPanel");
             completePanelObj.transform.SetParent(uiRoot.transform, false);
@@ -964,36 +978,36 @@ namespace GlitchVerse.Editor
             // 8. Level HUD Controller
             LevelHUD hud = uiRoot.AddComponent<LevelHUD>();
             SetPrivateField(hud, "titleText", titleTxt);
-            SetPrivateField(hud, "chamberText", levelTxt);
+            SetPrivateField(hud, "levelLabelText", levelTxt);
             SetPrivateField(hud, "timerText", timerTxt);
             SetPrivateField(hud, "abilityStatusText", abilityTxt);
-            SetPrivateField(hud, "echoStatusText", echoTxt);
+            SetPrivateField(hud, "echoHintText", echoTxt);
             SetPrivateField(hud, "instructionsText", instTxt);
             SetPrivateField(hud, "completionPanel", completePanelObj);
             SetPrivateField(hud, "completionTitleText", compTitle);
             SetPrivateField(hud, "completionStatsText", compStats);
             SetPrivateField(hud, "completionPromptText", compPrompt);
-            SetPrivateField(hud, "playerController", playerCtrl);
-            SetPrivateField(hud, "abilityController", abilityCtrl);
-            SetPrivateField(hud, "echoRecorder", echoRec);
-            SetPrivateField(hud, "echoPlayback", echoPlay);
+            SetPrivateField(hud, "completionBannerText", compTitle);
             SetPrivateField(hud, "exitDoor", exitComp);
+            SetPrivateField(hud, "abilityController", abilityCtrl);
+            SetPrivateField(hud, "echoPlayback", echoPlay);
 
             // 9. Director and Triggers
             GameObject directorObj = new GameObject("LevelDirector");
             LevelDirector director = directorObj.AddComponent<LevelDirector>();
-            SetPrivateField(director, "currentChamberNumber", chamberNum);
-            SetPrivateField(director, "nextChamberSceneName", nextScene);
-            SetPrivateField(director, "isFinalChamber", isFinal);
+            SetPrivateField(director, "levelTitle", isFinal ? "CONTAINMENT 04" : $"CONTAINMENT 0{chamberNum}");
+            SetPrivateField(director, "chamberNumber", chamberNum);
+            SetPrivateField(director, "nextSceneName", nextScene);
+            SetPrivateField(director, "isFinalLevel", isFinal);
             SetPrivateField(director, "exitDoor", exitComp);
-            SetPrivateField(director, "player", playerCtrl);
-            SetPrivateField(director, "hud", hud);
+            SetPrivateField(director, "localPlayer", playerCtrl);
+            SetPrivateField(director, "spawnPoint", spawnObj.transform);
+            SetPrivateField(hud, "levelDirector", director);
 
             ArchitectTriggers triggers = directorObj.AddComponent<ArchitectTriggers>();
-            SetPrivateField(triggers, "dialogueSystem", dialogue);
-            SetPrivateField(triggers, "player", playerCtrl);
-            SetPrivateField(triggers, "director", director);
-            SetPrivateField(triggers, "currentChamber", chamberNum);
+            SetPrivateField(triggers, "levelDirector", director);
+            SetPrivateField(triggers, "abilityController", abilityCtrl);
+            SetPrivateField(triggers, "echoPlayback", echoPlay);
 
             // 10. Horror Chapter Introduction Overlay (Phase 07.5)
             GameObject introPanelObj = new GameObject("ChapterIntroPanel");
@@ -1048,6 +1062,9 @@ namespace GlitchVerse.Editor
 
             GameObject sessionObj = new GameObject("GameSession");
             sessionObj.AddComponent<GameSession>();
+
+            subBannerObj.transform.SetAsLastSibling();
+            questionTxt.transform.SetAsLastSibling();
 
             return new BaseSceneRefs
             {
@@ -1244,6 +1261,7 @@ namespace GlitchVerse.Editor
 
             SetPrivateField(refs.hud, "pressurePlate", plateComp);
             SetPrivateField(refs.director, "pressurePlate", plateComp);
+            SetPrivateField(refs.triggers, "pressurePlate", plateComp);
 
             // Checkpoint 2: Scripted Fake Exit Prank (Level 01)
             GameObject realDoorObj = Object.Instantiate(refs.exitDoor.gameObject, refs.puzzleRoot.transform);
@@ -1424,6 +1442,7 @@ namespace GlitchVerse.Editor
 
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
 
             // Checkpoint 4: Fake Emergency Countdown Prank (Level 02)
             GameObject emergencyPrankObj = new GameObject("FakeEmergencyPrankController");
@@ -1626,6 +1645,7 @@ namespace GlitchVerse.Editor
 
             SetPrivateField(refs.hud, "pressurePlate", plateComp);
             SetPrivateField(refs.director, "pressurePlate", plateComp);
+            SetPrivateField(refs.triggers, "pressurePlate", plateComp);
 
             SaveChamberScene("Level03.unity");
         }
@@ -1783,6 +1803,7 @@ namespace GlitchVerse.Editor
 
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+            SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
 
             SaveChamberScene("Level04.unity");
         }

@@ -35,6 +35,12 @@ namespace GlitchVerse.Narrative
 
             timer += Time.deltaTime;
 
+            if (playerTransform == null)
+            {
+                var p = FindAnyObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
+                if (p != null) playerTransform = p.transform;
+            }
+
             // Trigger when player reaches the mid-chamber or after 5s
             bool playerReached = playerTransform != null && playerTransform.position.x > triggerXThreshold;
             if (timer >= triggerDelay || playerReached)

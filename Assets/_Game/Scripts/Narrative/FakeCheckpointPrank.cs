@@ -27,6 +27,11 @@ namespace GlitchVerse.Narrative
         {
             if (hasTriggered) return;
 
+            if (player == null)
+            {
+                player = FindAnyObjectByType<PlayerController2D>(FindObjectsInactive.Exclude);
+            }
+
             if (player != null && player.transform.position.x >= triggerX)
             {
                 hasTriggered = true;

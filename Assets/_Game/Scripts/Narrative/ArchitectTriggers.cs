@@ -60,12 +60,27 @@ namespace GlitchVerse.Narrative
                 pressurePlate.OnPlateStateChanged += HandlePlateStateChanged;
             }
 
-            // Trigger Entry Commentary delayed by 0.5s so everything initializes
-            Invoke(nameof(TriggerEntryCommentary), 0.5f);
+            // Trigger Entry Commentary when chapter intro concludes (or after brief delay if already concluded)
+            if (ChapterIntroController.Current != null && ChapterIntroController.Current.IsIntroPlaying)
+            {
+                ChapterIntroController.OnIntroConcluded += HandleIntroConcluded;
+            }
+            else
+            {
+                Invoke(nameof(TriggerEntryCommentary), 0.5f);
+            }
+        }
+
+        private void HandleIntroConcluded()
+        {
+            ChapterIntroController.OnIntroConcluded -= HandleIntroConcluded;
+            Invoke(nameof(TriggerEntryCommentary), 0.2f);
         }
 
         private void OnDestroy()
         {
+            ChapterIntroController.OnIntroConcluded -= HandleIntroConcluded;
+
             if (levelDirector != null)
             {
                 levelDirector.OnLevelComplete -= HandleLevelComplete;
@@ -164,7 +179,20 @@ namespace GlitchVerse.Narrative
         {
             if (ArchitectDialogue.Current == null) return;
 
-            int chamber = levelDirector != null ? levelDirector.ChamberNumber : 1;
+            if (levelDirector == null) levelDirector = LevelDirector.Current;
+            int chamber = 1;
+            if (levelDirector != null)
+            {
+                chamber = levelDirector.ChamberNumber;
+            }
+            else
+            {
+                string sName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (sName.StartsWith("Level") && sName.Length >= 7 && int.TryParse(sName.Substring(5, 2), out int parsed))
+                {
+                    chamber = parsed;
+                }
+            }
 
             // Checkpoint 5: Context-aware retry lines after traps
             if (chamber == 2 && CollapsingFloor.HasDiedToFloor)

@@ -46,6 +46,40 @@ namespace GlitchVerse.Core
         private void Awake()
         {
             Current = this;
+
+            // Defensive fallback: ensure chamber number and next scene are never missing
+            if (string.IsNullOrEmpty(nextSceneName) && !isFinalLevel || chamberNumber <= 0)
+            {
+                string activeScene = SceneManager.GetActiveScene().name;
+                if (activeScene == "Level01")
+                {
+                    chamberNumber = 1;
+                    levelTitle = "CONTAINMENT 01";
+                    nextSceneName = "Level02";
+                    isFinalLevel = false;
+                }
+                else if (activeScene == "Level02")
+                {
+                    chamberNumber = 2;
+                    levelTitle = "CONTAINMENT 02";
+                    nextSceneName = "Level03";
+                    isFinalLevel = false;
+                }
+                else if (activeScene == "Level03")
+                {
+                    chamberNumber = 3;
+                    levelTitle = "CONTAINMENT 03";
+                    nextSceneName = "Level04";
+                    isFinalLevel = false;
+                }
+                else if (activeScene == "Level04")
+                {
+                    chamberNumber = 4;
+                    levelTitle = "CONTAINMENT 04";
+                    nextSceneName = "";
+                    isFinalLevel = true;
+                }
+            }
         }
 
         private void Start()
@@ -60,9 +94,14 @@ namespace GlitchVerse.Core
                 echoSwitch.OnSwitchStateChanged += HandlePlateStateChanged;
             }
 
-            if (exitDoor != null)
+            // Subscribe to all doors in the scene (including relocated real exit doors)
+            var allDoors = FindObjectsByType<ExitDoor>(FindObjectsInactive.Include);
+            foreach (var d in allDoors)
             {
-                exitDoor.OnPlayerReachedExit += HandlePlayerReachedExit;
+                if (d != null)
+                {
+                    d.OnPlayerReachedExit += HandlePlayerReachedExit;
+                }
             }
         }
 
@@ -78,9 +117,13 @@ namespace GlitchVerse.Core
                 echoSwitch.OnSwitchStateChanged -= HandlePlateStateChanged;
             }
 
-            if (exitDoor != null)
+            var allDoors = FindObjectsByType<ExitDoor>(FindObjectsInactive.Include);
+            foreach (var d in allDoors)
             {
-                exitDoor.OnPlayerReachedExit -= HandlePlayerReachedExit;
+                if (d != null)
+                {
+                    d.OnPlayerReachedExit -= HandlePlayerReachedExit;
+                }
             }
 
             if (Current == this)
@@ -112,17 +155,26 @@ namespace GlitchVerse.Core
 
         private void HandlePlateStateChanged(bool isActivated)
         {
-            if (exitDoor != null)
-            {
-                exitDoor.SetUnlocked(isActivated);
-            }
+            var prank = FindAnyObjectByType<GlitchVerse.Narrative.FakeExitPrank>();
+            bool isPrankActive = prank != null && prank.IsPrankTriggered;
 
             var allDoors = FindObjectsByType<ExitDoor>(FindObjectsInactive.Include);
             foreach (var d in allDoors)
             {
-                if (d != null && d != exitDoor)
+                if (d != null)
                 {
-                    d.SetUnlocked(isActivated);
+                    if (isPrankActive && d.gameObject.name.Contains("RealExit"))
+                    {
+                        d.SetUnlocked(true);
+                    }
+                    else if (isPrankActive && d.GetComponent<GlitchVerse.Narrative.FakeExitPrank>() != null)
+                    {
+                        d.SetUnlocked(false);
+                    }
+                    else
+                    {
+                        d.SetUnlocked(isActivated);
+                    }
                 }
             }
         }
@@ -148,7 +200,8 @@ namespace GlitchVerse.Core
 
         private System.Collections.IEnumerator LoadNextLevelDelayed(float delay)
         {
-            yield return new WaitForSeconds(delay);
+            yield return new WaitForSecondsRealtime(delay);
+            Time.timeScale = 1.0f; // Ensure time scale is strictly restored
             Debug.Log($"[LevelDirector] Loading next chamber: {nextSceneName}");
             SceneManager.LoadScene(nextSceneName);
         }
@@ -162,6 +215,7 @@ namespace GlitchVerse.Core
 
         public void RestartLevel()
         {
+            Time.timeScale = 1.0f;
             if (GameSession.Instance != null)
             {
                 GameSession.Instance.RestartCurrentLevel();

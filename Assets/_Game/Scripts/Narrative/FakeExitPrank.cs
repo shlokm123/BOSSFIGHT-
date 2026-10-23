@@ -22,6 +22,7 @@ namespace GlitchVerse.Narrative
         [SerializeField] private Vector3 relocatedPosition = new Vector3(-3.0f, -0.6f, 0f);
 
         private bool prankTriggered = false;
+        public bool IsPrankTriggered => prankTriggered;
 
         private void Start()
         {

@@ -17,6 +17,9 @@ namespace GlitchVerse.Narrative
         public static ArchitectDialogue Current { get; private set; }
 
         [Header("UI Subtitle Elements")]
+        [SerializeField] private GameObject subtitleBannerPanel;
+        [SerializeField] private Text speakerNameText;
+        [SerializeField] private Text dialogueContentText;
         [SerializeField] private Text subtitleText;
         [SerializeField] private Image flashOverlay;
         [SerializeField] private TextMesh monitorTextMesh;
@@ -46,6 +49,43 @@ namespace GlitchVerse.Narrative
         private void Awake()
         {
             Current = this;
+
+            // Defensive fallbacks for UI elements
+            if (dialogueContentText == null && subtitleText != null) dialogueContentText = subtitleText;
+            if (subtitleText == null && dialogueContentText != null) subtitleText = dialogueContentText;
+
+            if (subtitleBannerPanel == null)
+            {
+                var bannerObj = GameObject.Find("ArchitectSubtitleBanner");
+                if (bannerObj != null) subtitleBannerPanel = bannerObj;
+            }
+
+            if (speakerNameText == null)
+            {
+                var spkObj = GameObject.Find("SpeakerNameText");
+                if (spkObj != null) speakerNameText = spkObj.GetComponent<Text>();
+            }
+
+            if (subtitleText == null)
+            {
+                var contentObj = GameObject.Find("SubtitleContentText");
+                if (contentObj != null)
+                {
+                    subtitleText = contentObj.GetComponent<Text>();
+                    dialogueContentText = subtitleText;
+                }
+            }
+
+            if (flashOverlay == null)
+            {
+                var flashObj = GameObject.Find("EmergencyFlashOverlay");
+                if (flashObj != null) flashOverlay = flashObj.GetComponent<Image>();
+            }
+
+            if (subtitleBannerPanel != null)
+            {
+                subtitleBannerPanel.SetActive(false);
+            }
 
             if (subtitleText != null)
             {
@@ -140,7 +180,47 @@ namespace GlitchVerse.Narrative
 
         private IEnumerator DisplayDialogueRoutine(DialogueEntry entry)
         {
-            if (subtitleText == null) yield break;
+            if (subtitleText == null && dialogueContentText != null)
+            {
+                subtitleText = dialogueContentText;
+            }
+
+            if (subtitleText == null)
+            {
+                var contentObj = GameObject.Find("SubtitleContentText");
+                if (contentObj != null)
+                {
+                    subtitleText = contentObj.GetComponent<Text>();
+                    dialogueContentText = subtitleText;
+                }
+            }
+
+            if (subtitleBannerPanel == null)
+            {
+                subtitleBannerPanel = GameObject.Find("ArchitectSubtitleBanner");
+            }
+
+            if (speakerNameText == null)
+            {
+                var spkObj = GameObject.Find("SpeakerNameText");
+                if (spkObj != null) speakerNameText = spkObj.GetComponent<Text>();
+            }
+
+            if (subtitleText == null)
+            {
+                Debug.LogWarning($"[ArchitectDialogue] Missing subtitle Text component. Aborting line: '{entry.text}'");
+                yield break;
+            }
+
+            if (subtitleBannerPanel != null)
+            {
+                subtitleBannerPanel.SetActive(true);
+            }
+
+            if (speakerNameText != null)
+            {
+                speakerNameText.text = "// THE ARCHITECT //";
+            }
 
             subtitleText.gameObject.SetActive(true);
 
@@ -174,11 +254,16 @@ namespace GlitchVerse.Narrative
             subtitleText.text = rawPrefix + "<color=#FFFFFF>" + targetMessage + "</color>";
 
             // 3. Readable hold duration
-            yield return new WaitForSeconds(entry.duration);
+            yield return new WaitForSecondsRealtime(entry.duration);
 
             // 4. Subtle exit
             subtitleText.text = "";
             subtitleText.gameObject.SetActive(false);
+
+            if (subtitleBannerPanel != null)
+            {
+                subtitleBannerPanel.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -186,6 +271,12 @@ namespace GlitchVerse.Narrative
         /// </summary>
         public void FlashScreenRed(float peakAlpha = 0.35f, float duration = 0.22f)
         {
+            if (flashOverlay == null)
+            {
+                var flashObj = GameObject.Find("EmergencyFlashOverlay");
+                if (flashObj != null) flashOverlay = flashObj.GetComponent<Image>();
+            }
+
             if (flashOverlay == null) return;
 
             if (flashRoutine != null)
@@ -203,7 +294,7 @@ namespace GlitchVerse.Narrative
 
             while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 float t = elapsed / duration;
                 flashOverlay.color = Color.Lerp(baseColor, clearColor, t);
                 yield return null;

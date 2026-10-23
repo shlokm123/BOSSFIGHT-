@@ -25,6 +25,12 @@ namespace GlitchVerse.UI
         [SerializeField] private Text echoHintText;
         [SerializeField] private Text completionBannerText;
 
+        [Header("Completion Panel References")]
+        [SerializeField] private GameObject completionPanel;
+        [SerializeField] private Text completionTitleText;
+        [SerializeField] private Text completionStatsText;
+        [SerializeField] private Text completionPromptText;
+
         [Header("Scene Dependencies")]
         [SerializeField] private PressurePlate pressurePlate;
         [SerializeField] private EchoSwitch echoSwitch;
@@ -43,6 +49,32 @@ namespace GlitchVerse.UI
             if (exitDoor == null) exitDoor = FindAnyObjectByType<ExitDoor>(FindObjectsInactive.Exclude);
             if (echoPlayback == null) echoPlayback = FindAnyObjectByType<EchoPlayback>(FindObjectsInactive.Exclude);
             if (abilityController == null) abilityController = FindAnyObjectByType<AbilityController>(FindObjectsInactive.Exclude);
+
+            // Completion Panel fallbacks
+            if (completionPanel == null)
+            {
+                var compObj = GameObject.Find("CompletionPanel");
+                if (compObj != null) completionPanel = compObj;
+            }
+            if (completionTitleText == null)
+            {
+                var titleObj = GameObject.Find("CompletionTitle");
+                if (titleObj != null) completionTitleText = titleObj.GetComponent<Text>();
+            }
+            if (completionStatsText == null)
+            {
+                var statsObj = GameObject.Find("CompletionStats");
+                if (statsObj != null) completionStatsText = statsObj.GetComponent<Text>();
+            }
+            if (completionPromptText == null)
+            {
+                var promptObj = GameObject.Find("CompletionPrompt");
+                if (promptObj != null) completionPromptText = promptObj.GetComponent<Text>();
+            }
+            if (completionPanel != null)
+            {
+                completionPanel.SetActive(false);
+            }
 
             // Setup header labels
             if (titleText != null) titleText.text = "GLITCHVERSE: ECHO PROTOCOL";
@@ -180,6 +212,42 @@ namespace GlitchVerse.UI
 
         private void HandleLevelComplete()
         {
+            if (completionPanel != null)
+            {
+                completionPanel.SetActive(true);
+
+                if (completionTitleText != null)
+                {
+                    completionTitleText.text = (levelDirector != null && levelDirector.IsFinalLevel)
+                        ? "SIMULATION TERMINATED // REALITY BREACHED"
+                        : "CONTAINMENT PROTOCOL CLEARED";
+                }
+
+                if (completionStatsText != null)
+                {
+                    int minutes = Mathf.FloorToInt(roomTimer / 60f);
+                    float seconds = roomTimer % 60f;
+                    int restarts = GameSession.Instance != null ? GameSession.Instance.ResetCount : 0;
+                    completionStatsText.text = $"ELAPSED TIME: {minutes:00}:{seconds:04.1f}   TOTAL RESTARTS: {restarts}";
+                }
+
+                if (completionPromptText != null)
+                {
+                    if (levelDirector != null && levelDirector.IsFinalLevel)
+                    {
+                        completionPromptText.text = "[R] RESTART SIMULATION FROM BEGINNING";
+                    }
+                    else if (levelDirector != null && !string.IsNullOrEmpty(levelDirector.NextSceneName))
+                    {
+                        completionPromptText.text = $"TRANSITIONING TO {levelDirector.NextSceneName.ToUpper()}...";
+                    }
+                    else
+                    {
+                        completionPromptText.text = "[SPACE] ADVANCE TO NEXT CHAMBER";
+                    }
+                }
+            }
+
             if (completionBannerText != null)
             {
                 completionBannerText.gameObject.SetActive(true);
