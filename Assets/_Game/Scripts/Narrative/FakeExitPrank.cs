@@ -1,16 +1,21 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using GlitchVerse.Core;
 using GlitchVerse.Interactables;
+using GlitchVerse.Mechanics;
 using GlitchVerse.Player;
+using GlitchVerse.UI;
 
 namespace GlitchVerse.Narrative
 {
     /// <summary>
     /// Implements the scripted one-time Fake Exit prank for Level 01.
     /// When the player first enters the unlocked exit, it flashes ACCESS GRANTED,
-    /// triggers a glitch effect, and relocates the real exit door to Observation Platform A.
-    /// Follows Phase 07 Checkpoint 2 fairness requirements.
+    /// triggers a glitch effect, relocates the real exit door to Observation Platform A,
+    /// locks it behind a security barrier, activates two moving red laser hazards,
+    /// and powers up the temporal Echo switch on Platform B.
+    /// Follows Chapter I Difficulty Upgrade 01B requirements.
     /// </summary>
     public class FakeExitPrank : MonoBehaviour
     {
@@ -19,16 +24,22 @@ namespace GlitchVerse.Narrative
         [SerializeField] private ExitDoor realDoor;
 
         [Header("Platform Relocation Target")]
-        [SerializeField] private Vector3 relocatedPosition = new Vector3(-3.0f, -0.6f, 0f);
+        [SerializeField] private Vector3 relocatedPosition = new Vector3(-3.0f, 0.4f, 0f);
 
         [Header("Security Interlock")]
         [SerializeField] private SecurityBarrier securityBarrier;
         [SerializeField] private SecurityOverrideSwitch secondarySwitch;
 
+        [Header("Moving Laser Hazards")]
+        [SerializeField] private MovingLaserHazard laserA;
+        [SerializeField] private MovingLaserHazard laserB;
+
         private bool prankTriggered = false;
         public bool IsPrankTriggered => prankTriggered;
         public SecurityBarrier Barrier => securityBarrier;
         public SecurityOverrideSwitch SecondarySwitch => secondarySwitch;
+        public MovingLaserHazard LaserA => laserA;
+        public MovingLaserHazard LaserB => laserB;
 
         private void Start()
         {
@@ -49,6 +60,16 @@ namespace GlitchVerse.Narrative
             {
                 secondarySwitch.SetSwitchPowered(false);
             }
+
+            if (laserA != null)
+            {
+                laserA.SetHazardActive(false);
+            }
+
+            if (laserB != null)
+            {
+                laserB.SetHazardActive(false);
+            }
         }
 
         /// <summary>
@@ -65,14 +86,14 @@ namespace GlitchVerse.Narrative
 
         private IEnumerator ExecutePrankRoutine()
         {
-            // 1. Brief flash and glitch
+            // 1. Brief flash and betrayal dialogue
             if (ArchitectDialogue.Current != null)
             {
                 ArchitectDialogue.Current.FlashScreenRed(0.4f, 0.25f);
                 ArchitectDialogue.Current.Speak(
                     "I said you could leave. I didn't say where.",
                     "PORTAL RELOCATED",
-                    3.2f,
+                    3.0f,
                     "fake_exit_prank",
                     0f,
                     priority: true
@@ -99,7 +120,6 @@ namespace GlitchVerse.Narrative
                 realDoor.transform.position = relocatedPosition;
                 realDoor.SetUnlocked(true);
 
-                // Add visual beacon/glow on the new door
                 var light = realDoor.GetComponentInChildren<UnityEngine.Rendering.Universal.Light2D>();
                 if (light != null)
                 {
@@ -108,7 +128,7 @@ namespace GlitchVerse.Narrative
                 }
             }
 
-            // 4. Activate security barrier and power up the secondary override breaker on Platform B
+            // 4. Activate security barrier and power up the Echo switch on Platform B
             if (securityBarrier != null)
             {
                 securityBarrier.gameObject.SetActive(true);
@@ -120,7 +140,48 @@ namespace GlitchVerse.Narrative
                 secondarySwitch.SetSwitchPowered(true);
             }
 
-            Debug.Log("[FakeExitPrank] Exit relocated to Observation Platform A. Security barrier locked. Override switch energized.");
+            // 5. Activate both moving red lasers
+            if (laserA != null)
+            {
+                laserA.SetHazardActive(true);
+            }
+
+            if (laserB != null)
+            {
+                laserB.SetHazardActive(true);
+            }
+
+            // 6. Update HUD instruction and Echo hint
+            var hud = FindAnyObjectByType<LevelHUD>(FindObjectsInactive.Exclude);
+            if (hud != null)
+            {
+                var echoHintField = typeof(LevelHUD).GetField("echoHintText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (echoHintField != null)
+                {
+                    var echoHintText = echoHintField.GetValue(hud) as Text;
+                    if (echoHintText != null)
+                    {
+                        echoHintText.text = "[H] REPLAY ECHO / [C] CLEAR";
+                    }
+                }
+            }
+
+            // 7. Contextual temporal instruction after initial betrayal
+            yield return new WaitForSeconds(3.2f);
+
+            if (ArchitectDialogue.Current != null)
+            {
+                ArchitectDialogue.Current.Speak(
+                    "SOME DOORS REQUIRE SOMEONE YOU USED TO BE.",
+                    "TEMPORAL ANOMALY",
+                    3.5f,
+                    "ch1_echo_hint",
+                    0f,
+                    priority: true
+                );
+            }
+
+            Debug.Log("[FakeExitPrank] Exit relocated to Observation Platform A. Moving lasers online. Echo switch energized.");
         }
 
         public void ResetPrank()
@@ -140,6 +201,19 @@ namespace GlitchVerse.Narrative
             if (secondarySwitch != null)
             {
                 secondarySwitch.ResetSwitch();
+                secondarySwitch.SetSwitchPowered(false);
+            }
+
+            if (laserA != null)
+            {
+                laserA.ResetHazard();
+                laserA.SetHazardActive(false);
+            }
+
+            if (laserB != null)
+            {
+                laserB.ResetHazard();
+                laserB.SetHazardActive(false);
             }
         }
     }

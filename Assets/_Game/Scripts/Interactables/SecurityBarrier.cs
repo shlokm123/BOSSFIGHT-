@@ -6,8 +6,8 @@ namespace GlitchVerse.Interactables
 {
     /// <summary>
     /// Physical security laser barrier blocking access to the real exit in Chapter I
-    /// until the secondary override switch on Platform B is activated.
-    /// Follows Phase 07 / Difficulty Upgrade 01 specifications.
+    /// until the Echo-only switch on Platform B is actively held by an Echo ghost.
+    /// Follows Chapter I Difficulty Upgrade 01B specifications.
     /// </summary>
     [RequireComponent(typeof(BoxCollider2D))]
     public class SecurityBarrier : MonoBehaviour
@@ -24,8 +24,10 @@ namespace GlitchVerse.Interactables
 
         [Header("State")]
         [SerializeField] private bool isLocked = true;
+        [SerializeField] private bool isPermanentlyUnlocked = false;
 
         public bool IsLocked => isLocked;
+        public bool IsPermanentlyUnlocked => isPermanentlyUnlocked;
 
         private void Awake()
         {
@@ -37,6 +39,11 @@ namespace GlitchVerse.Interactables
 
         public void SetBarrierLocked(bool locked)
         {
+            if (isPermanentlyUnlocked && locked)
+            {
+                return; // Do not relock once player has reached exit
+            }
+
             isLocked = locked;
             if (barrierCollider != null)
             {
@@ -51,8 +58,16 @@ namespace GlitchVerse.Interactables
             SetBarrierLocked(false);
         }
 
+        public void SetPermanentlyUnlocked()
+        {
+            isPermanentlyUnlocked = true;
+            SetBarrierLocked(false);
+            Debug.Log($"[SecurityBarrier] {gameObject.name} permanently unlocked. Relock suppressed.");
+        }
+
         public void ResetBarrier()
         {
+            isPermanentlyUnlocked = false;
             SetBarrierLocked(true);
         }
 
@@ -73,8 +88,8 @@ namespace GlitchVerse.Interactables
             if (signText != null)
             {
                 signText.text = isLocked
-                    ? "<color=#FF1E40>[SECURITY INTERLOCK: ACTIVE]</color>\n<size=12><color=#FFAA00>MANUAL OVERRIDE: CONSOLE B</color></size>"
-                    : "<color=#00F0FF>[INTERLOCK OVERRIDDEN]</color>\n<size=12><color=#00FF88>ACCESS GRANTED</color></size>";
+                    ? "<color=#FF1E40>[SECURITY INTERLOCK: ACTIVE]</color>\n<size=12><color=#D600FF>TEMPORAL ECHO OVERRIDE REQUIRED</color></size>"
+                    : "<color=#00F0FF>[INTERLOCK OFFLINE: ECHO DETECTED]</color>\n<size=12><color=#00FF88>ACCESS GRANTED</color></size>";
             }
         }
     }

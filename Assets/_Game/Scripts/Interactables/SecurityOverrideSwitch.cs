@@ -2,164 +2,125 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
+using GlitchVerse.Echo;
 using GlitchVerse.Narrative;
 using GlitchVerse.Player;
 
 namespace GlitchVerse.Interactables
 {
     /// <summary>
-    /// Interactive secondary breaker switch on Platform B in Chapter I.
-    /// Powers up when the Fake Exit Prank triggers, and requires the player
-    /// to jump up and step on it to drop the security barrier at the real exit.
-    /// Follows Phase 07 / Difficulty Upgrade 01 specifications.
+    /// Interactive temporal Echo-only security switch mounted on Platform B in Chapter I.
+    /// Powers up when the Fake Exit Prank triggers.
+    /// Strictly rejects live player activation; can only be engaged and held by a temporal Echo ghost.
+    /// Disables the security barrier at Observation Platform A while held.
+    /// Reactivates the barrier when the Echo releases, with a fair grace buffer.
+    /// Follows Chapter I Difficulty Upgrade 01B specifications.
     /// </summary>
-    [RequireComponent(typeof(BoxCollider2D))]
-    public class SecurityOverrideSwitch : MonoBehaviour
+    public class SecurityOverrideSwitch : EchoSwitch
     {
         [Header("Target Interlock")]
         [SerializeField] private SecurityBarrier targetBarrier;
 
-        [Header("Visual Feedback")]
-        [SerializeField] private SpriteRenderer switchRenderer;
-        [SerializeField] private Light2D switchLight;
-        [SerializeField] private Transform depressVisual;
-        [SerializeField] private Text consoleStatusText;
-
         [Header("State Colors")]
-        [SerializeField] private Color unpoweredColor = new Color(0.28f, 0.32f, 0.38f, 0.7f);
-        [SerializeField] private Color poweredColor = new Color(1.0f, 0.65f, 0.15f, 1f);   // Warning Amber
-        [SerializeField] private Color activatedColor = new Color(0.0f, 0.95f, 1.0f, 1f);   // Cyan Cleared
+        [SerializeField] private Color unpoweredColor = new Color(0.25f, 0.28f, 0.35f, 0.7f);
+        [SerializeField] private Color poweredColor = new Color(0.85f, 0f, 1f, 1f);     // Holographic Magenta #D600FF
+        [SerializeField] private Color activatedColor = new Color(0.0f, 0.95f, 1.0f, 1f);  // Cyan Cleared #00F0FF
 
-        [Header("State")]
-        [SerializeField] private bool isPowered = false;
-        [SerializeField] private bool isActivated = false;
+        private bool hasSpokenPraise = false;
 
-        private Vector3 initialVisualPos;
-        public bool IsPowered => isPowered;
-        public bool IsActivated => isActivated;
+        public SecurityBarrier TargetBarrier
+        {
+            get => targetBarrier;
+            set => targetBarrier = value;
+        }
 
         public event Action OnSwitchActivated;
 
-        private void Awake()
+        protected override void Awake()
         {
-            var col = GetComponent<BoxCollider2D>();
-            col.isTrigger = true;
-
-            if (depressVisual != null)
-            {
-                initialVisualPos = depressVisual.localPosition;
-            }
-
-            UpdateVisuals();
-        }
-
-        public void SetSwitchPowered(bool powered)
-        {
-            isPowered = powered;
-            UpdateVisuals();
-            Debug.Log($"[SecurityOverrideSwitch] Powered: {powered}");
-        }
-
-        public void ResetSwitch()
-        {
+            // Configure strictly for Echo-only temporal gating
+            allowPlayerActivation = false;
+            allowEchoActivation = true;
+            latching = false;
+            holdGraceDuration = 2.0f; // 2-second grace hold window for fair traversal
             isPowered = false;
-            isActivated = false;
-            if (depressVisual != null)
+
+            inactiveColor = poweredColor;
+            activeColor = activatedColor;
+
+            base.Awake();
+
+            OnSwitchStateChanged += HandleSwitchStateChanged;
+        }
+
+        private void OnDestroy()
+        {
+            OnSwitchStateChanged -= HandleSwitchStateChanged;
+        }
+
+        private void HandleSwitchStateChanged(bool active)
+        {
+            if (targetBarrier != null)
             {
-                depressVisual.localPosition = initialVisualPos;
+                // Barrier locked when switch is not activated, unlocked when switch is activated
+                targetBarrier.SetBarrierLocked(!active);
             }
-            UpdateVisuals();
-        }
 
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            CheckActivation(other);
-        }
-
-        private void OnTriggerStay2D(Collider2D other)
-        {
-            CheckActivation(other);
-        }
-
-        private void CheckActivation(Collider2D other)
-        {
-            if (!isPowered || isActivated) return;
-
-            // Activated when live player or movable cube contacts the switch
-            bool isPlayer = other.GetComponent<PlayerController2D>() != null || other.CompareTag("Player");
-            bool isCube = other.GetComponent<MovableCube>() != null;
-
-            if (isPlayer || isCube)
+            if (active)
             {
-                Debug.Log($"[SecurityOverrideSwitch] Activated by {other.gameObject.name} (tag: {other.tag}) at position {other.transform.position}");
-                ActivateSwitch();
+                OnSwitchActivated?.Invoke();
+
+                if (!hasSpokenPraise)
+                {
+                    hasSpokenPraise = true;
+                    if (ArchitectDialogue.Current != null)
+                    {
+                        ArchitectDialogue.Current.Speak(
+                            "Congratulations. Your past self is finally useful.",
+                            "SECURITY OVERRIDE",
+                            3.2f,
+                            "ch1_echo_useful",
+                            0f,
+                            priority: true
+                        );
+                    }
+                }
+            }
+        }
+
+        public override void ResetSwitch()
+        {
+            hasSpokenPraise = false;
+            base.ResetSwitch();
+            if (targetBarrier != null)
+            {
+                targetBarrier.SetBarrierLocked(true);
             }
         }
 
         public void ActivateSwitch()
         {
             if (isActivated) return;
-
-            isActivated = true;
-            Debug.Log("[SecurityOverrideSwitch] Player engaged secondary override breaker!");
-
-            if (depressVisual != null)
-            {
-                depressVisual.localPosition = initialVisualPos + new Vector3(0f, -0.08f, 0f);
-            }
-
-            UpdateVisuals();
-
-            // Unlock target barrier
-            if (targetBarrier != null)
-            {
-                targetBarrier.UnlockBarrier();
-            }
-
-            // Narrative feedback from Architect
-            if (ArchitectDialogue.Current != null)
-            {
-                ArchitectDialogue.Current.Speak(
-                    "Did you really think a breaker switch makes you clever?",
-                    "SECURITY OVERRIDE",
-                    2.8f,
-                    "ch1_switch_override",
-                    0f,
-                    priority: true
-                );
-            }
-
-            OnSwitchActivated?.Invoke();
+            SetActivated(true);
         }
 
-        private void UpdateVisuals()
+        protected override void UpdateVisuals()
         {
-            Color curColor = isActivated ? activatedColor : (isPowered ? poweredColor : unpoweredColor);
-
-            if (switchRenderer != null)
-            {
-                switchRenderer.color = curColor;
-            }
-
-            if (switchLight != null)
-            {
-                switchLight.color = curColor;
-                switchLight.intensity = isActivated ? 1.6f : (isPowered ? 1.2f : 0.25f);
-            }
+            base.UpdateVisuals();
 
             if (consoleStatusText != null)
             {
                 if (isActivated)
                 {
-                    consoleStatusText.text = "<color=#00F0FF>[OVERRIDE ENGAGED]</color>\n<size=12><color=#00FF88>BARRIER OFFLINE</color></size>";
+                    consoleStatusText.text = "<color=#00F0FF>[ECHO OVERRIDE ACTIVE]</color>\n<size=11><color=#00FF88>EXIT BARRIER UNLOCKED</color></size>";
                 }
                 else if (isPowered)
                 {
-                    consoleStatusText.text = "<color=#FFAA00>[BREAKER ONLINE]</color>\n<size=12><color=#FFFFFF>STEP TO RELEASE INTERLOCK</color></size>";
+                    consoleStatusText.text = "<color=#D600FF>[TEMPORAL SENSOR: ONLINE]</color>\n<size=11><color=#FFFFFF>ECHO GHOST [H] REQUIRED TO ENGAGE</color></size>";
                 }
                 else
                 {
-                    consoleStatusText.text = "<color=#666666>[STANDBY]</color>\n<size=12><color=#444444>AWAITING POWER ROUTE</color></size>";
+                    consoleStatusText.text = "<color=#666666>[STANDBY]</color>\n<size=11><color=#444444>AWAITING INTERLOCK ACTIVATION</color></size>";
                 }
             }
         }

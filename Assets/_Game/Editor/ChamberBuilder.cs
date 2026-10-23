@@ -1240,6 +1240,7 @@ namespace GlitchVerse.Editor
             };
 
             var refs = SetupBaseChamber("CONTAINMENT 01 // FIRST LIE", 1, "Level02", false, atmo);
+            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite cubeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cube_crate.png");
@@ -1404,9 +1405,10 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.director, "pressurePlate", plateComp);
             SetPrivateField(refs.triggers, "pressurePlate", plateComp);
 
-            // Checkpoint 2: Scripted Fake Exit Prank & Difficulty Upgrade 01 (Level 01)
+            // Checkpoint 2: Scripted Fake Exit Prank & Difficulty Upgrade 01B (Level 01)
             Sprite barrierSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/security_barrier_grid.png");
-            Sprite switchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/secondary_breaker_switch.png");
+            Sprite switchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png") ?? AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/secondary_breaker_switch.png");
+            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
 
             GameObject realDoorObj = Object.Instantiate(refs.exitDoor.gameObject, refs.puzzleRoot.transform);
             realDoorObj.name = "RealExitDoor_PlatformA";
@@ -1414,7 +1416,7 @@ namespace GlitchVerse.Editor
             realDoorObj.SetActive(false);
             ExitDoor realDoorComp = realDoorObj.GetComponent<ExitDoor>();
 
-            // 1. Security Barrier (Blocks doorway on Observation Platform A until breaker is flipped)
+            // 1. Security Barrier (Blocks doorway on Observation Platform A until Echo switch is held)
             GameObject barrierObj = new GameObject("RealExit_SecurityBarrier");
             barrierObj.transform.SetParent(refs.puzzleRoot.transform);
             barrierObj.transform.position = new Vector3(-3.0f, 0.4f, 0f);
@@ -1438,10 +1440,23 @@ namespace GlitchVerse.Editor
             barLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
             barLight.intensity = 1.4f;
 
+            GameObject barCanvasObj = new GameObject("Barrier_SignUI");
+            barCanvasObj.transform.SetParent(barrierObj.transform);
+            barCanvasObj.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            Canvas barCanvas = barCanvasObj.AddComponent<Canvas>();
+            barCanvas.renderMode = RenderMode.WorldSpace;
+            RectTransform barRt = barCanvasObj.GetComponent<RectTransform>();
+            barRt.sizeDelta = new Vector2(300f, 80f);
+            barRt.localScale = new Vector3(0.007f, 0.007f, 1f);
+            Text barText = CreateUIText(barCanvasObj.transform, "SignText", 
+                "<color=#FF1E40>[SECURITY INTERLOCK: ACTIVE]</color>", defaultFont, 14, TextAnchor.MiddleCenter,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Color.white);
+
             SecurityBarrier barrierComp = barrierObj.AddComponent<SecurityBarrier>();
             SetPrivateField(barrierComp, "barrierCollider", barCol);
             SetPrivateField(barrierComp, "barrierRenderer", barRend);
             SetPrivateField(barrierComp, "barrierLight", barLight);
+            SetPrivateField(barrierComp, "signText", barText);
             SetPrivateField(barrierComp, "isLocked", true);
             barrierObj.SetActive(false); // Managed by FakeExitPrank
 
@@ -1486,24 +1501,28 @@ namespace GlitchVerse.Editor
             Light2D pbbLight = pbbLightObj.AddComponent<Light2D>();
             pbbLight.lightType = Light2D.LightType.Point;
             pbbLight.pointLightOuterRadius = 3.0f;
-            pbbLight.color = new Color(1.0f, 0.65f, 0.15f, 1f);
+            pbbLight.color = new Color(0.85f, 0f, 1f, 1f); // Holographic Magenta Beacon
             pbbLight.intensity = 0.8f;
 
             FlickeringLight2D pbbFlicker = pbbLightObj.AddComponent<FlickeringLight2D>();
             pbbFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
             pbbFlicker.BaseIntensity = 0.8f;
 
-            // Draped interlock cable bundle connecting Platform B to ceiling/wall
-            GameObject interlockCable = new GameObject("Deco_InterlockCable_B");
-            interlockCable.transform.SetParent(refs.envRoot.transform);
-            interlockCable.transform.position = new Vector3(5.5f, -0.6f, 0f);
-            interlockCable.transform.localScale = new Vector3(1.2f, 0.8f, 1f);
-            SpriteRenderer icRend = interlockCable.AddComponent<SpriteRenderer>();
-            icRend.sprite = cableSp;
-            icRend.color = new Color(0.7f, 0.55f, 0.35f, 0.85f);
-            icRend.sortingOrder = -3;
+            // Draped interlock conduit bundles bridging Platform B across ceiling to Platform A
+            float[] conduitXs = new float[] { 5.5f, 3.5f, 1.5f, -0.5f, -2.5f };
+            foreach (var cx in conduitXs)
+            {
+                GameObject interlockCable = new GameObject($"Deco_ConduitLink_{cx}");
+                interlockCable.transform.SetParent(refs.envRoot.transform);
+                interlockCable.transform.position = new Vector3(cx, 3.8f, 0f);
+                interlockCable.transform.localScale = new Vector3(1.8f, 0.7f, 1f);
+                SpriteRenderer icRend = interlockCable.AddComponent<SpriteRenderer>();
+                icRend.sprite = cableSp;
+                icRend.color = new Color(0.85f, 0.1f, 1.0f, 0.8f); // Magenta energy conduit
+                icRend.sortingOrder = -3;
+            }
 
-            // 3. Secondary Override Breaker Switch on Platform B
+            // 3. Temporal Echo Switch Console on Platform B
             GameObject switchObj = new GameObject("SecondarySwitch_ConsoleB");
             switchObj.transform.SetParent(refs.puzzleRoot.transform);
             switchObj.transform.position = new Vector3(5.5f, -1.0f, 0f);
@@ -1511,7 +1530,7 @@ namespace GlitchVerse.Editor
             SpriteRenderer swRend = switchObj.AddComponent<SpriteRenderer>();
             swRend.sprite = switchSp;
             swRend.sortingOrder = 4;
-            swRend.color = new Color(0.28f, 0.32f, 0.38f, 0.7f); // Initially unpowered
+            swRend.color = new Color(0.25f, 0.28f, 0.35f, 0.7f); // Initially unpowered
 
             BoxCollider2D swCol = switchObj.AddComponent<BoxCollider2D>();
             swCol.isTrigger = true;
@@ -1523,24 +1542,110 @@ namespace GlitchVerse.Editor
             Light2D swLight = swLightObj.AddComponent<Light2D>();
             swLight.lightType = Light2D.LightType.Point;
             swLight.pointLightOuterRadius = 2.4f;
-            swLight.color = new Color(1.0f, 0.65f, 0.15f, 1f);
+            swLight.color = new Color(0.85f, 0f, 1f, 1f); // Holographic Magenta
             swLight.intensity = 0.25f; // Dim when unpowered
+
+            GameObject swCanvasObj = new GameObject("Switch_ConsoleUI");
+            swCanvasObj.transform.SetParent(switchObj.transform);
+            swCanvasObj.transform.localPosition = new Vector3(0f, 0.65f, 0f);
+            Canvas swCanvas = swCanvasObj.AddComponent<Canvas>();
+            swCanvas.renderMode = RenderMode.WorldSpace;
+            RectTransform swRt = swCanvasObj.GetComponent<RectTransform>();
+            swRt.sizeDelta = new Vector2(300f, 80f);
+            swRt.localScale = new Vector3(0.007f, 0.007f, 1f);
+            Text swText = CreateUIText(swCanvasObj.transform, "StatusText", 
+                "<color=#666666>[STANDBY]</color>", defaultFont, 14, TextAnchor.MiddleCenter,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Color.white);
 
             SecurityOverrideSwitch switchComp = switchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(switchComp, "targetBarrier", barrierComp);
             SetPrivateField(switchComp, "switchRenderer", swRend);
-            SetPrivateField(switchComp, "switchLight", swLight);
+            SetPrivateField(switchComp, "glowLight", swLight);
             SetPrivateField(switchComp, "depressVisual", switchObj.transform);
+            SetPrivateField(switchComp, "consoleStatusText", swText);
+            SetPrivateField(switchComp, "allowPlayerActivation", false);
+            SetPrivateField(switchComp, "allowEchoActivation", true);
+            SetPrivateField(switchComp, "holdGraceDuration", 2.0f);
+            SetPrivateField(switchComp, "latching", false);
             SetPrivateField(switchComp, "isPowered", false);
             SetPrivateField(switchComp, "isActivated", false);
 
-            // 4. Wire FakeExitPrank with door, barrier, and switch
+            // 4. Dual Moving Red Lasers between Platform B and Platform A
+            // Laser A — Vertical Bar sweeping horizontally (X: 0.9 to 2.5, Y: -2.85)
+            GameObject laserAObj = new GameObject("LaserA_Vertical");
+            laserAObj.transform.SetParent(refs.puzzleRoot.transform);
+            laserAObj.transform.position = new Vector3(1.7f, -2.85f, 0f);
+
+            SpriteRenderer laRend = laserAObj.AddComponent<SpriteRenderer>();
+            laRend.sprite = laserSp;
+            laRend.color = new Color(1.0f, 0.12f, 0.22f, 1f);
+            laRend.sortingOrder = 7;
+            laRend.drawMode = SpriteDrawMode.Sliced;
+            laRend.size = new Vector2(0.35f, 1.9f);
+
+            BoxCollider2D laCol = laserAObj.AddComponent<BoxCollider2D>();
+            laCol.isTrigger = true;
+            laCol.size = new Vector2(0.35f, 1.9f);
+
+            GameObject laLightObj = new GameObject("LaserA_Light");
+            laLightObj.transform.SetParent(laserAObj.transform);
+            laLightObj.transform.localPosition = Vector3.zero;
+            Light2D laLight = laLightObj.AddComponent<Light2D>();
+            laLight.lightType = Light2D.LightType.Point;
+            laLight.pointLightOuterRadius = 2.5f;
+            laLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
+            laLight.intensity = 1.4f;
+
+            MovingLaserHazard laserAComp = laserAObj.AddComponent<MovingLaserHazard>();
+            laserAComp.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(0.9f, -2.85f, 0f), new Vector3(2.5f, -2.85f, 0f), 1.6f, 0.5f);
+            SetPrivateField(laserAComp, "laserRenderer", laRend);
+            SetPrivateField(laserAComp, "laserLight", laLight);
+            laserAComp.SetHazardActive(false);
+
+            // Laser B — Horizontal Bar sweeping vertically (X: -0.5, Y: -3.2 to -1.3)
+            GameObject laserBObj = new GameObject("LaserB_Horizontal");
+            laserBObj.transform.SetParent(refs.puzzleRoot.transform);
+            laserBObj.transform.position = new Vector3(-0.5f, -2.2f, 0f);
+
+            SpriteRenderer lbRend = laserBObj.AddComponent<SpriteRenderer>();
+            lbRend.sprite = laserSp;
+            lbRend.color = new Color(1.0f, 0.12f, 0.22f, 1f);
+            lbRend.sortingOrder = 7;
+            lbRend.drawMode = SpriteDrawMode.Sliced;
+            lbRend.size = new Vector2(2.0f, 0.3f);
+
+            BoxCollider2D lbCol = laserBObj.AddComponent<BoxCollider2D>();
+            lbCol.isTrigger = true;
+            lbCol.size = new Vector2(2.0f, 0.3f);
+
+            GameObject lbLightObj = new GameObject("LaserB_Light");
+            lbLightObj.transform.SetParent(laserBObj.transform);
+            lbLightObj.transform.localPosition = Vector3.zero;
+            Light2D lbLight = lbLightObj.AddComponent<Light2D>();
+            lbLight.lightType = Light2D.LightType.Point;
+            lbLight.pointLightOuterRadius = 2.8f;
+            lbLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
+            lbLight.intensity = 1.4f;
+
+            MovingLaserHazard laserBComp = laserBObj.AddComponent<MovingLaserHazard>();
+            laserBComp.ConfigurePath(MovingLaserHazard.MotionAxis.Vertical, new Vector3(-0.5f, -3.2f, 0f), new Vector3(-0.5f, -1.3f, 0f), 1.1f, 0.0f);
+            SetPrivateField(laserBComp, "laserRenderer", lbRend);
+            SetPrivateField(laserBComp, "laserLight", lbLight);
+            laserBComp.SetHazardActive(false);
+
+            // 5. Wire FakeExitPrank with door, barrier, switch, and moving lasers
             FakeExitPrank prank = refs.exitDoor.gameObject.AddComponent<FakeExitPrank>();
             SetPrivateField(prank, "decoyDoor", refs.exitDoor);
             SetPrivateField(prank, "realDoor", realDoorComp);
             SetPrivateField(prank, "relocatedPosition", new Vector3(-3.0f, 0.4f, 0f));
             SetPrivateField(prank, "securityBarrier", barrierComp);
             SetPrivateField(prank, "secondarySwitch", switchComp);
+            SetPrivateField(prank, "laserA", laserAComp);
+            SetPrivateField(prank, "laserB", laserBComp);
+
+            SetPrivateField(refs.hud, "echoSwitch", switchComp);
+            SetPrivateField(refs.director, "echoSwitch", switchComp);
+            SetPrivateField(refs.triggers, "echoSwitch", switchComp);
 
             SaveChamberScene("Level01.unity");
         }
@@ -2944,10 +3049,16 @@ namespace GlitchVerse.Editor
 
         private static void SetPrivateField(object target, string fieldName, object value)
         {
-            var field = target.GetType().GetField(fieldName, 
-                System.Reflection.BindingFlags.NonPublic | 
-                System.Reflection.BindingFlags.Instance | 
-                System.Reflection.BindingFlags.Public);
+            var type = target.GetType();
+            System.Reflection.FieldInfo field = null;
+            while (type != null && field == null)
+            {
+                field = type.GetField(fieldName, 
+                    System.Reflection.BindingFlags.NonPublic | 
+                    System.Reflection.BindingFlags.Instance | 
+                    System.Reflection.BindingFlags.Public);
+                type = type.BaseType;
+            }
             if (field != null)
             {
                 field.SetValue(target, value);
