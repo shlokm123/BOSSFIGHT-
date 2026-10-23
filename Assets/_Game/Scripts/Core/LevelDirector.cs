@@ -14,7 +14,16 @@ namespace GlitchVerse.Core
     /// </summary>
     public class LevelDirector : MonoBehaviour
     {
-        public static LevelDirector Current { get; private set; }
+        private static LevelDirector instance;
+        public static LevelDirector Current
+        {
+            get
+            {
+                if (instance == null) instance = FindAnyObjectByType<LevelDirector>();
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         [Header("Chamber Identity")]
         [SerializeField] private string levelTitle = "CONTAINMENT 01";

@@ -21,8 +21,14 @@ namespace GlitchVerse.Narrative
         [Header("Platform Relocation Target")]
         [SerializeField] private Vector3 relocatedPosition = new Vector3(-3.0f, -0.6f, 0f);
 
+        [Header("Security Interlock")]
+        [SerializeField] private SecurityBarrier securityBarrier;
+        [SerializeField] private SecurityOverrideSwitch secondarySwitch;
+
         private bool prankTriggered = false;
         public bool IsPrankTriggered => prankTriggered;
+        public SecurityBarrier Barrier => securityBarrier;
+        public SecurityOverrideSwitch SecondarySwitch => secondarySwitch;
 
         private void Start()
         {
@@ -32,6 +38,16 @@ namespace GlitchVerse.Narrative
             if (realDoor != null && realDoor != decoyDoor)
             {
                 realDoor.gameObject.SetActive(false);
+            }
+
+            if (securityBarrier != null)
+            {
+                securityBarrier.gameObject.SetActive(false);
+            }
+
+            if (secondarySwitch != null)
+            {
+                secondarySwitch.SetSwitchPowered(false);
             }
         }
 
@@ -92,7 +108,19 @@ namespace GlitchVerse.Narrative
                 }
             }
 
-            Debug.Log("[FakeExitPrank] Exit relocated to Observation Platform A. Real exit unlocked.");
+            // 4. Activate security barrier and power up the secondary override breaker on Platform B
+            if (securityBarrier != null)
+            {
+                securityBarrier.gameObject.SetActive(true);
+                securityBarrier.SetBarrierLocked(true);
+            }
+
+            if (secondarySwitch != null)
+            {
+                secondarySwitch.SetSwitchPowered(true);
+            }
+
+            Debug.Log("[FakeExitPrank] Exit relocated to Observation Platform A. Security barrier locked. Override switch energized.");
         }
 
         public void ResetPrank()
@@ -101,6 +129,17 @@ namespace GlitchVerse.Narrative
             if (realDoor != null && realDoor != decoyDoor)
             {
                 realDoor.gameObject.SetActive(false);
+            }
+
+            if (securityBarrier != null)
+            {
+                securityBarrier.ResetBarrier();
+                securityBarrier.gameObject.SetActive(false);
+            }
+
+            if (secondarySwitch != null)
+            {
+                secondarySwitch.ResetSwitch();
             }
         }
     }

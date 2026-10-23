@@ -137,13 +137,16 @@ namespace GlitchVerse.Editor
                         }
                     }
 
-                    if (prank != null && realDoor != null)
+                    var barrier = Object.FindAnyObjectByType<GlitchVerse.Interactables.SecurityBarrier>(FindObjectsInactive.Include);
+                    var secondarySwitch = Object.FindAnyObjectByType<GlitchVerse.Interactables.SecurityOverrideSwitch>(FindObjectsInactive.Include);
+
+                    if (prank != null && realDoor != null && barrier != null && secondarySwitch != null)
                     {
-                        sb.AppendLine($"[PASS] Level 01: FakeExitPrank and RealExitDoor_PlatformA confirmed.");
+                        sb.AppendLine($"[PASS] Level 01: FakeExitPrank, RealExitDoor_PlatformA, SecurityBarrier, and SecurityOverrideSwitch confirmed.");
                     }
                     else
                     {
-                        sb.AppendLine($"[FAIL] Level 01: Prank or RealDoor missing (prank={prank != null}, realDoor={realDoor != null})");
+                        sb.AppendLine($"[FAIL] Level 01: Components missing (prank={prank != null}, realDoor={realDoor != null}, barrier={barrier != null}, switch={secondarySwitch != null})");
                         allPassed = false;
                     }
                 }

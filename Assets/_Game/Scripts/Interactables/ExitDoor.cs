@@ -116,9 +116,10 @@ namespace GlitchVerse.Interactables
 
                 Debug.Log("[ExitDoor] Player entered unlocked exit door.");
                 OnPlayerReachedExit?.Invoke();
-                if (GlitchVerse.Core.LevelDirector.Current != null)
+                var dir = GlitchVerse.Core.LevelDirector.Current;
+                if (dir != null)
                 {
-                    GlitchVerse.Core.LevelDirector.Current.CompleteChamber();
+                    dir.CompleteChamber();
                 }
             }
         }
