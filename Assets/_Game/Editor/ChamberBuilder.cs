@@ -1195,6 +1195,9 @@ namespace GlitchVerse.Editor
             // Chapter VI: TRUTH Modular Environmental Art
             GenerateChapter06Sprites();
 
+            // Chapter VII: JUDGMENT Modular Environmental Art
+            GenerateChapter07Sprites();
+
             AssetDatabase.Refresh();
         }
 
@@ -4445,6 +4448,436 @@ namespace GlitchVerse.Editor
                 }
 
                 return panelBg;
+            });
+        }
+        #endregion
+
+        #region Chapter VII: Judgment Procedural Sprites
+        private static void GenerateChapter07Sprites()
+        {
+            // 1. Chapter VII Architect Boss Arena Symmetrical Backdrop (256x144)
+            // Symmetrical grand confrontation arena: central core socket, flanking vertical crimson banners,
+            // deep lower reactor abyss with reflections, heavy ceiling infrastructure, side forcefield gates
+            CreateSpriteAsset("Environment/Chapter07/ch7_architect_boss_arena_bg.png", 256, 144, (x, y) =>
+            {
+                float nx = x / 255.0f;
+                float ny = y / 143.0f;
+
+                // Deep ominous background: dark charcoal ceiling, blazing crimson pit reflection at bottom
+                Color bg = Color.Lerp(
+                    new Color(0.22f, 0.04f, 0.06f, 1f), // Crimson abyss glow at bottom
+                    new Color(0.05f, 0.04f, 0.06f, 1f), // Charcoal ceiling at top
+                    ny
+                );
+
+                // --- CENTRAL ARCHITECT CORE SOCKET (X: 104..152, Y: 40..104) ---
+                int scx = x - 128;
+                int scy = y - 72;
+                float sDist = Mathf.Sqrt(scx * scx + scy * scy);
+
+                // Heavy circular housing bezel in background
+                if (sDist >= 32.0f && sDist <= 46.0f)
+                {
+                    float ringShade = Mathf.Sin(sDist * 0.8f);
+                    Color ringC = new Color(0.16f + ringShade * 0.04f, 0.12f + ringShade * 0.03f, 0.14f + ringShade * 0.03f, 1f);
+                    if (sDist >= 44.0f || sDist <= 34.0f) ringC = new Color(0.08f, 0.06f, 0.07f, 1f);
+                    // Radial hydraulic mounting spokes (every 45 deg)
+                    float angle = Mathf.Atan2(scy, scx) * Mathf.Rad2Deg;
+                    if (Mathf.Abs(angle % 45.0f) <= 4.0f) ringC = new Color(0.26f, 0.20f, 0.22f, 1f);
+                    bg = ringC;
+                }
+
+                // Core aura radiation behind core
+                if (sDist < 32.0f)
+                {
+                    float aura = (1.0f - sDist / 32.0f);
+                    bg += new Color(0.85f * aura, 0.08f * aura, 0.12f * aura, 0f);
+                }
+
+                // --- FLANKING HOLOGRAPHIC ARCHITECT BANNERS (X: 42..66 and X: 190..214, Y: 36..128) ---
+                bool inLeftBanner = (x >= 42 && x <= 66 && y >= 36 && y <= 128);
+                bool inRightBanner = (x >= 190 && x <= 214 && y >= 36 && y <= 128);
+
+                if (inLeftBanner || inRightBanner)
+                {
+                    // Banner steel mounting brackets at top and bottom
+                    if (y >= 122 || y <= 40)
+                    {
+                        bg = new Color(0.18f, 0.15f, 0.16f, 1f);
+                    }
+                    else
+                    {
+                        // Crimson digital screen surface with scanlines
+                        float scan = (y % 2 == 0) ? 0.8f : 1.05f;
+                        Color bannerBg = new Color(0.35f * scan, 0.06f * scan, 0.10f * scan, 1f);
+
+                        // Stylized digital Architect surveillance face silhouette (Y: 60..104)
+                        int bx = inLeftBanner ? (x - 54) : (x - 202);
+                        int by = y - 82;
+                        float faceDist = Mathf.Sqrt(bx * bx * 1.4f + by * by);
+                        if (faceDist <= 14.0f && faceDist >= 6.0f)
+                        {
+                            bannerBg = new Color(0.95f * scan, 0.20f * scan, 0.28f * scan, 1f); // Glowing visage contour
+                        }
+                        // Digital eye dots in visor
+                        if (Mathf.Abs(by - 4) <= 1 && (bx == -4 || bx == 4))
+                        {
+                            bannerBg = new Color(1.0f, 0.9f, 0.95f, 1f); // White-hot gaze
+                        }
+
+                        // Telemetry horizontal glitch lines
+                        if ((y * 7) % 23 == 0) bannerBg += new Color(0.3f, 0.05f, 0.1f, 0f);
+
+                        bg = Color.Lerp(bg, bannerBg, 0.90f);
+                    }
+                }
+
+                // --- SIDE FORCEFIELD PORTAL FRAMING (Far Left: 8..24, Far Right: 232..248, Y: 18..96) ---
+                if ((x >= 8 && x <= 24 && y >= 18 && y <= 96) || (x >= 232 && x <= 248 && y >= 18 && y <= 96))
+                {
+                    if (x <= 11 || x >= 245 || (x >= 21 && x <= 24) || (x >= 232 && x <= 235))
+                    {
+                        bg = new Color(0.16f, 0.12f, 0.14f, 1f); // Frame posts
+                    }
+                    else if (y >= 22 && y <= 92)
+                    {
+                        // Red forcefield beam interior
+                        float fScan = (y % 3 == 0) ? 0.9f : 1.2f;
+                        bg = new Color(0.85f * fScan, 0.15f * fScan, 0.20f * fScan, 1f);
+                    }
+                }
+
+                // --- LOWER ABYSS PIT REFLECTIONS (Y < 30) ---
+                if (y < 30)
+                {
+                    float wave = (Mathf.Sin(x * 0.15f) + Mathf.Cos(y * 0.2f)) * 0.5f;
+                    float depth = (1.0f - y / 30.0f) * 0.4f;
+                    bg += new Color(0.35f * depth, 0.05f * depth, 0.08f * depth, 0f) * (0.8f + 0.4f * wave);
+                }
+
+                // Hanging heavy cable silhouettes in ceiling (Y > 115)
+                if (y > 115)
+                {
+                    float sag = Mathf.Sin(x * 0.05f) * 8.0f;
+                    if (Mathf.Abs(y - (136 - sag)) <= 1.2f || Mathf.Abs(y - (126 - sag * 0.7f)) <= 0.9f)
+                        return new Color(0.04f, 0.03f, 0.05f, 1f);
+                }
+
+                return bg;
+            });
+
+            // 2. The Fractured Architect Boss Core (128x128)
+            // Massive circular mechanical containment assembly, heavy steel clamps, fractured crystalline red energy center
+            CreateSpriteAsset("Environment/Chapter07/ch7_architect_core_fractured.png", 128, 128, (x, y) =>
+            {
+                int cx = x - 64;
+                int cy = y - 64;
+                float dist = Mathf.Sqrt(cx * cx + cy * cy);
+
+                if (dist > 62.0f) return Color.clear;
+
+                // --- OUTER MECHANICAL CHASSIS & CLAMPS (Dist: 44..62) ---
+                if (dist >= 44.0f)
+                {
+                    float angle = Mathf.Atan2(cy, cx) * Mathf.Rad2Deg;
+                    if (angle < 0) angle += 360f;
+
+                    // 4 Heavy Hydraulic Clamp Assemblies at 0, 90, 180, 270 deg
+                    bool isClamp = (Mathf.Abs(angle - 0) <= 12f || Mathf.Abs(angle - 90) <= 12f ||
+                                    Mathf.Abs(angle - 180) <= 12f || Mathf.Abs(angle - 270) <= 12f ||
+                                    Mathf.Abs(angle - 360) <= 12f);
+
+                    if (isClamp)
+                    {
+                        if (dist >= 58.0f || dist <= 46.0f) return new Color(0.08f, 0.06f, 0.07f, 1f); // Rim
+                        if (dist >= 50.0f && dist <= 54.0f) return new Color(0.60f, 0.60f, 0.65f, 1f); // Chrome piston rod
+                        return new Color(0.24f, 0.18f, 0.20f, 1f);
+                    }
+
+                    // Segmented armor ring with cooling fins
+                    if (dist >= 60.0f || dist <= 45.0f) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    if ((int)angle % 15 == 0) return new Color(0.08f, 0.06f, 0.07f, 1f); // Seam
+                    if ((int)dist % 4 <= 1) return new Color(0.22f, 0.18f, 0.20f, 1f);
+                    return new Color(0.16f, 0.13f, 0.14f, 1f);
+                }
+
+                // --- INNER ENERGY CONTAINMENT RING (Dist: 34..43) ---
+                if (dist >= 34.0f)
+                {
+                    if (dist >= 42.0f || dist <= 35.0f) return new Color(0.10f, 0.08f, 0.09f, 1f);
+                    // Glowing cyan telemetry ring contrasting with crimson
+                    float pulse = 0.8f + 0.2f * Mathf.Sin(dist * 0.5f);
+                    return new Color(0.10f * pulse, 0.85f * pulse, 0.95f * pulse, 1f);
+                }
+
+                // --- FRACTURED CRIMSON CORE INTERIOR (Dist < 34) ---
+                float coreNorm = 1.0f - (dist / 34.0f);
+
+                // Fracture lines running across crystalline core
+                bool isFracture = (Mathf.Abs(cx - cy * 0.4f) <= 1.2f) ||
+                                  (Mathf.Abs(cx * 0.6f + cy) <= 1.2f) ||
+                                  (Mathf.Abs(cx + cy) <= 1.0f && dist > 14.0f);
+
+                if (isFracture)
+                {
+                    return new Color(1.0f, 0.95f, 0.95f, 1f); // White-hot fracture lines!
+                }
+
+                // Sharded crystalline facets
+                float shardNoise = (Mathf.Sin(cx * 0.35f + cy * 0.25f) + Mathf.Cos(cx * 0.2f - cy * 0.4f)) * 0.5f;
+
+                Color coreColor = Color.Lerp(
+                    new Color(0.85f, 0.12f, 0.20f, 1f), // Deep crimson outer core
+                    new Color(1.0f, 0.55f, 0.25f, 1f),  // Amber radiant center
+                    coreNorm
+                );
+
+                coreColor += new Color(shardNoise * 0.15f, shardNoise * 0.08f, shardNoise * 0.05f, 0f);
+
+                // Innermost singularity / eye iris (Dist <= 6)
+                if (dist <= 6.0f)
+                {
+                    return new Color(1.0f, 0.95f, 0.98f, 1f); // Intense white core center
+                }
+
+                return coreColor;
+            });
+
+            // 3. Cyan Energy Emitter Pod (48x64)
+            // Suspended cylindrical high-voltage pod with electric cyan lightning arcs and copper coils
+            CreateSpriteAsset("Environment/Chapter07/ch7_cyan_energy_emitter_pod.png", 48, 64, (x, y) =>
+            {
+                // Top Hanger Bracket (Y: 52..63, X: 16..32)
+                if (y >= 52)
+                {
+                    if (x >= 16 && x <= 32)
+                    {
+                        if (x == 16 || x == 32 || y == 63 || y == 52) return new Color(0.10f, 0.08f, 0.10f, 1f);
+                        if (x == 24) return new Color(0.40f, 0.40f, 0.45f, 1f); // Chain link
+                        return new Color(0.18f, 0.15f, 0.18f, 1f);
+                    }
+                    return Color.clear;
+                }
+
+                // Main Pod Body (X: 8..40, Y: 10..51)
+                if (x <= 8 || x >= 40 || y <= 10) return Color.clear;
+
+                // Top & Bottom Heavy Endcaps (Y: 44..51 and Y: 10..18)
+                if (y >= 44 || y <= 18)
+                {
+                    if (x == 9 || x == 39 || y == 10 || y == 51) return new Color(0.08f, 0.07f, 0.09f, 1f);
+                    // Copper coil bands
+                    if (y == 46 || y == 48 || y == 13 || y == 15) return new Color(0.70f, 0.40f, 0.15f, 1f);
+                    return new Color(0.20f, 0.17f, 0.20f, 1f);
+                }
+
+                // Glass Containment Cylinder in center (Y: 19..43, X: 12..36)
+                if (x <= 11 || x >= 37) return new Color(0.12f, 0.10f, 0.12f, 1f); // Pillar struts
+
+                // Central Electric Lightning Arc (X: ~24)
+                int arcOffset = (int)(Mathf.Sin(y * 0.6f) * 4.0f);
+                if (Mathf.Abs(x - (24 + arcOffset)) <= 1)
+                {
+                    return new Color(1.0f, 1.0f, 1.0f, 1f); // Hot white lightning bolt
+                }
+                if (Mathf.Abs(x - (24 + arcOffset)) <= 3)
+                {
+                    return new Color(0.10f, 0.95f, 1.0f, 1f); // Cyan electrical corona
+                }
+
+                // Glass cylinder ambient glow
+                float glassGlow = 1.0f - (Mathf.Abs(x - 24) / 12.0f);
+                return new Color(0.04f, 0.25f * glassGlow, 0.35f * glassGlow, 0.85f);
+            });
+
+            // 4. Boss Control Node Housing (48x48)
+            // Heavy mechanical housing with recessed interactive cylinder and holographic status rings
+            CreateSpriteAsset("Environment/Chapter07/ch7_boss_control_node_housing.png", 48, 48, (x, y) =>
+            {
+                int cx = x - 24;
+                int cy = y - 24;
+                float dist = Mathf.Sqrt(cx * cx + cy * cy);
+
+                if (dist > 23.0f) return Color.clear;
+
+                // Octagonal dark steel outer base
+                if (dist >= 18.0f)
+                {
+                    if (dist >= 22.0f) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    if (x % 6 == 0 || y % 6 == 0) return new Color(0.35f, 0.28f, 0.30f, 1f); // Mounting bolts
+                    return new Color(0.18f, 0.15f, 0.16f, 1f);
+                }
+
+                // Holographic status ring (Dist: 14..17)
+                if (dist >= 14.0f)
+                {
+                    return new Color(1.0f, 0.25f, 0.30f, 1f); // Glowing red override ring
+                }
+
+                // Core interactive cylinder (Dist < 14)
+                if (dist <= 6.0f)
+                {
+                    return new Color(1.0f, 0.85f, 0.90f, 1f); // White-hot trigger core
+                }
+
+                float rad = 1.0f - (dist / 14.0f);
+                return new Color(0.85f + rad * 0.15f, 0.15f + rad * 0.10f, 0.20f + rad * 0.10f, 1f);
+            });
+
+            // 5. Red Forcefield Barrier (32x96)
+            // Heavy crimson security forcefield with vertical laser bars, hex grid interference, top/bottom emitters
+            CreateSpriteAsset("Environment/Chapter07/ch7_red_forcefield_barrier.png", 32, 96, (x, y) =>
+            {
+                // Top and Bottom Emitter Projector Bases (Y: 0..8 and Y: 88..95)
+                if (y <= 8 || y >= 88)
+                {
+                    if (x <= 2 || x >= 29 || y == 0 || y == 95) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    if (y == 7 || y == 88) return new Color(0.95f, 0.20f, 0.25f, 1f); // Emitter slit
+                    return new Color(0.20f, 0.16f, 0.18f, 1f);
+                }
+
+                // Forcefield Energy Beam Interior (X: 8..23, Y: 9..87)
+                if (x <= 7 || x >= 24) return Color.clear;
+
+                float xDist = Mathf.Abs(x - 16) / 8.0f; // 0 at center, 1 at edge
+                float alpha = (1.0f - xDist);
+
+                // Hex grid scanline interference
+                float hexScan = ((x * 5 + y * 7) % 9 == 0) ? 0.35f : 0.0f;
+                float verticalBeam = (x == 15 || x == 16) ? 0.3f : 0.0f;
+
+                Color laserColor = new Color(1.0f, 0.15f + hexScan * 0.3f, 0.25f + hexScan * 0.2f, alpha * 0.85f + verticalBeam);
+                return laserColor;
+            });
+
+            // 6. Arena Catwalk Deck (128x64)
+            // Multi-tier confrontation deck with diamond tread dark iron plate, glowing red edge trim, structural truss
+            CreateSpriteAsset("Environment/Chapter07/ch7_arena_catwalk_deck.png", 128, 64, (x, y) =>
+            {
+                // Top Deck (Y: 48..63)
+                if (y >= 48)
+                {
+                    // Glowing crimson warning edge rim (Y: 60..63)
+                    if (y >= 60)
+                    {
+                        if (y == 63) return new Color(1.0f, 0.5f, 0.6f, 1f); // Bevel
+                        return new Color(1.0f, 0.15f, 0.25f, 1f); // Crimson edge
+                    }
+                    if (y == 48 || y == 59) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    bool tread = ((x % 8 == y % 8) || (x % 8 == (7 - (y % 8))));
+                    return tread ? new Color(0.25f, 0.20f, 0.22f, 1f) : new Color(0.15f, 0.12f, 0.14f, 1f);
+                }
+
+                // Bottom Structural Open Truss (Y: 0..47)
+                if (y <= 4) return new Color(0.14f, 0.11f, 0.12f, 1f);
+                if (x % 32 <= 4) return new Color(0.20f, 0.16f, 0.18f, 1f);
+
+                // Diagonal cross braces
+                int bayX = x % 32;
+                float targetY1 = bayX * (44.0f / 32.0f) + 4.0f;
+                float targetY2 = (31 - bayX) * (44.0f / 32.0f) + 4.0f;
+                if (Mathf.Abs(y - targetY1) <= 1.8f || Mathf.Abs(y - targetY2) <= 1.8f)
+                {
+                    return new Color(0.16f, 0.12f, 0.14f, 1f);
+                }
+
+                // Red power conduit running along underside (Y: 42..45)
+                if (y >= 42 && y <= 45) return new Color(0.95f, 0.15f, 0.22f, 1f);
+
+                return Color.clear;
+            });
+
+            // 7. Power Conduit Manifold (128x64)
+            // Heavy industrial conduit manifold: 4 parallel conduits (2 crimson, 2 cyan) with heavy distributor box
+            CreateSpriteAsset("Environment/Chapter07/ch7_power_conduit_manifold.png", 128, 64, (x, y) =>
+            {
+                // Central heavy junction distributor box (X: 48..80, Y: 12..52)
+                if (x >= 48 && x <= 80 && y >= 12 && y <= 52)
+                {
+                    if (x == 48 || x == 80 || y == 12 || y == 52) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    if ((x == 52 || x == 76) && (y == 16 || y == 48)) return new Color(0.40f, 0.35f, 0.38f, 1f); // Bolts
+                    // Status indicator window in center (X: 58..70, Y: 26..38)
+                    if (x >= 58 && x <= 70 && y >= 26 && y <= 38)
+                    {
+                        return new Color(1.0f, 0.2f, 0.25f, 1f); // Blazing warning core
+                    }
+                    return new Color(0.18f, 0.15f, 0.16f, 1f);
+                }
+
+                // Conduit 1: Upper Red Line (Y: 44..48)
+                if (y >= 44 && y <= 48)
+                {
+                    if (y == 44 || y == 48) return new Color(0.10f, 0.06f, 0.07f, 1f);
+                    if (x % 24 <= 1) return new Color(0.30f, 0.25f, 0.28f, 1f); // Bracket
+                    return new Color(0.95f, 0.15f, 0.22f, 1f);
+                }
+
+                // Conduit 2: Mid-Upper Cyan Line (Y: 34..38)
+                if (y >= 34 && y <= 38)
+                {
+                    if (y == 34 || y == 38) return new Color(0.08f, 0.10f, 0.12f, 1f);
+                    if (x % 24 <= 1) return new Color(0.30f, 0.25f, 0.28f, 1f);
+                    return new Color(0.10f, 0.90f, 1.0f, 1f);
+                }
+
+                // Conduit 3: Mid-Lower Cyan Line (Y: 24..28)
+                if (y >= 24 && y <= 28)
+                {
+                    if (y == 24 || y == 28) return new Color(0.08f, 0.10f, 0.12f, 1f);
+                    if (x % 24 <= 1) return new Color(0.30f, 0.25f, 0.28f, 1f);
+                    return new Color(0.10f, 0.90f, 1.0f, 1f);
+                }
+
+                // Conduit 4: Lower Red Line (Y: 14..18)
+                if (y >= 14 && y <= 18)
+                {
+                    if (y == 14 || y == 18) return new Color(0.10f, 0.06f, 0.07f, 1f);
+                    if (x % 24 <= 1) return new Color(0.30f, 0.25f, 0.28f, 1f);
+                    return new Color(0.95f, 0.15f, 0.22f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 8. Holographic Architect Banner (48x96)
+            // Tall vertical crimson digital banner displaying fragmented Architect surveillance face and telemetry
+            CreateSpriteAsset("Environment/Chapter07/ch7_holographic_architect_banner.png", 48, 96, (x, y) =>
+            {
+                // Top and Bottom Mounting Fixtures (Y: 0..6 and Y: 90..95)
+                if (y <= 6 || y >= 90)
+                {
+                    if (x <= 4 || x >= 43 || y == 0 || y == 95) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    return new Color(0.22f, 0.18f, 0.20f, 1f);
+                }
+
+                // Digital Holo Screen (X: 4..43, Y: 7..89)
+                if (x <= 4 || x >= 43) return Color.clear;
+
+                float scan = (y % 2 == 0) ? 0.85f : 1.05f;
+                Color bannerBase = new Color(0.30f * scan, 0.05f * scan, 0.08f * scan, 0.90f);
+
+                // Stylized Architect Face Silhouette (Y: 40..74, X: 12..36)
+                int fx = x - 24;
+                int fy = y - 56;
+                float dist = Mathf.Sqrt(fx * fx * 1.3f + fy * fy);
+                if (dist <= 13.0f && dist >= 6.0f)
+                {
+                    bannerBase = new Color(0.95f * scan, 0.18f * scan, 0.25f * scan, 1f);
+                }
+                // Eyes
+                if (Mathf.Abs(fy - 3) <= 1 && (fx == -4 || fx == 4))
+                {
+                    bannerBase = new Color(1.0f, 0.92f, 0.95f, 1f);
+                }
+
+                // Telemetry text blocks at bottom (Y: 12..28)
+                if (y >= 12 && y <= 28 && (y % 3 <= 1) && x >= 8 && x <= 40)
+                {
+                    bool charDot = ((x * 7 + y * 13) % 4 == 0);
+                    if (charDot) bannerBase = new Color(1.0f, 0.4f, 0.45f, 1f);
+                }
+
+                return bannerBase;
             });
         }
         #endregion
@@ -8903,21 +9336,146 @@ namespace GlitchVerse.Editor
 
             var refs = SetupBaseChamber("CONTAINMENT 07 // JUDGMENT", 7, "", true, atmo);
 
+            // Load Chapter VII dedicated modular art kit
+            Sprite ch7ArenaBgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_architect_boss_arena_bg.png");
+            Sprite ch7CoreSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_architect_core_fractured.png");
+            Sprite ch7CyanEmitterSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_cyan_energy_emitter_pod.png");
+            Sprite ch7NodeHousingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_boss_control_node_housing.png");
+            Sprite ch7ForcefieldSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_red_forcefield_barrier.png");
+            Sprite ch7ArenaDeckSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_arena_catwalk_deck.png");
+            Sprite ch7ManifoldSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_power_conduit_manifold.png");
+            Sprite ch7BannerSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter07/ch7_holographic_architect_banner.png");
+
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
             Sprite beamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ceiling_beam.png");
             Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
             Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
-            Sprite nodeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/boss_control_node.png");
+            Sprite nodeSp = ch7NodeHousingSp ?? AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/boss_control_node.png");
             Sprite surgeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/energy_surge_hazard.png");
-            Sprite bossCoreSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/architect_boss_core.png");
+            Sprite bossCoreSp = ch7CoreSp ?? AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/architect_boss_core.png");
             Sprite hazardLaserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
 
             // ALL 3 reality powers enabled for final confrontation
             refs.abilityCtrl.AllowGravity = true;
             refs.abilityCtrl.AllowTimeFreeze = true;
             refs.abilityCtrl.AllowDimensionSwap = true;
+
+            // Clean up old prototype monitor / background shapes
+            GameObject oldMonitor = GameObject.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor);
+
+            GameObject oldLight = GameObject.Find("Chamber_Spotlight");
+            if (oldLight != null) Object.DestroyImmediate(oldLight);
+
+            GameObject bgOldRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgOldRoot != null)
+            {
+                for (int i = bgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(bgOldRoot.transform.GetChild(i).gameObject);
+                }
+            }
+
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            Material unlitMat = (unlitShader != null) ? new Material(unlitShader) : null;
+
+            // =========================================================================
+            // 1. VISUAL ENVIRONMENT ROOT (CH07_VisualEnvironment)
+            // =========================================================================
+            GameObject ch07EnvRoot = new GameObject("CH07_VisualEnvironment");
+            ch07EnvRoot.transform.position = Vector3.zero;
+
+            // A. Monumental Boss Arena Core Silo Backdrop (Sorting Order: -25, Unlit Material)
+            GameObject arenaBackdrop = new GameObject("BG_ArchitectBossArenaBackdrop");
+            arenaBackdrop.transform.SetParent(ch07EnvRoot.transform);
+            arenaBackdrop.transform.position = new Vector3(0f, 0.5f, 2.0f);
+            arenaBackdrop.transform.localScale = new Vector3(7.5f, 4.5f, 1f);
+            SpriteRenderer abRend = arenaBackdrop.AddComponent<SpriteRenderer>();
+            abRend.sprite = ch7ArenaBgSp;
+            abRend.sortingOrder = -25;
+            if (unlitMat != null) abRend.material = new Material(unlitMat);
+            abRend.color = Color.white;
+
+            // B. Holographic Architect Surveillance Banners (Flanking the Arena at X: -5.8, 5.8)
+            Vector3[] bannerPositions = new Vector3[]
+            {
+                new Vector3(-5.8f, 1.6f, 0f),
+                new Vector3(5.8f, 1.6f, 0f)
+            };
+            SpriteRenderer[] bannerRenderers = new SpriteRenderer[bannerPositions.Length];
+            for (int i = 0; i < bannerPositions.Length; i++)
+            {
+                GameObject bannerObj = new GameObject($"Deco_HoloArchitectBanner_{i + 1}");
+                bannerObj.transform.SetParent(ch07EnvRoot.transform);
+                bannerObj.transform.position = bannerPositions[i];
+                bannerObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+                SpriteRenderer bRend = bannerObj.AddComponent<SpriteRenderer>();
+                bRend.sprite = ch7BannerSp;
+                bRend.sortingOrder = -22;
+                if (unlitMat != null) bRend.material = new Material(unlitMat);
+                bRend.color = new Color(1.0f, 0.9f, 0.95f, 0.9f);
+                bannerRenderers[i] = bRend;
+
+                GameObject bLightObj = new GameObject("Banner_GlowLight");
+                bLightObj.transform.SetParent(bannerObj.transform);
+                bLightObj.transform.localPosition = Vector3.zero;
+                Light2D bLight = bLightObj.AddComponent<Light2D>();
+                bLight.lightType = Light2D.LightType.Point;
+                bLight.pointLightOuterRadius = 3.6f;
+                bLight.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+                bLight.intensity = 0.65f;
+            }
+
+            // C. Cyan High-Voltage Emitter Pods (Flanking the Core at X: -3.5, 3.5, Y: 2.2)
+            Vector3[] podPositions = new Vector3[]
+            {
+                new Vector3(-3.5f, 2.2f, 0f),
+                new Vector3(3.5f, 2.2f, 0f)
+            };
+            SpriteRenderer[] podRenderers = new SpriteRenderer[podPositions.Length];
+            Light2D[] podLights = new Light2D[podPositions.Length];
+            for (int i = 0; i < podPositions.Length; i++)
+            {
+                GameObject podObj = new GameObject($"Deco_CyanEnergyEmitterPod_{i + 1}");
+                podObj.transform.SetParent(ch07EnvRoot.transform);
+                podObj.transform.position = podPositions[i];
+                podObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+                SpriteRenderer pRend = podObj.AddComponent<SpriteRenderer>();
+                pRend.sprite = ch7CyanEmitterSp;
+                pRend.sortingOrder = -14;
+                podRenderers[i] = pRend;
+
+                GameObject pLightObj = new GameObject("EmitterPod_CyanArcLight");
+                pLightObj.transform.SetParent(podObj.transform);
+                pLightObj.transform.localPosition = Vector3.zero;
+                Light2D pLight = pLightObj.AddComponent<Light2D>();
+                pLight.lightType = Light2D.LightType.Point;
+                pLight.pointLightOuterRadius = 4.8f;
+                pLight.color = new Color(0f, 0.95f, 1f, 1f);
+                pLight.intensity = 1.1f;
+                podLights[i] = pLight;
+            }
+
+            // D. Power Conduit Manifolds (Ceiling Conduits & Abyss Conduits)
+            Vector3[] manifoldPositions = new Vector3[]
+            {
+                new Vector3(-4.8f, 3.8f, 0f),
+                new Vector3(4.8f, 3.8f, 0f),
+                new Vector3(-3.5f, -3.9f, 0f),
+                new Vector3(3.5f, -3.9f, 0f)
+            };
+            for (int i = 0; i < manifoldPositions.Length; i++)
+            {
+                GameObject manObj = new GameObject($"Deco_PowerConduitManifold_{i + 1}");
+                manObj.transform.SetParent(ch07EnvRoot.transform);
+                manObj.transform.position = manifoldPositions[i];
+                manObj.transform.localScale = new Vector3(1.5f, 1.1f, 1f);
+                SpriteRenderer mRend = manObj.AddComponent<SpriteRenderer>();
+                mRend.sprite = ch7ManifoldSp;
+                mRend.sortingOrder = -16;
+            }
 
             // --- ARENA PERIMETER & CHASM GEOMETRY ---
             GameObject baseFloor = GameObject.Find("Floor");
@@ -8927,7 +9485,7 @@ namespace GlitchVerse.Editor
             floorLeft.transform.SetParent(refs.envRoot.transform);
             floorLeft.transform.position = new Vector3(-6.5f, -4.0f, 0f);
             SpriteRenderer flR = floorLeft.AddComponent<SpriteRenderer>();
-            flR.sprite = floorSp;
+            flR.sprite = ch7ArenaDeckSp ?? floorSp;
             flR.drawMode = SpriteDrawMode.Tiled;
             flR.size = new Vector2(7.0f, 1.0f);
             flR.sortingOrder = 2;
@@ -8938,7 +9496,7 @@ namespace GlitchVerse.Editor
             floorRight.transform.SetParent(refs.envRoot.transform);
             floorRight.transform.position = new Vector3(6.5f, -4.0f, 0f);
             SpriteRenderer frR = floorRight.AddComponent<SpriteRenderer>();
-            frR.sprite = floorSp;
+            frR.sprite = ch7ArenaDeckSp ?? floorSp;
             frR.drawMode = SpriteDrawMode.Tiled;
             frR.size = new Vector2(7.0f, 1.0f);
             frR.sortingOrder = 2;
@@ -8962,20 +9520,20 @@ namespace GlitchVerse.Editor
             GameObject bossCoreObj = new GameObject("ArchitectBossCore");
             bossCoreObj.transform.SetParent(refs.envRoot.transform);
             bossCoreObj.transform.position = new Vector3(0f, 2.2f, 0f);
-            bossCoreObj.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
+            bossCoreObj.transform.localScale = new Vector3(2.2f, 2.2f, 1f);
 
             SpriteRenderer coreRend = bossCoreObj.AddComponent<SpriteRenderer>();
             coreRend.sprite = bossCoreSp;
-            coreRend.sortingOrder = -4;
+            coreRend.sortingOrder = -5;
 
             GameObject coreAlarmObj = new GameObject("Core_EmergencyAlarmStrobe");
             coreAlarmObj.transform.SetParent(bossCoreObj.transform);
             coreAlarmObj.transform.localPosition = Vector3.zero;
             Light2D alarmLight = coreAlarmObj.AddComponent<Light2D>();
             alarmLight.lightType = Light2D.LightType.Point;
-            alarmLight.pointLightOuterRadius = 10.0f;
+            alarmLight.pointLightOuterRadius = 12.0f;
             alarmLight.color = new Color(1.0f, 0.15f, 0.25f, 1f);
-            alarmLight.intensity = 1.4f;
+            alarmLight.intensity = 1.5f;
             FlickeringLight2D alarmFlicker = coreAlarmObj.AddComponent<FlickeringLight2D>();
             alarmFlicker.Mode = FlickeringLight2D.FlickerMode.BossCorePulse;
 
@@ -8984,9 +9542,9 @@ namespace GlitchVerse.Editor
             coreCyanObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
             Light2D cyanLight = coreCyanObj.AddComponent<Light2D>();
             cyanLight.lightType = Light2D.LightType.Point;
-            cyanLight.pointLightOuterRadius = 6.0f;
+            cyanLight.pointLightOuterRadius = 7.0f;
             cyanLight.color = new Color(0f, 0.94f, 1f, 1f);
-            cyanLight.intensity = 0.8f;
+            cyanLight.intensity = 1.1f;
 
             // --- STAGE 1: GRAVITY ASSAULT ---
             GameObject lowSurgeObj = new GameObject("Stage1_LowSurgeHazard");
@@ -9057,7 +9615,7 @@ namespace GlitchVerse.Editor
             node1Plat.transform.SetParent(refs.puzzleRoot.transform);
             node1Plat.transform.position = new Vector3(5.5f, 2.8f, 0f);
             SpriteRenderer n1pR = node1Plat.AddComponent<SpriteRenderer>();
-            n1pR.sprite = beamSp;
+            n1pR.sprite = ch7ArenaDeckSp ?? beamSp;
             n1pR.drawMode = SpriteDrawMode.Tiled;
             n1pR.size = new Vector2(3.2f, 0.4f);
             n1pR.sortingOrder = 2;
@@ -9081,9 +9639,9 @@ namespace GlitchVerse.Editor
             n1LightObj.transform.localPosition = Vector3.zero;
             Light2D n1Light = n1LightObj.AddComponent<Light2D>();
             n1Light.lightType = Light2D.LightType.Point;
-            n1Light.pointLightOuterRadius = 3.0f;
+            n1Light.pointLightOuterRadius = 3.2f;
             n1Light.color = new Color(1.0f, 0.25f, 0.25f, 1f);
-            n1Light.intensity = 0.8f;
+            n1Light.intensity = 0.9f;
 
             BossControlNode node1Comp = node1Obj.AddComponent<BossControlNode>();
             SetPrivateField(node1Comp, "stageNumber", 1);
@@ -9129,7 +9687,7 @@ namespace GlitchVerse.Editor
             node2Plat.transform.SetParent(stage2Root.transform);
             node2Plat.transform.position = new Vector3(5.5f, 0.8f, 0f);
             SpriteRenderer n2pR = node2Plat.AddComponent<SpriteRenderer>();
-            n2pR.sprite = floorSp;
+            n2pR.sprite = ch7ArenaDeckSp ?? floorSp;
             n2pR.drawMode = SpriteDrawMode.Tiled;
             n2pR.size = new Vector2(2.5f, 0.4f);
             n2pR.sortingOrder = 2;
@@ -9153,9 +9711,9 @@ namespace GlitchVerse.Editor
             n2LightObj.transform.localPosition = Vector3.zero;
             Light2D n2Light = n2LightObj.AddComponent<Light2D>();
             n2Light.lightType = Light2D.LightType.Point;
-            n2Light.pointLightOuterRadius = 3.0f;
+            n2Light.pointLightOuterRadius = 3.2f;
             n2Light.color = new Color(1.0f, 0.25f, 0.25f, 1f);
-            n2Light.intensity = 0.8f;
+            n2Light.intensity = 0.9f;
 
             BossControlNode node2Comp = node2Obj.AddComponent<BossControlNode>();
             SetPrivateField(node2Comp, "stageNumber", 2);
@@ -9169,7 +9727,7 @@ namespace GlitchVerse.Editor
             echoPlat.transform.SetParent(refs.puzzleRoot.transform);
             echoPlat.transform.position = new Vector3(-6.0f, 0.5f, 0f);
             SpriteRenderer epR = echoPlat.AddComponent<SpriteRenderer>();
-            epR.sprite = floorSp;
+            epR.sprite = ch7ArenaDeckSp ?? floorSp;
             epR.drawMode = SpriteDrawMode.Tiled;
             epR.size = new Vector2(3.5f, 0.5f);
             epR.sortingOrder = 2;
@@ -9213,23 +9771,23 @@ namespace GlitchVerse.Editor
             shieldObj.transform.position = new Vector3(8.0f, -2.5f, 0f);
 
             SpriteRenderer sbRend = shieldObj.AddComponent<SpriteRenderer>();
-            sbRend.sprite = hazardLaserSp;
+            sbRend.sprite = ch7ForcefieldSp ?? hazardLaserSp;
             sbRend.drawMode = SpriteDrawMode.Sliced;
-            sbRend.size = new Vector2(0.35f, 3.5f);
+            sbRend.size = new Vector2(0.45f, 3.5f);
             sbRend.sortingOrder = 8;
             sbRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
 
             BoxCollider2D sbCol = shieldObj.AddComponent<BoxCollider2D>();
-            sbCol.size = new Vector2(0.35f, 3.5f);
+            sbCol.size = new Vector2(0.45f, 3.5f);
 
             GameObject sbLightObj = new GameObject("ShieldBarrier_Light");
             sbLightObj.transform.SetParent(shieldObj.transform);
             sbLightObj.transform.localPosition = Vector3.zero;
             Light2D sbLight = sbLightObj.AddComponent<Light2D>();
             sbLight.lightType = Light2D.LightType.Point;
-            sbLight.pointLightOuterRadius = 3.0f;
+            sbLight.pointLightOuterRadius = 3.2f;
             sbLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
-            sbLight.intensity = 1.3f;
+            sbLight.intensity = 1.4f;
 
             SecurityBarrier shieldBarrierComp = shieldObj.AddComponent<SecurityBarrier>();
             SetPrivateField(shieldBarrierComp, "barrierCollider", sbCol);
@@ -9266,6 +9824,21 @@ namespace GlitchVerse.Editor
             SetPrivateField(node3Comp, "nodeRenderer", n3Rend);
             SetPrivateField(node3Comp, "glowLight", n3Light);
             SetPrivateField(node3Comp, "pulseVisual", node3Obj.transform);
+
+            // =========================================================================
+            // 2. CHAPTER VII VISUAL DIRECTOR
+            // =========================================================================
+            GameObject dirObj = new GameObject("Chapter07_VisualDirector");
+            dirObj.transform.SetParent(ch07EnvRoot.transform);
+            Chapter07VisualDirector ch07Director = dirObj.AddComponent<Chapter07VisualDirector>();
+            ch07Director.CoreRenderer = coreRend;
+            ch07Director.CoreAlarmStrobe = alarmLight;
+            ch07Director.CoreCyanBacklight = cyanLight;
+            ch07Director.CyanEmitterRenderers = podRenderers;
+            ch07Director.CyanEmitterLights = podLights;
+            ch07Director.BannerRenderers = bannerRenderers;
+            var globalLightObj = GameObject.Find("GlobalLight_2D");
+            if (globalLightObj != null) ch07Director.GlobalLight = globalLightObj.GetComponent<Light2D>();
 
             // --- BOSS UI OVERLAY (CORE INTEGRITY) ---
             Text bossIntegrityText = CreateUIText(
@@ -9308,6 +9881,13 @@ namespace GlitchVerse.Editor
             // Wire HUD and Director
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
+
+            // Clean UI canvas overlays for clean GameView capture
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+
+            var subtitleBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subtitleBanner != null) subtitleBanner.SetActive(false);
 
             SaveChamberScene("Level07.unity");
         }
