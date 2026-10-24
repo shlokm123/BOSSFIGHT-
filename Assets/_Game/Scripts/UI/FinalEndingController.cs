@@ -33,6 +33,9 @@ namespace GlitchVerse.UI
         [SerializeField] private Text consequenceText;
         [SerializeField] private GameObject finalEndScreenPanel;
         [SerializeField] private Button restartSimulationButton;
+        [Header("Audio")]
+        [SerializeField] private AudioSource voiceAudioSource;
+        [SerializeField] private AudioClip architectVoiceClip;
 
         private bool hasTriggered = false;
         private bool isRestarting = false;
@@ -46,6 +49,29 @@ namespace GlitchVerse.UI
                 return;
             }
             Instance = this;
+
+            // Configure dedicated 2D voice audio source
+            if (voiceAudioSource == null)
+            {
+                voiceAudioSource = GetComponent<AudioSource>();
+                if (voiceAudioSource == null) voiceAudioSource = gameObject.AddComponent<AudioSource>();
+            }
+            voiceAudioSource.playOnAwake = false;
+            voiceAudioSource.loop = false;
+            voiceAudioSource.spatialBlend = 0f;
+            voiceAudioSource.pitch = 1.0f;
+            voiceAudioSource.volume = 1.0f;
+
+            if (architectVoiceClip == null)
+            {
+                architectVoiceClip = Resources.Load<AudioClip>("Audio/Architect_FinalVoice");
+#if UNITY_EDITOR
+                if (architectVoiceClip == null)
+                {
+                    architectVoiceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Game/Audio/Architect_FinalVoice.mp3");
+                }
+#endif
+            }
 
             if (restartSimulationButton != null)
             {
@@ -190,7 +216,7 @@ namespace GlitchVerse.UI
             yield return new WaitForSecondsRealtime(3.2f);
 
             // =========================================================================
-            // BEAT 2 — SILENCE
+            // BEAT 2 — SILENCE & CONFLICTING AUDIO STOP
             // =========================================================================
             // Fade dialogue out, hold pitch-black screen
             if (primaryStatusText != null) primaryStatusText.gameObject.SetActive(false);
@@ -198,28 +224,47 @@ namespace GlitchVerse.UI
             if (truthClimaxText != null) truthClimaxText.gameObject.SetActive(false);
             if (consequenceText != null) consequenceText.gameObject.SetActive(false);
 
+            // 5. All conflicting audio fades out or stops
+            StopAllConflictingAudio();
+
+            // 6. Brief silence
             yield return new WaitForSecondsRealtime(2.0f);
 
             // =========================================================================
-            // BEAT 3 — THE TRUTH
+            // BEAT 3 — ARCHITECT VOICE RECORDING & TWIST REVEAL
             // =========================================================================
+            // 7. Architect voice recording plays exactly once
+            float voiceDuration = 8.62f;
+            if (architectVoiceClip != null)
+            {
+                voiceDuration = architectVoiceClip.length;
+            }
+
+            if (voiceAudioSource != null && architectVoiceClip != null)
+            {
+                voiceAudioSource.clip = architectVoiceClip;
+                voiceAudioSource.Play();
+            }
+
+            // Display spoken line synchronized with recording
             if (truthClimaxText != null)
             {
                 truthClimaxText.gameObject.SetActive(true);
-
-                truthClimaxText.text = "<color=#EEEEEE>SUBJECT 075...</color>";
-                yield return new WaitForSecondsRealtime(2.0f);
-
-                truthClimaxText.text = "<color=#EEEEEE>SUBJECT 075...\n\nYOU NEVER UNDERSTOOD.</color>";
-                yield return new WaitForSecondsRealtime(2.4f);
-
-                truthClimaxText.text = "<color=#EEEEEE>SUBJECT 075...\n\nYOU NEVER UNDERSTOOD.\n\nI WASN'T KEEPING YOU IN.</color>";
-                yield return new WaitForSecondsRealtime(3.0f);
-
-                // Climactic revelation line in deep crimson
-                truthClimaxText.text = "<color=#EEEEEE>SUBJECT 075...\n\nYOU NEVER UNDERSTOOD.\n\nI WASN'T KEEPING YOU IN.\n\n</color><color=#FF1E40><b>I WAS KEEPING THEM OUT.</b></color>";
-                yield return new WaitForSecondsRealtime(4.0f);
+                truthClimaxText.text = "<color=#EEEEEE>I WASN'T KEEPING YOU IN...</color>";
             }
+
+            // 8. The full recording finishes (using actual AudioClip duration)
+            yield return new WaitForSecondsRealtime(voiceDuration);
+
+            // Brief chilling silence after audio finishes
+            yield return new WaitForSecondsRealtime(0.6f);
+
+            // 9. Reveal the existing twist: "I WAS KEEPING THEM OUT."
+            if (truthClimaxText != null)
+            {
+                truthClimaxText.text = "<color=#EEEEEE>I WASN'T KEEPING YOU IN...\n\n</color><color=#FF1E40><b>I WAS KEEPING THEM OUT.</b></color>";
+            }
+            yield return new WaitForSecondsRealtime(4.0f);
 
             // =========================================================================
             // BEAT 4 — THE CONSEQUENCE
@@ -271,12 +316,29 @@ namespace GlitchVerse.UI
             cg.alpha = end;
         }
 
+        private void StopAllConflictingAudio()
+        {
+            var allSources = FindObjectsByType<AudioSource>(FindObjectsInactive.Exclude);
+            foreach (var src in allSources)
+            {
+                if (src != null && src != voiceAudioSource)
+                {
+                    src.Stop();
+                }
+            }
+        }
+
         public void OnRestartSimulationClicked()
         {
             if (isRestarting) return;
             isRestarting = true;
 
             Debug.Log("[FinalEndingController] Restarting Simulation -> Returning to MainMenu!");
+
+            if (voiceAudioSource != null)
+            {
+                voiceAudioSource.Stop();
+            }
 
             if (endingCoroutine != null)
             {

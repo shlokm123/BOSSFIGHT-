@@ -9979,7 +9979,18 @@ namespace GlitchVerse.Editor
 
             endScreenPanel.SetActive(false);
 
+            AudioClip voiceClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Game/Audio/Architect_FinalVoice.mp3");
+            AudioSource voiceSrc = endingRoot.AddComponent<AudioSource>();
+            voiceSrc.playOnAwake = false;
+            voiceSrc.loop = false;
+            voiceSrc.spatialBlend = 0f;
+            voiceSrc.pitch = 1.0f;
+            voiceSrc.volume = 1.0f;
+            voiceSrc.clip = voiceClip;
+
             FinalEndingController endingCtrl = endingRoot.AddComponent<FinalEndingController>();
+            SetPrivateField(endingCtrl, "voiceAudioSource", voiceSrc);
+            SetPrivateField(endingCtrl, "architectVoiceClip", voiceClip);
             SetPrivateField(endingCtrl, "endingCanvasGroup", endCg);
             SetPrivateField(endingCtrl, "fullScreenBackdrop", endBg);
             SetPrivateField(endingCtrl, "primaryStatusText", primaryStatus);
