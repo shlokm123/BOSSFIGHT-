@@ -3416,9 +3416,9 @@ namespace GlitchVerse.Editor
 
             BossHazardEmitter lowEmitter = lowSurgeObj.AddComponent<BossHazardEmitter>();
             SetPrivateField(lowEmitter, "initialDelay", 0.5f);
-            SetPrivateField(lowEmitter, "idleDuration", 2.2f);
-            SetPrivateField(lowEmitter, "warningDuration", 1.2f);
-            SetPrivateField(lowEmitter, "surgeDuration", 1.4f);
+            SetPrivateField(lowEmitter, "idleDuration", 2.4f);
+            SetPrivateField(lowEmitter, "warningDuration", 1.4f);
+            SetPrivateField(lowEmitter, "surgeDuration", 1.6f);
             SetPrivateField(lowEmitter, "hazardRenderer", lsRend);
             SetPrivateField(lowEmitter, "warningLight", lsLight);
 
@@ -3446,16 +3446,18 @@ namespace GlitchVerse.Editor
             hsLight.intensity = 0f;
 
             BossHazardEmitter highEmitter = highSurgeObj.AddComponent<BossHazardEmitter>();
-            SetPrivateField(highEmitter, "initialDelay", 2.6f);
-            SetPrivateField(highEmitter, "idleDuration", 2.2f);
-            SetPrivateField(highEmitter, "warningDuration", 1.2f);
-            SetPrivateField(highEmitter, "surgeDuration", 1.4f);
+            SetPrivateField(highEmitter, "initialDelay", 2.8f);
+            SetPrivateField(highEmitter, "idleDuration", 2.4f);
+            SetPrivateField(highEmitter, "warningDuration", 1.4f);
+            SetPrivateField(highEmitter, "surgeDuration", 1.6f);
             SetPrivateField(highEmitter, "hazardRenderer", hsRend);
             SetPrivateField(highEmitter, "warningLight", hsLight);
 
+            // Elevated Platform for Node 1: Mounted high on right ceiling bulkhead at (X: 5.5, Y: 2.8)
+            // Requires gravity inversion to traverse across ceiling and land
             GameObject node1Plat = new GameObject("Stage1_Node1Platform");
             node1Plat.transform.SetParent(refs.puzzleRoot.transform);
-            node1Plat.transform.position = new Vector3(4.5f, 2.8f, 0f);
+            node1Plat.transform.position = new Vector3(5.5f, 2.8f, 0f);
             SpriteRenderer n1pR = node1Plat.AddComponent<SpriteRenderer>();
             n1pR.sprite = beamSp;
             n1pR.drawMode = SpriteDrawMode.Tiled;
@@ -3466,7 +3468,7 @@ namespace GlitchVerse.Editor
 
             GameObject node1Obj = new GameObject("Stage1_OverrideNode1");
             node1Obj.transform.SetParent(refs.puzzleRoot.transform);
-            node1Obj.transform.position = new Vector3(4.5f, 3.2f, 0f);
+            node1Obj.transform.position = new Vector3(5.5f, 3.2f, 0f);
 
             SpriteRenderer n1Rend = node1Obj.AddComponent<SpriteRenderer>();
             n1Rend.sprite = nodeSp;
@@ -3497,13 +3499,13 @@ namespace GlitchVerse.Editor
             stage2Root.transform.SetParent(refs.puzzleRoot.transform);
 
             CreateDimensionPlatform(stage2Root.transform, "DimAlpha_Stage2_Plat1",
-                new Vector3(-2.0f, -1.8f, 0f), new Vector2(2.8f, 0.4f), alphaSp, DimensionType.Alpha);
+                new Vector3(-2.2f, -1.8f, 0f), new Vector2(2.6f, 0.4f), alphaSp, DimensionType.Alpha);
 
             CreateDimensionPlatform(stage2Root.transform, "DimBeta_Stage2_Plat2",
-                new Vector3(0.5f, -0.6f, 0f), new Vector2(2.8f, 0.4f), betaSp, DimensionType.Beta);
+                new Vector3(0.5f, -0.6f, 0f), new Vector2(2.6f, 0.4f), betaSp, DimensionType.Beta);
 
             CreateDimensionPlatform(stage2Root.transform, "DimAlpha_Stage2_Plat3",
-                new Vector3(3.0f, 0.6f, 0f), new Vector2(2.8f, 0.4f), alphaSp, DimensionType.Alpha);
+                new Vector3(3.2f, 0.6f, 0f), new Vector2(2.6f, 0.4f), alphaSp, DimensionType.Alpha);
 
             GameObject stage2HazardObj = new GameObject("Stage2_MovingSecurityHazard");
             stage2HazardObj.transform.SetParent(stage2Root.transform);
@@ -3511,18 +3513,18 @@ namespace GlitchVerse.Editor
 
             SpriteRenderer s2hRend = stage2HazardObj.AddComponent<SpriteRenderer>();
             s2hRend.sprite = hazardLaserSp;
-            s2hRend.drawMode = SpriteDrawMode.Tiled;
-            s2hRend.size = new Vector2(1.6f, 0.8f);
+            s2hRend.drawMode = SpriteDrawMode.Sliced;
+            s2hRend.size = new Vector2(1.8f, 0.6f);
             s2hRend.sortingOrder = 4;
             s2hRend.color = new Color(1.0f, 0.2f, 0.3f, 1f);
 
             BoxCollider2D s2hCol = stage2HazardObj.AddComponent<BoxCollider2D>();
-            s2hCol.size = new Vector2(1.6f, 0.8f);
+            s2hCol.size = new Vector2(1.8f, 0.6f);
 
             FreezableHazard stage2HazardComp = stage2HazardObj.AddComponent<FreezableHazard>();
-            SetPrivateField(stage2HazardComp, "offsetA", new Vector3(-1.6f, 0f, 0f));
-            SetPrivateField(stage2HazardComp, "offsetB", new Vector3(1.6f, 0f, 0f));
-            SetPrivateField(stage2HazardComp, "moveSpeed", 3.0f);
+            SetPrivateField(stage2HazardComp, "offsetA", new Vector3(-2.0f, 0f, 0f));
+            SetPrivateField(stage2HazardComp, "offsetB", new Vector3(2.0f, 0f, 0f));
+            SetPrivateField(stage2HazardComp, "moveSpeed", 3.2f);
             SetPrivateField(stage2HazardComp, "hazardRenderer", s2hRend);
 
             GameObject node2Plat = new GameObject("Stage2_Node2Platform");
@@ -3588,21 +3590,56 @@ namespace GlitchVerse.Editor
             s3sCol.isTrigger = true;
             s3sCol.size = new Vector2(1.2f, 0.4f);
 
-            EchoSwitch echoSwitchComp = stage3SwitchObj.AddComponent<EchoSwitch>();
-            SetPrivateField(echoSwitchComp, "switchRenderer", s3sRend);
-            SetPrivateField(echoSwitchComp, "depressVisual", stage3SwitchObj.transform);
+            GameObject s3LightObj = new GameObject("Stage3_EchoSwitch_Light");
+            s3LightObj.transform.SetParent(stage3SwitchObj.transform);
+            s3LightObj.transform.localPosition = Vector3.zero;
+            Light2D s3Light = s3LightObj.AddComponent<Light2D>();
+            s3Light.lightType = Light2D.LightType.Point;
+            s3Light.pointLightOuterRadius = 2.4f;
+            s3Light.color = new Color(0.85f, 0f, 1f, 1f);
+            s3Light.intensity = 1.0f;
 
+            SecurityOverrideSwitch echoSwitchComp = stage3SwitchObj.AddComponent<SecurityOverrideSwitch>();
+            SetPrivateField(echoSwitchComp, "switchRenderer", s3sRend);
+            SetPrivateField(echoSwitchComp, "glowLight", s3Light);
+            SetPrivateField(echoSwitchComp, "depressVisual", stage3SwitchObj.transform);
+            SetPrivateField(echoSwitchComp, "allowPlayerActivation", false);
+            SetPrivateField(echoSwitchComp, "allowEchoActivation", true);
+            SetPrivateField(echoSwitchComp, "holdGraceDuration", 6.0f);
+            SetPrivateField(echoSwitchComp, "latching", false);
+            SetPrivateField(echoSwitchComp, "isPowered", true);
+
+            // Forcefield Shield Barrier guarding Node 3 at X: 8.0, Y: -2.5
             GameObject shieldObj = new GameObject("Stage3_ShieldBarrier");
             shieldObj.transform.SetParent(refs.puzzleRoot.transform);
             shieldObj.transform.position = new Vector3(8.0f, -2.5f, 0f);
+
             SpriteRenderer sbRend = shieldObj.AddComponent<SpriteRenderer>();
-            sbRend.sprite = wallSp;
-            sbRend.drawMode = SpriteDrawMode.Tiled;
-            sbRend.size = new Vector2(0.8f, 3.5f);
-            sbRend.sortingOrder = 4;
-            sbRend.color = new Color(1.0f, 0.15f, 0.25f, 0.9f);
+            sbRend.sprite = hazardLaserSp;
+            sbRend.drawMode = SpriteDrawMode.Sliced;
+            sbRend.size = new Vector2(0.35f, 3.5f);
+            sbRend.sortingOrder = 8;
+            sbRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+
             BoxCollider2D sbCol = shieldObj.AddComponent<BoxCollider2D>();
-            sbCol.size = new Vector2(0.8f, 3.5f);
+            sbCol.size = new Vector2(0.35f, 3.5f);
+
+            GameObject sbLightObj = new GameObject("ShieldBarrier_Light");
+            sbLightObj.transform.SetParent(shieldObj.transform);
+            sbLightObj.transform.localPosition = Vector3.zero;
+            Light2D sbLight = sbLightObj.AddComponent<Light2D>();
+            sbLight.lightType = Light2D.LightType.Point;
+            sbLight.pointLightOuterRadius = 3.0f;
+            sbLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            sbLight.intensity = 1.3f;
+
+            SecurityBarrier shieldBarrierComp = shieldObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(shieldBarrierComp, "barrierCollider", sbCol);
+            SetPrivateField(shieldBarrierComp, "barrierRenderer", sbRend);
+            SetPrivateField(shieldBarrierComp, "barrierLight", sbLight);
+
+            SetPrivateField(echoSwitchComp, "targetBarrier", shieldBarrierComp);
+            echoSwitchComp.TargetBarrier = shieldBarrierComp;
 
             GameObject node3Obj = new GameObject("Stage3_OverrideNode3");
             node3Obj.transform.SetParent(refs.puzzleRoot.transform);
