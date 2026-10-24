@@ -289,3 +289,11 @@ Numeric index assumptions across `GameSession.cs` and `LevelDirector.cs` (`Scene
 - No duplicate ending invocations or persistent UI conflicts.
 - Chapter III interrogation remains intact (`Y` / `N`).
 - Chapter VII boss checkpoints and visual shutdown remain intact.
+
+---
+
+## 13. GIT COMMIT REFERENCE
+
+- **Branch:** `feature/shlok-core`
+- **Commit Hash:** `4d5fae3146730ebe95eae2ca762e734e4e1c007e`
+
