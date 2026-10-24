@@ -609,6 +609,577 @@ namespace GlitchVerse.Editor
                 return new Color(0.12f, 0.15f, 0.20f, 1f);
             });
 
+            // 34A. Chapter 1: Lower Wall Wainscot Panel (128x128) - Heavy rusted steel/concrete base wainscoting
+            CreateSpriteAsset("ch1_wall_lower_wainscot.png", 128, 128, (x, y) =>
+            {
+                if (x == 0 || x == 127) return new Color(0.10f, 0.09f, 0.08f, 1f);
+                if (y == 55 || y == 56) return new Color(0.12f, 0.10f, 0.09f, 1f); // Wainscot dividing joint seam
+                if (y <= 6) return new Color(0.08f, 0.07f, 0.06f, 1f); // Dark steel base kickboard
+
+                float n = Mathf.Sin(x * 12.9898f + y * 78.233f) * 43758.5453f;
+                float noise = n - Mathf.Floor(n);
+                float n2 = Mathf.Sin(x * 26.345f + y * 45.123f) * 23421.631f;
+                float noise2 = n2 - Mathf.Floor(n2);
+
+                bool isRivet = ((x == 8 || x == 119) && (y == 16 || y == 46 || y == 70 || y == 118));
+                bool isRivetHalo = ((Mathf.Abs(x - 8) <= 2 || Mathf.Abs(x - 119) <= 2) && 
+                                    (Mathf.Abs(y - 16) <= 2 || Mathf.Abs(y - 46) <= 2 || Mathf.Abs(y - 70) <= 2 || Mathf.Abs(y - 118) <= 2));
+
+                bool isRustDrip = false;
+                if ((x == 8 || x == 9 || x == 118 || x == 119 || x == 42 || x == 43 || x == 85 || x == 86) && y < 56)
+                {
+                    float dripLen = 22f + ((x * 17) % 30);
+                    if (56 - y < dripLen) isRustDrip = true;
+                }
+
+                if (isRivet) return new Color(0.24f, 0.20f, 0.16f, 1f);
+                if (isRivetHalo) return new Color(0.40f, 0.22f, 0.14f, 1f);
+                if (isRustDrip)
+                {
+                    float rustBlend = 0.5f + 0.3f * noise;
+                    return Color.Lerp(new Color(0.45f, 0.24f, 0.14f, 1f), new Color(0.28f, 0.16f, 0.10f, 1f), rustBlend);
+                }
+
+                if (y < 56)
+                {
+                    // Stained wainscoting with warm rust, scratches, and grime
+                    float baseVal = 0.38f + noise * 0.12f;
+                    Color wainscotCol = new Color(baseVal * 1.15f, baseVal * 0.95f, baseVal * 0.82f, 1f);
+                    if (noise2 > 0.65f) wainscotCol = Color.Lerp(wainscotCol, new Color(0.58f, 0.30f, 0.15f, 1f), 0.60f);
+                    return wainscotCol;
+                }
+                else
+                {
+                    // Upper section transition to weathered off-white/beige bunker concrete
+                    float baseVal = 0.76f + noise * 0.10f;
+                    Color concreteCol = new Color(baseVal * 1.02f, baseVal * 0.98f, baseVal * 0.90f, 1f);
+                    if (y < 68 && noise > 0.35f)
+                    {
+                        float rustFactor = (68f - y) / 12f * 0.6f;
+                        concreteCol = Color.Lerp(concreteCol, new Color(0.62f, 0.34f, 0.18f, 1f), rustFactor);
+                    }
+                    return concreteCol;
+                }
+            });
+
+            // 34B. Chapter 1: Upper Wall Weathered Concrete Panel (128x128) - Continuous weathered off-white/beige bunker wall
+            System.Func<int, int, Color> upperConcreteFunc = (x, y) =>
+            {
+                if (x == 0 || x == 127) return new Color(0.20f, 0.18f, 0.16f, 1f);
+                if (y == 0 || y == 127) return new Color(0.24f, 0.22f, 0.20f, 1f);
+
+                float n = Mathf.Sin(x * 12.9898f + y * 78.233f) * 43758.5453f;
+                float noise = n - Mathf.Floor(n);
+                float n2 = Mathf.Sin(x * 26.345f + y * 45.123f) * 23421.631f;
+                float noise2 = n2 - Mathf.Floor(n2);
+
+                bool isRivet = ((x == 8 || x == 119) && (y == 16 || y == 64 || y == 112));
+                bool isRivetHalo = ((Mathf.Abs(x - 8) <= 2 || Mathf.Abs(x - 119) <= 2) && 
+                                    (Mathf.Abs(y - 16) <= 2 || Mathf.Abs(y - 64) <= 2 || Mathf.Abs(y - 112) <= 2));
+
+                bool isRustDrip = false;
+                if ((x == 8 || x == 9 || x == 118 || x == 119 || x == 48 || x == 49 || x == 80 || x == 81) && noise2 > 0.30f)
+                {
+                    isRustDrip = true;
+                }
+
+                if (isRivet) return new Color(0.35f, 0.30f, 0.25f, 1f);
+                if (isRivetHalo) return new Color(0.58f, 0.32f, 0.18f, 1f);
+                if (isRustDrip)
+                {
+                    float rustBlend = 0.5f + 0.3f * noise;
+                    return Color.Lerp(new Color(0.62f, 0.34f, 0.18f, 1f), new Color(0.42f, 0.24f, 0.14f, 1f), rustBlend);
+                }
+
+                // Weathered off-white / beige industrial concrete
+                float baseVal = 0.78f + noise * 0.10f + (noise2 > 0.8f ? -0.06f : 0.03f);
+                Color concreteCol = new Color(baseVal * 1.02f, baseVal * 0.98f, baseVal * 0.90f, 1f);
+                return concreteCol;
+            };
+
+            CreateSpriteAsset("ch1_wall_upper_concrete.png", 128, 128, upperConcreteFunc);
+            CreateSpriteAsset("ch1_weathered_concrete.png", 128, 128, upperConcreteFunc);
+
+            // 35. Chapter 1: Heavy Industrial Platform Deck (128x64) - Diamond plate tread with riveted girder rim
+            CreateSpriteAsset("ch1_heavy_platform.png", 128, 64, (x, y) =>
+            {
+                if (y >= 44)
+                {
+                    if (y == 63) return new Color(0.45f, 0.48f, 0.52f, 1f);
+                    if (y == 62) return new Color(0.35f, 0.38f, 0.42f, 1f);
+                    int pattern = (x + y) % 8;
+                    int pattern2 = (x - y + 64) % 8;
+                    bool isTreadNub = (pattern == 0 && pattern2 <= 2) || (pattern2 == 0 && pattern <= 2);
+                    if (isTreadNub) return new Color(0.38f, 0.42f, 0.46f, 1f);
+
+                    float n = (Mathf.Sin(x * 19f + y * 31f) + 1f) * 0.5f;
+                    if (n > 0.85f) return new Color(0.28f, 0.20f, 0.15f, 1f);
+                    return new Color(0.18f, 0.20f, 0.24f, 1f);
+                }
+
+                if (y >= 16)
+                {
+                    if (y == 43) return new Color(0.10f, 0.11f, 0.13f, 1f);
+                    if (y == 42) return new Color(0.14f, 0.15f, 0.18f, 1f);
+                    if (y == 16) return new Color(0.28f, 0.30f, 0.35f, 1f);
+
+                    int rivetX = x % 16;
+                    bool isRivet = (rivetX == 8) && (y == 34 || y == 24);
+                    bool isRivetEdge = (Mathf.Abs(rivetX - 8) <= 1) && (Mathf.Abs(y - 34) <= 1 || Mathf.Abs(y - 24) <= 1);
+                    if (isRivet) return new Color(0.42f, 0.45f, 0.50f, 1f);
+                    if (isRivetEdge) return new Color(0.12f, 0.14f, 0.17f, 1f);
+
+                    if (x == 0 || x == 64 || x == 127) return new Color(0.08f, 0.09f, 0.11f, 1f);
+                    if (x == 1 || x == 65) return new Color(0.25f, 0.28f, 0.32f, 1f);
+
+                    float n = (Mathf.Sin(x * 37f + y * 73f) + 1f) * 0.5f;
+                    float baseSteel = 0.17f + n * 0.04f;
+                    Color steelCol = new Color(baseSteel, baseSteel * 1.05f, baseSteel * 1.15f, 1f);
+                    if (rivetX == 8 && y < 24) steelCol = Color.Lerp(steelCol, new Color(0.10f, 0.08f, 0.06f, 1f), 0.6f);
+                    return steelCol;
+                }
+
+                if (y < 16)
+                {
+                    int strut = (x / 2 + y) % 16;
+                    if (strut <= 2 && y > 4) return new Color(0.12f, 0.14f, 0.17f, 1f);
+                    if ((x == 22 || x == 78 || x == 104) && y < 10) return new Color(0.08f, 0.09f, 0.10f, 1f);
+                    return new Color(0.05f, 0.06f, 0.08f, 0.95f);
+                }
+
+                return new Color(0.15f, 0.18f, 0.22f, 1f);
+            });
+
+            // 36. Chapter 1: Heavy Overhead Truss (128x64) - Steel roof structure with rivet plates
+            CreateSpriteAsset("ch1_overhead_truss.png", 128, 64, (x, y) =>
+            {
+                if (y >= 58)
+                {
+                    if (y == 58) return new Color(0.12f, 0.13f, 0.16f, 1f);
+                    if (y == 63) return new Color(0.35f, 0.38f, 0.44f, 1f);
+                    return new Color(0.20f, 0.22f, 0.26f, 1f);
+                }
+                if (y <= 6)
+                {
+                    if (y == 6) return new Color(0.38f, 0.42f, 0.48f, 1f);
+                    if (y == 0) return new Color(0.08f, 0.09f, 0.11f, 1f);
+                    return new Color(0.22f, 0.24f, 0.28f, 1f);
+                }
+
+                int postX = x % 32;
+                if (postX <= 3 || postX >= 29)
+                {
+                    if ((postX == 1 || postX == 30) && (y == 12 || y == 24 || y == 40 || y == 52))
+                        return new Color(0.45f, 0.48f, 0.54f, 1f);
+                    return new Color(0.18f, 0.20f, 0.24f, 1f);
+                }
+
+                int seg = x / 32;
+                int localX = x % 32;
+                bool isDiag = false;
+                if (seg % 2 == 0)
+                {
+                    float targetY = 6f + (localX / 32f) * 52f;
+                    if (Mathf.Abs(y - targetY) <= 3.0f) isDiag = true;
+                }
+                else
+                {
+                    float targetY = 58f - (localX / 32f) * 52f;
+                    if (Mathf.Abs(y - targetY) <= 3.0f) isDiag = true;
+                }
+
+                if (isDiag) return new Color(0.24f, 0.27f, 0.32f, 1f);
+                if (y >= 26 && y <= 30 && x % 4 != 0) return new Color(0.12f, 0.14f, 0.18f, 0.7f);
+                return Color.clear;
+            });
+
+            // 37. Chapter 1: Catwalk Railing (64x32) - Weathered yellow industrial pipe railing
+            CreateSpriteAsset("ch1_catwalk_railing.png", 64, 32, (x, y) =>
+            {
+                bool isStanchion = (Mathf.Abs(x - 4) <= 1 || Mathf.Abs(x - 32) <= 1 || Mathf.Abs(x - 60) <= 1) && y <= 30;
+                bool isTopRail = (y >= 28 && y <= 31);
+                bool isMidRail = (y >= 14 && y <= 17);
+                bool isToeKick = (y <= 4);
+
+                if (isTopRail)
+                {
+                    if (y == 31) return new Color(0.85f, 0.65f, 0.20f, 1f);
+                    if (y == 30) return new Color(0.75f, 0.52f, 0.15f, 1f);
+                    return new Color(0.45f, 0.32f, 0.10f, 1f);
+                }
+                if (isMidRail)
+                {
+                    if (y == 17) return new Color(0.70f, 0.50f, 0.15f, 1f);
+                    return new Color(0.38f, 0.28f, 0.10f, 1f);
+                }
+                if (isToeKick)
+                {
+                    if (y == 4) return new Color(0.32f, 0.35f, 0.40f, 1f);
+                    return new Color(0.15f, 0.17f, 0.20f, 1f);
+                }
+                if (isStanchion)
+                {
+                    if (x % 2 == 0) return new Color(0.60f, 0.45f, 0.15f, 1f);
+                    return new Color(0.28f, 0.22f, 0.10f, 1f);
+                }
+                return Color.clear;
+            });
+
+            // 38. Chapter 1: Illuminated EXIT :) Sign (64x24) - Physical amber lightbox sign
+            CreateSpriteAsset("ch1_exit_sign.png", 64, 24, (x, y) =>
+            {
+                if (x <= 2 || x >= 61 || y <= 2 || y >= 21) return new Color(0.14f, 0.13f, 0.12f, 1f);
+                if (x <= 4 || x >= 59 || y <= 4 || y >= 19) return new Color(0.28f, 0.25f, 0.22f, 1f);
+
+                Color amberGlow = new Color(1.0f, 0.72f, 0.20f, 1f);
+                Color amberBright = new Color(1.0f, 0.90f, 0.45f, 1f);
+                Color darkCharcoal = new Color(0.10f, 0.09f, 0.08f, 0.95f);
+
+                bool e = (x >= 10 && x <= 15 && y >= 8 && y <= 15) &&
+                         (x == 10 || x == 11 || y == 8 || y == 9 || y == 11 || y == 12 || y == 14 || y == 15);
+                bool xChar = (x >= 18 && x <= 23 && y >= 8 && y <= 15) &&
+                             (Mathf.Abs((x - 18) - (y - 8)) <= 1 || Mathf.Abs((x - 18) - (15 - y)) <= 1);
+                bool i = (x >= 26 && x <= 28 && y >= 8 && y <= 15);
+                bool t = (x >= 31 && x <= 37 && y >= 8 && y <= 15) &&
+                         (y >= 14 || (x >= 33 && x <= 35));
+                bool colon = (x >= 42 && x <= 43 && ((y >= 9 && y <= 10) || (y >= 13 && y <= 14)));
+                bool paren = (x >= 46 && x <= 49 && y >= 8 && y <= 15) &&
+                             ((y == 8 || y == 15) ? (x == 46 || x == 47) :
+                              (y == 9 || y == 14) ? (x == 47 || x == 48) :
+                              (x == 48 || x == 49));
+
+                if (e || xChar || i || t || colon || paren) return darkCharcoal;
+
+                float distFromCenter = Mathf.Abs(x - 32) / 32f + Mathf.Abs(y - 12) / 12f;
+                return Color.Lerp(amberBright, amberGlow, distFromCenter * 0.7f);
+            });
+
+            // 39. Chapter 1: Cinematic Blast Door (64x96) - Heavy industrial containment blast door
+            CreateSpriteAsset("ch1_blast_door_cinematic.png", 64, 96, (x, y) =>
+            {
+                if (x <= 3 || x >= 60 || y <= 2 || y >= 93) return new Color(0.12f, 0.13f, 0.15f, 1f);
+                if (x <= 6 || x >= 57 || y <= 4 || y >= 91)
+                {
+                    if ((x == 5 || x == 58) && (y % 12 == 6)) return new Color(0.40f, 0.44f, 0.50f, 1f);
+                    return new Color(0.24f, 0.27f, 0.32f, 1f);
+                }
+
+                if (x == 31 || x == 32) return new Color(0.08f, 0.09f, 0.10f, 1f);
+                if (x == 30 || x == 33) return new Color(0.35f, 0.38f, 0.44f, 1f);
+
+                int cy = y - 60;
+                int cx = x - 32;
+                bool isEmblem = false;
+                if (cy >= -12 && cy <= 12)
+                {
+                    int halfWidth = (cy + 12);
+                    if (Mathf.Abs(cx) <= halfWidth)
+                    {
+                        if (cy >= -5 && Mathf.Abs(cx) <= (cy + 5) * 0.75f)
+                            isEmblem = false;
+                        else
+                            isEmblem = true;
+                    }
+                }
+
+                if (y <= 22)
+                {
+                    if (y == 22) return new Color(0.10f, 0.11f, 0.13f, 1f);
+                    if (y == 21) return new Color(0.35f, 0.38f, 0.42f, 1f);
+                    float n = (Mathf.Sin(x * 47f + y * 89f) + 1f) * 0.5f;
+                    if (n > 0.8f) return new Color(0.35f, 0.22f, 0.15f, 1f);
+                    return new Color(0.20f, 0.22f, 0.26f, 1f);
+                }
+
+                if (isEmblem) return new Color(0.30f, 0.18f, 0.14f, 0.9f);
+
+                float noise = (Mathf.Sin(x * 17f + y * 29f) + 1f) * 0.5f;
+                float baseVal = 0.58f + noise * 0.08f;
+                Color doorCol = new Color(baseVal * 1.02f, baseVal * 0.98f, baseVal * 0.92f, 1f);
+                if (y < 40 && noise > 0.45f)
+                {
+                    float rf = (40f - y) / 20f * 0.5f;
+                    doorCol = Color.Lerp(doorCol, new Color(0.40f, 0.24f, 0.14f, 1f), rf);
+                }
+                return doorCol;
+            });
+
+            // 40. Chapter 1: Corporate Mural Decal (128x96) - Inverted Triangle + "A SAFER TOMORROW"
+            CreateSpriteAsset("ch1_mural_safer_tomorrow.png", 128, 96, (x, y) =>
+            {
+                Color stencilColor = new Color(0.45f, 0.18f, 0.14f, 0.85f);
+                Color stencilFaded = new Color(0.35f, 0.14f, 0.11f, 0.60f);
+
+                float noise = (Mathf.Sin(x * 43.12f + y * 71.34f) + 1f) * 0.5f;
+                if (noise > 0.88f) return Color.clear;
+
+                int cy = y - 62;
+                int cx = x - 64;
+                if (cy >= -18 && cy <= 18)
+                {
+                    int maxHalfW = (cy + 18);
+                    if (Mathf.Abs(cx) <= maxHalfW)
+                    {
+                        if (cy >= -8 && Mathf.Abs(cx) <= (cy + 8) * 0.75f)
+                        {
+                            if (cy >= -3 && cy <= 5 && Mathf.Abs(cx) <= (cy + 3) * 0.5f)
+                                return (noise > 0.7f) ? stencilFaded : stencilColor;
+                            return Color.clear;
+                        }
+                        return (noise > 0.7f) ? stencilFaded : stencilColor;
+                    }
+                }
+
+                if (y >= 28 && y <= 35)
+                {
+                    bool a = (x >= 32 && x <= 38) && (x == 32 || x == 38 || y == 35 || y == 31);
+                    bool s = (x >= 46 && x <= 52) && (y == 35 || y == 31 || y == 28 || (x == 46 && y >= 31) || (x == 52 && y <= 31));
+                    bool a2 = (x >= 55 && x <= 61) && (x == 55 || x == 61 || y == 35 || y == 31);
+                    bool f = (x >= 64 && x <= 70) && (x == 64 || y == 35 || y == 31);
+                    bool e = (x >= 73 && x <= 79) && (x == 73 || y == 35 || y == 31 || y == 28);
+                    bool r = (x >= 82 && x <= 88) && (x == 82 || y == 35 || y == 31 || (x == 88 && y >= 31) || (x == y + 54 && y <= 31));
+
+                    if (a || s || a2 || f || e || r) return (noise > 0.65f) ? stencilFaded : stencilColor;
+                }
+
+                if (y >= 15 && y <= 22)
+                {
+                    bool t = (x >= 24 && x <= 30) && (y == 22 || x == 27);
+                    bool o = (x >= 34 && x <= 40) && (x == 34 || x == 40 || y == 22 || y == 15);
+                    bool m = (x >= 44 && x <= 52) && (x == 44 || x == 52 || (y >= 18 && (x == 48 || Mathf.Abs(x - 48) == (22 - y))));
+                    bool o2 = (x >= 56 && x <= 62) && (x == 56 || x == 62 || y == 22 || y == 15);
+                    bool r1 = (x >= 66 && x <= 72) && (x == 66 || y == 22 || y == 18 || (x == 72 && y >= 18) || (x == y + 51 && y <= 18));
+                    bool r2 = (x >= 76 && x <= 82) && (x == 76 || y == 22 || y == 18 || (x == 82 && y >= 18) || (x == y + 61 && y <= 18));
+                    bool o3 = (x >= 86 && x <= 92) && (x == 86 || x == 92 || y == 22 || y == 15);
+                    bool w = (x >= 96 && x <= 104) && (x == 96 || x == 104 || (y <= 19 && (x == 100 || Mathf.Abs(x - 100) == (y - 15))));
+
+                    if (t || o || m || o2 || r1 || r2 || o3 || w) return (noise > 0.65f) ? stencilFaded : stencilColor;
+                }
+
+                return Color.clear;
+            });
+
+            // 41. Chapter 1: Architect Surveillance Desk Terminal (64x48) - Retro CRT with smiley face and desk lamp
+            CreateSpriteAsset("ch1_desk_terminal.png", 64, 48, (x, y) =>
+            {
+                if (x >= 18 && x <= 42 && y >= 22 && y <= 45)
+                {
+                    bool isBezel = (x == 18 || x == 42 || y == 22 || y == 45 ||
+                                   ((x <= 20 || x >= 40) && (y <= 24 || y >= 43)));
+                    if (isBezel) return new Color(0.18f, 0.20f, 0.24f, 1f);
+                    if (x == 19 || x == 41 || y == 23 || y == 44) return new Color(0.08f, 0.10f, 0.12f, 1f);
+
+                    bool isScanline = (y % 2 == 0);
+                    Color screenBase = isScanline ? new Color(0.03f, 0.10f, 0.08f, 1f) : new Color(0.05f, 0.15f, 0.12f, 1f);
+
+                    Color phosphorGlow = new Color(0.2f, 0.95f, 0.70f, 1f);
+                    Color phosphorCore = new Color(0.8f, 1.0f, 0.95f, 1f);
+
+                    bool leftEye = (x >= 25 && x <= 28) && ((y == 37 && (x == 26 || x == 27)) || (y == 36 && (x == 25 || x == 28)));
+                    bool rightEye = (x >= 32 && x <= 35) && ((y == 37 && (x == 33 || x == 34)) || (y == 36 && (x == 32 || x == 35)));
+                    bool smile = (y == 28 && x >= 28 && x <= 32) ||
+                                 (y == 29 && (x == 27 || x == 33)) ||
+                                 (y == 30 && (x == 26 || x == 34));
+
+                    if (leftEye || rightEye || smile) return phosphorCore;
+                    if ((x >= 24 && x <= 36) && (y >= 27 && y <= 38))
+                    {
+                        if (Mathf.Abs(x - 30) <= 6 && Mathf.Abs(y - 33) <= 5) return Color.Lerp(screenBase, phosphorGlow, 0.35f);
+                    }
+                    return screenBase;
+                }
+
+                if (x >= 27 && x <= 33 && y >= 19 && y <= 21) return new Color(0.14f, 0.16f, 0.18f, 1f);
+
+                if (x >= 47 && x <= 55 && y >= 21 && y <= 38)
+                {
+                    if (y == 21 && x >= 50 && x <= 54) return new Color(0.35f, 0.28f, 0.12f, 1f);
+                    if (x == 52 && y >= 22 && y <= 30) return new Color(0.40f, 0.32f, 0.15f, 1f);
+                    if ((x == 51 && y == 31) || (x == 50 && y == 32) || (x == 49 && y == 33)) return new Color(0.40f, 0.32f, 0.15f, 1f);
+                    if (y >= 33 && y <= 37 && x >= 46 && x <= 50) return new Color(0.70f, 0.50f, 0.15f, 1f);
+                    if (x >= 46 && x <= 48 && y >= 32 && y <= 34) return new Color(1.0f, 0.90f, 0.40f, 1f);
+                }
+
+                if (x >= 4 && x <= 60 && y >= 16 && y <= 20)
+                {
+                    if (y == 20) return new Color(0.40f, 0.35f, 0.30f, 1f);
+                    if (y == 16) return new Color(0.12f, 0.10f, 0.08f, 1f);
+                    return new Color(0.24f, 0.20f, 0.17f, 1f);
+                }
+
+                if (x >= 42 && x <= 58 && y <= 15)
+                {
+                    if (y == 10 || y == 5 || x == 42 || x == 58 || y == 0) return new Color(0.10f, 0.11f, 0.13f, 1f);
+                    if (x >= 48 && x <= 52 && (y == 13 || y == 8 || y == 3)) return new Color(0.60f, 0.55f, 0.45f, 1f);
+                    return new Color(0.22f, 0.24f, 0.27f, 1f);
+                }
+
+                if (x >= 6 && x <= 9 && y <= 15) return new Color(0.16f, 0.18f, 0.20f, 1f);
+
+                if (x >= 12 && x <= 22 && y <= 16)
+                {
+                    if (y >= 6 && y <= 14 && x >= 13 && x <= 21) return new Color(0.10f, 0.12f, 0.14f, 0.85f);
+                    if (x == 17 && y <= 6) return new Color(0.14f, 0.15f, 0.18f, 0.85f);
+                    if (y == 0 && x >= 14 && x <= 20) return new Color(0.14f, 0.15f, 0.18f, 0.85f);
+                }
+                return Color.clear;
+            });
+
+            // 42. Chapter 1: Hanging Cable Bundle (64x64) - Drooping, tangled high-voltage power cables
+            CreateSpriteAsset("ch1_hanging_cables.png", 64, 64, (x, y) =>
+            {
+                float t = (x - 32f) / 32f;
+                float sag1 = 58f - (t * t * 38f);
+                if (Mathf.Abs(y - sag1) <= 1.8f)
+                {
+                    if (y > sag1) return new Color(0.35f, 0.38f, 0.45f, 1f);
+                    return new Color(0.12f, 0.13f, 0.16f, 1f);
+                }
+
+                float sag2 = 52f - (t * t * 44f);
+                if (Mathf.Abs(y - sag2) <= 1.4f)
+                {
+                    if ((x / 4) % 2 == 0) return new Color(0.70f, 0.45f, 0.12f, 1f);
+                    return new Color(0.10f, 0.11f, 0.14f, 1f);
+                }
+
+                float sag3 = 44f - (t * t * 40f);
+                if (Mathf.Abs(y - sag3) <= 1.0f) return new Color(0.16f, 0.18f, 0.22f, 1f);
+
+                if (x == 14 && y >= 25 && y <= 55) return new Color(0.14f, 0.16f, 0.20f, 1f);
+                if (x == 15 && y == 24) return new Color(0.8f, 0.6f, 0.2f, 1f);
+
+                if (x == 50 && y >= 18 && y <= 50) return new Color(0.14f, 0.16f, 0.20f, 1f);
+                if ((x <= 6 || x >= 57) && y >= 50) return new Color(0.28f, 0.30f, 0.36f, 1f);
+                return Color.clear;
+            });
+
+            // 43. Chapter 1: Wall Breaker Lockers (48x80) - Industrial electrical cabinets with louvers and latches
+            CreateSpriteAsset("ch1_wall_lockers.png", 48, 80, (x, y) =>
+            {
+                if (x <= 2 || x >= 45 || y <= 2 || y >= 77) return new Color(0.12f, 0.13f, 0.15f, 1f);
+                if (x <= 4 || x >= 43 || y <= 4 || y >= 75) return new Color(0.25f, 0.28f, 0.32f, 1f);
+
+                if (x == 23 || x == 24) return new Color(0.10f, 0.11f, 0.12f, 1f);
+
+                if (y >= 60 && y <= 70 && ((x >= 8 && x <= 20) || (x >= 28 && x <= 40)))
+                {
+                    if (y % 3 == 0) return new Color(0.08f, 0.09f, 0.10f, 1f);
+                    return new Color(0.32f, 0.35f, 0.40f, 1f);
+                }
+
+                if (y >= 40 && y <= 46)
+                {
+                    if ((x >= 19 && x <= 21) || (x >= 26 && x <= 28)) return new Color(0.70f, 0.65f, 0.55f, 1f);
+                }
+
+                if (y >= 28 && y <= 34 && x >= 30 && x <= 38)
+                {
+                    if ((x + y) % 4 <= 1) return new Color(0.85f, 0.60f, 0.10f, 1f);
+                    return new Color(0.10f, 0.11f, 0.12f, 1f);
+                }
+
+                float noise = (Mathf.Sin(x * 23f + y * 67f) + 1f) * 0.5f;
+                float baseVal = 0.20f + noise * 0.04f;
+                Color lockerCol = new Color(baseVal, baseVal * 1.05f, baseVal * 1.12f, 1f);
+                if (y < 20 && noise > 0.5f) lockerCol = Color.Lerp(lockerCol, new Color(0.35f, 0.22f, 0.14f, 1f), 0.4f);
+                return lockerCol;
+            });
+
+            // 44. Chapter 1: Cavernous Containment Chasm Backdrop (256x144) - Distant misty machinery and void
+            CreateSpriteAsset("ch1_chasm_backdrop.png", 256, 144, (x, y) =>
+            {
+                float yNorm = y / 144f;
+                // Rich atmospheric mist gradient: slate-blue mist fading into industrial chasm depth
+                Color mistTop = new Color(0.20f, 0.25f, 0.32f, 1f);
+                Color mistMid = new Color(0.28f, 0.34f, 0.42f, 1f);
+                Color abyssDark = new Color(0.10f, 0.12f, 0.16f, 1f);
+                Color bgSky = (yNorm > 0.45f) ? Color.Lerp(mistMid, mistTop, (yNorm - 0.45f) / 0.55f) : Color.Lerp(abyssDark, mistMid, yNorm / 0.45f);
+
+                // Silhouetted industrial containment towers in distance
+                if (x >= 70 && x <= 110)
+                {
+                    Color towerCol = new Color(0.12f, 0.15f, 0.20f, 1f);
+                    int brace = (x + y) % 20;
+                    if (brace <= 2) towerCol = new Color(0.18f, 0.22f, 0.28f, 1f);
+                    if (Mathf.Abs(x - 90) <= 2 && Mathf.Abs(y - 85) <= 2) return new Color(1.0f, 0.70f, 0.25f, 1f); // Amber warning beacon
+                    return towerCol;
+                }
+
+                if (x >= 180 && x <= 220)
+                {
+                    Color towerCol = new Color(0.10f, 0.13f, 0.17f, 1f);
+                    int brace = (x - y + 144) % 18;
+                    if (brace <= 2) towerCol = new Color(0.15f, 0.19f, 0.24f, 1f);
+                    if (Mathf.Abs(x - 200) <= 2 && Mathf.Abs(y - 110) <= 2) return new Color(1.0f, 0.70f, 0.25f, 1f); // Amber warning beacon
+                    return towerCol;
+                }
+
+                // Suspended gantry catwalks across chasm
+                if ((y >= 50 && y <= 55) || (y >= 92 && y <= 96))
+                {
+                    if (x % 6 <= 4) return new Color(0.14f, 0.17f, 0.22f, 1f);
+                }
+
+                // Drooping suspension cables across abyss
+                float sag = 120f - Mathf.Pow((x - 128f) / 128f, 2f) * 60f;
+                if (Mathf.Abs(y - sag) <= 1.2f) return new Color(0.10f, 0.12f, 0.16f, 1f);
+                return bgSky;
+            });
+
+            // 45. Chapter 1: Foreground Framing Silhouette (128x64) - Girders and hanging cables at sorting order 12
+            CreateSpriteAsset("ch1_foreground_silhouette.png", 128, 64, (x, y) =>
+            {
+                if (y >= 48)
+                {
+                    if (y == 48) return new Color(0.12f, 0.14f, 0.16f, 0.95f);
+                    return new Color(0.04f, 0.05f, 0.06f, 0.95f);
+                }
+                if (y >= 40 && y <= 46) return new Color(0.05f, 0.06f, 0.07f, 0.92f);
+
+                float t = (x - 64f) / 64f;
+                float c1 = 44f - (t * t * 24f);
+                if (Mathf.Abs(y - c1) <= 1.5f) return new Color(0.03f, 0.04f, 0.05f, 0.95f);
+
+                float c2 = 40f - (t * t * 32f);
+                if (Mathf.Abs(y - c2) <= 1.2f) return new Color(0.03f, 0.04f, 0.05f, 0.95f);
+
+                if (x + y >= 80 && x <= 32) return new Color(0.04f, 0.05f, 0.06f, 0.95f);
+                return Color.clear;
+            });
+
+            // 46. Chapter 1: Wall Pipe Cluster (64x32) - Conduit pipes with red valve and mounting brackets
+            CreateSpriteAsset("ch1_pipe_cluster.png", 64, 32, (x, y) =>
+            {
+                if (y >= 18 && y <= 26)
+                {
+                    if (y == 26) return new Color(0.48f, 0.52f, 0.58f, 1f);
+                    if (y == 25) return new Color(0.38f, 0.42f, 0.48f, 1f);
+                    if (y == 18) return new Color(0.10f, 0.12f, 0.14f, 1f);
+                    if (x >= 28 && x <= 32) return new Color(0.42f, 0.46f, 0.52f, 1f);
+                    return new Color(0.24f, 0.27f, 0.32f, 1f);
+                }
+
+                if (y >= 6 && y <= 12)
+                {
+                    if (y == 12) return new Color(0.70f, 0.42f, 0.22f, 1f);
+                    if (y == 6) return new Color(0.20f, 0.10f, 0.05f, 1f);
+                    return new Color(0.48f, 0.28f, 0.15f, 1f);
+                }
+
+                if (x >= 12 && x <= 16 && y >= 12 && y <= 18)
+                {
+                    if (y == 15 && x >= 10 && x <= 18) return new Color(0.85f, 0.20f, 0.15f, 1f);
+                    return new Color(0.32f, 0.35f, 0.40f, 1f);
+                }
+
+                if ((x >= 4 && x <= 8) || (x >= 54 && x <= 58))
+                {
+                    if (y >= 4 && y <= 28) return new Color(0.16f, 0.18f, 0.22f, 1f);
+                }
+                return Color.clear;
+            });
+
             AssetDatabase.Refresh();
         }
 
@@ -1248,62 +1819,296 @@ namespace GlitchVerse.Editor
         }
         #endregion
 
-        #region Level 01: The First Lie (Tutorial & Basic Push)
+        #region Level 01: The First Lie (Cinematic Industrial Containment Redesign)
         public static void ConstructLevel01Scene()
         {
             var atmo = new ChapterAtmosphereConfig
             {
-                ambientColor = new Color(0.85f, 0.62f, 0.38f, 1f), // Warm amber emergency lighting
-                ambientIntensity = 0.78f,
-                spawnLampColor = new Color(1.0f, 0.68f, 0.22f, 1f),
-                spawnLampIntensity = 1.1f,
+                ambientColor = new Color(0.32f, 0.30f, 0.28f, 1f), // Moody industrial charcoal-slate base
+                ambientIntensity = 0.75f,
+                spawnLampColor = new Color(1.0f, 0.72f, 0.35f, 1f), // Warm amber bulkhead lighting
+                spawnLampIntensity = 1.45f,
                 spawnLampFlicker = FlickeringLight2D.FlickerMode.SubtleFluorescent,
                 particleType = AtmosphericParticleEmitter.AtmosphereType.ContainmentDust,
-                architectMonitorColor = new Color(1.0f, 0.70f, 0.20f, 0.95f)
+                architectMonitorColor = new Color(0.2f, 0.95f, 0.75f, 0.95f) // Phosphor green/cyan
             };
 
             var refs = SetupBaseChamber("CONTAINMENT 01 // FIRST LIE", 1, "Level02", false, atmo);
             Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-            Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
+            // Load Chapter 1 Cinematic Modular Assets
+            Sprite concreteSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_weathered_concrete.png");
+            Sprite wainscotSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_wall_lower_wainscot.png");
+            Sprite upperConcreteSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_wall_upper_concrete.png") ?? concreteSp;
+            Sprite heavyPlatSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_heavy_platform.png");
+            Sprite trussSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_overhead_truss.png");
+            Sprite railingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_catwalk_railing.png");
+            Sprite exitSignSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_exit_sign.png");
+            Sprite blastDoorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_blast_door_cinematic.png");
+            Sprite muralSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_mural_safer_tomorrow.png");
+            Sprite deskSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_desk_terminal.png");
+            Sprite cablesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_hanging_cables.png");
+            Sprite lockersSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_wall_lockers.png");
+            Sprite chasmSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_chasm_backdrop.png");
+            Sprite fgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_foreground_silhouette.png");
+            Sprite pipeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_pipe_cluster.png");
+
             Sprite cubeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cube_crate.png");
             Sprite plateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pressure_plate.png");
-            Sprite grateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_grate.png");
-            Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
             Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
             Sprite subjDecalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_subject075.png");
-            Sprite debrisSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_debris.png");
             Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
+            Sprite barrierSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/security_barrier_grid.png");
+            Sprite switchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
 
-            // Environmental Dressing: Ceiling Cables
-            float[] cableXs = new float[] { -6f, -2f, 2f, 6f };
+            // =========================================================================
+            // 1. BACKGROUND ARCHITECTURE: WEATHERED CONCRETE WALL & CAVERNOUS CHASM
+            // =========================================================================
+            GameObject bgRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgRoot != null)
+            {
+                Transform bgGrid = bgRoot.transform.Find("BG_BackWallGrid");
+                if (bgGrid != null) Object.DestroyImmediate(bgGrid.gameObject);
+                Transform bgReactor = bgRoot.transform.Find("BG_ReactorCore");
+                if (bgReactor != null) Object.DestroyImmediate(bgReactor.gameObject);
+                for (int i = bgRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = bgRoot.transform.GetChild(i);
+                    if (child.name.StartsWith("BG_Pillar")) Object.DestroyImmediate(child.gameObject);
+                }
+            }
+            else
+            {
+                bgRoot = new GameObject("--- BACKGROUND ---");
+            }
+
+            // A. Weathered Concrete Bunker Wall (Left & Center: X from -10.0 to +3.0)
+            GameObject concreteWallRoot = new GameObject("BG_WeatheredConcreteWall");
+            concreteWallRoot.transform.SetParent(bgRoot.transform);
+            concreteWallRoot.transform.position = Vector3.zero;
+
+            for (float wx = -10.0f; wx <= 3.0f; wx += 2.0f)
+            {
+                for (float wy = -3.0f; wy <= 4.0f; wy += 2.0f)
+                {
+                    GameObject cTile = new GameObject($"ConcreteTile_{wx}_{wy}");
+                    cTile.transform.SetParent(concreteWallRoot.transform);
+                    cTile.transform.position = new Vector3(wx, wy, 0f);
+                    SpriteRenderer cr = cTile.AddComponent<SpriteRenderer>();
+                    cr.sprite = (wy <= -2.5f && wainscotSp != null) ? wainscotSp : upperConcreteSp;
+                    cr.sortingOrder = -22;
+                    cr.color = new Color(0.95f, 0.92f, 0.90f, 1f);
+                }
+            }
+
+            // Unblock right wall renderers to reveal cavernous containment chasm
+            Transform chamberRightWall = refs.envRoot.transform.Find("Chamber_RightWall");
+            if (chamberRightWall != null)
+            {
+                for (int i = chamberRightWall.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(chamberRightWall.GetChild(i).gameObject);
+                }
+            }
+
+            // B. Cavernous Containment Chasm Backdrop (Right: X from 3.0 to 12.0)
+            GameObject chasmBackdrop = new GameObject("BG_ContainmentChasm");
+            chasmBackdrop.transform.SetParent(bgRoot.transform);
+            chasmBackdrop.transform.position = new Vector3(7.8f, 0.5f, 2.0f);
+            chasmBackdrop.transform.localScale = new Vector3(5.5f, 3.0f, 1f);
+            SpriteRenderer chasmRend = chasmBackdrop.AddComponent<SpriteRenderer>();
+            chasmRend.sprite = chasmSp;
+            chasmRend.sortingOrder = -25;
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            if (unlitShader != null) chasmRend.material = new Material(unlitShader);
+            chasmRend.color = Color.white;
+
+            // Distant pin-lights on machinery towers
+            GameObject pinLight1 = new GameObject("Chasm_TowerBeacon_1");
+            pinLight1.transform.SetParent(chasmBackdrop.transform);
+            pinLight1.transform.localPosition = new Vector3(-0.2f, 0.2f, 0f);
+            Light2D pl1 = pinLight1.AddComponent<Light2D>();
+            pl1.lightType = Light2D.LightType.Point;
+            pl1.pointLightOuterRadius = 3.5f;
+            pl1.pointLightInnerRadius = 0.3f;
+            pl1.color = new Color(1.0f, 0.70f, 0.25f, 1f);
+            pl1.intensity = 1.6f;
+
+            GameObject pinLight2 = new GameObject("Chasm_TowerBeacon_2");
+            pinLight2.transform.SetParent(chasmBackdrop.transform);
+            pinLight2.transform.localPosition = new Vector3(0.5f, 0.6f, 0f);
+            Light2D pl2 = pinLight2.AddComponent<Light2D>();
+            pl2.lightType = Light2D.LightType.Point;
+            pl2.pointLightOuterRadius = 3.0f;
+            pl2.pointLightInnerRadius = 0.2f;
+            pl2.color = new Color(1.0f, 0.70f, 0.25f, 1f);
+            pl2.intensity = 1.4f;
+
+            // C. Heavy Vertical Structural Pillars framing boundary at X = 3.6
+            GameObject strutCol = new GameObject("BG_ChasmBoundaryPillar");
+            strutCol.transform.SetParent(bgRoot.transform);
+            strutCol.transform.position = new Vector3(3.6f, 0.5f, 0f);
+            strutCol.transform.localScale = new Vector3(0.8f, 9.5f, 1f);
+            SpriteRenderer strutRend = strutCol.AddComponent<SpriteRenderer>();
+            strutRend.sprite = trussSp;
+            strutRend.sortingOrder = -15;
+            strutRend.color = new Color(0.22f, 0.25f, 0.30f, 0.95f);
+
+            // =========================================================================
+            // 2. FLOOR & CEILING UPGRADE: HEAVY RIVETED GIRDER PLATFORMS & TRUSSES
+            // =========================================================================
+            Transform chamberFloor = refs.envRoot.transform.Find("Chamber_Floor");
+            if (chamberFloor != null)
+            {
+                for (int i = chamberFloor.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(chamberFloor.GetChild(i).gameObject);
+                }
+
+                for (float fx = -10.0f; fx <= 10.0f; fx += 2.0f)
+                {
+                    GameObject pTile = new GameObject($"HeavyFloorDeck_{fx}");
+                    pTile.transform.SetParent(chamberFloor);
+                    pTile.transform.position = new Vector3(fx, -4.0f, 0f);
+                    SpriteRenderer pr = pTile.AddComponent<SpriteRenderer>();
+                    pr.sprite = heavyPlatSp;
+                    pr.sortingOrder = 0;
+
+                    GameObject underStrut = new GameObject($"UnderStrut_{fx}");
+                    underStrut.transform.SetParent(chamberFloor);
+                    underStrut.transform.position = new Vector3(fx, -4.8f, 0f);
+                    underStrut.transform.localScale = new Vector3(1.0f, 0.8f, 1f);
+                    SpriteRenderer usr = underStrut.AddComponent<SpriteRenderer>();
+                    usr.sprite = heavyPlatSp;
+                    usr.sortingOrder = -2;
+                    usr.color = new Color(0.12f, 0.14f, 0.18f, 0.9f);
+                }
+            }
+
+            Transform chamberCeiling = refs.envRoot.transform.Find("Chamber_Ceiling");
+            if (chamberCeiling != null)
+            {
+                for (int i = chamberCeiling.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(chamberCeiling.GetChild(i).gameObject);
+                }
+
+                for (float cx = -10.0f; cx <= 10.0f; cx += 2.0f)
+                {
+                    GameObject cTruss = new GameObject($"OverheadTruss_{cx}");
+                    cTruss.transform.SetParent(chamberCeiling);
+                    cTruss.transform.position = new Vector3(cx, 5.2f, 0f);
+                    SpriteRenderer ctr = cTruss.AddComponent<SpriteRenderer>();
+                    ctr.sprite = trussSp;
+                    ctr.sortingOrder = 0;
+                }
+            }
+
+            for (int i = refs.envRoot.transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = refs.envRoot.transform.GetChild(i);
+                if (child.name.StartsWith("OverheadPipe")) Object.DestroyImmediate(child.gameObject);
+            }
+
+            float[] cableXs = new float[] { -8f, -4.5f, -1.0f, 2.5f, 6.5f };
             foreach (var cx in cableXs)
             {
                 GameObject cableObj = new GameObject($"Ceiling_Cables_{cx}");
                 cableObj.transform.SetParent(refs.envRoot.transform);
                 cableObj.transform.position = new Vector3(cx, 4.4f, 0f);
-                cableObj.transform.localScale = new Vector3(1.5f, 1.0f, 1f);
+                cableObj.transform.localScale = new Vector3(1.8f, 1.2f, 1f);
                 SpriteRenderer cRend = cableObj.AddComponent<SpriteRenderer>();
-                cRend.sprite = cableSp;
+                cRend.sprite = cablesSp;
                 cRend.sortingOrder = -5;
             }
 
-            // Wall Grate & Subject 075 Identification Decal near spawn
-            GameObject grateObj = new GameObject("Deco_WallGrate");
-            grateObj.transform.SetParent(refs.envRoot.transform);
-            grateObj.transform.position = new Vector3(-8.0f, -0.6f, 0f);
-            SpriteRenderer gRend = grateObj.AddComponent<SpriteRenderer>();
-            gRend.sprite = grateSp;
-            gRend.sortingOrder = -5;
+            // =========================================================================
+            // 3. LEFT-SIDE BUNKER INSTALLATIONS (ELECTRICAL LOCKERS, CONDUITS, SPAWN)
+            // =========================================================================
+            GameObject lockersObj = new GameObject("Deco_WallBreakerLockers");
+            lockersObj.transform.SetParent(refs.envRoot.transform);
+            lockersObj.transform.position = new Vector3(-9.6f, -2.8f, 0f);
+            lockersObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+            SpriteRenderer lockRend = lockersObj.AddComponent<SpriteRenderer>();
+            lockRend.sprite = lockersSp;
+            lockRend.sortingOrder = -5;
+
+            GameObject pipeCluster1 = new GameObject("Deco_PipeCluster_Spawn");
+            pipeCluster1.transform.SetParent(refs.envRoot.transform);
+            pipeCluster1.transform.position = new Vector3(-9.5f, 0.2f, 0f);
+            pipeCluster1.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+            SpriteRenderer pcRend1 = pipeCluster1.AddComponent<SpriteRenderer>();
+            pcRend1.sprite = pipeSp;
+            pcRend1.sortingOrder = -5;
+
+            GameObject pipeCluster2 = new GameObject("Deco_PipeCluster_Mid");
+            pipeCluster2.transform.SetParent(refs.envRoot.transform);
+            pipeCluster2.transform.position = new Vector3(-6.5f, 2.5f, 0f);
+            pipeCluster2.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+            SpriteRenderer pcRend2 = pipeCluster2.AddComponent<SpriteRenderer>();
+            pcRend2.sprite = pipeSp;
+            pcRend2.sortingOrder = -5;
 
             GameObject subjDecalObj = new GameObject("Deco_Subject075_Decal");
             subjDecalObj.transform.SetParent(refs.envRoot.transform);
-            subjDecalObj.transform.position = new Vector3(-8.0f, 1.2f, 0f);
+            subjDecalObj.transform.position = new Vector3(-7.5f, 1.2f, 0f);
             SpriteRenderer sdRend = subjDecalObj.AddComponent<SpriteRenderer>();
             sdRend.sprite = subjDecalSp;
             sdRend.sortingOrder = -5;
 
-            // Hazard Warning Stripes on floor beneath Platform A
+            // =========================================================================
+            // 4. ARCHITECT WORKSTATION & CORPORATE MURAL ("A SAFER TOMORROW")
+            // =========================================================================
+            Transform oldMonitor = refs.envRoot.transform.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor.gameObject);
+
+            GameObject muralObj = new GameObject("Deco_CorporateMural");
+            muralObj.transform.SetParent(refs.envRoot.transform);
+            muralObj.transform.position = new Vector3(0.5f, 0.4f, 0f);
+            muralObj.transform.localScale = new Vector3(1.6f, 1.6f, 1f);
+            SpriteRenderer muralRend = muralObj.AddComponent<SpriteRenderer>();
+            muralRend.sprite = muralSp;
+            muralRend.sortingOrder = -20;
+
+            GameObject muralSpotObj = new GameObject("Mural_OverheadSpot");
+            muralSpotObj.transform.SetParent(refs.envRoot.transform);
+            muralSpotObj.transform.position = new Vector3(0.5f, 2.2f, 0f);
+            Light2D mSpot = muralSpotObj.AddComponent<Light2D>();
+            mSpot.lightType = Light2D.LightType.Point;
+            mSpot.pointLightOuterRadius = 5.5f;
+            mSpot.pointLightInnerRadius = 0.6f;
+            mSpot.color = new Color(1.0f, 0.78f, 0.42f, 1f);
+            mSpot.intensity = 2.0f;
+
+            GameObject deskObj = new GameObject("Deco_ArchitectWorkstation");
+            deskObj.transform.SetParent(refs.envRoot.transform);
+            deskObj.transform.position = new Vector3(0.2f, -3.25f, 0f);
+            deskObj.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+            SpriteRenderer deskRend = deskObj.AddComponent<SpriteRenderer>();
+            deskRend.sprite = deskSp;
+            deskRend.sortingOrder = 2;
+
+            GameObject crtGlowObj = new GameObject("Desk_CRTGlow");
+            crtGlowObj.transform.SetParent(deskObj.transform);
+            crtGlowObj.transform.localPosition = new Vector3(0.0f, 0.3f, 0f);
+            Light2D crtLight = crtGlowObj.AddComponent<Light2D>();
+            crtLight.lightType = Light2D.LightType.Point;
+            crtLight.pointLightOuterRadius = 2.5f;
+            crtLight.pointLightInnerRadius = 0.3f;
+            crtLight.color = new Color(0.2f, 0.95f, 0.75f, 1f);
+            crtLight.intensity = 1.0f;
+
+            GameObject deskLampObj = new GameObject("Desk_GooseneckLamp");
+            deskLampObj.transform.SetParent(deskObj.transform);
+            deskLampObj.transform.localPosition = new Vector3(0.35f, 0.45f, 0f);
+            Light2D deskLamp = deskLampObj.AddComponent<Light2D>();
+            deskLamp.lightType = Light2D.LightType.Point;
+            deskLamp.pointLightOuterRadius = 3.2f;
+            deskLamp.pointLightInnerRadius = 0.4f;
+            deskLamp.color = new Color(1.0f, 0.82f, 0.42f, 1f);
+            deskLamp.intensity = 1.8f;
+
             GameObject hazardObj = new GameObject("Deco_HazardStripes");
             hazardObj.transform.SetParent(refs.envRoot.transform);
             hazardObj.transform.position = new Vector3(-3.0f, -3.88f, 0f);
@@ -1312,61 +2117,104 @@ namespace GlitchVerse.Editor
             hzRend.sprite = hazardSp;
             hzRend.sortingOrder = 1;
 
-            // Floor Debris
-            GameObject debris1 = new GameObject("Deco_FloorDebris_1");
-            debris1.transform.SetParent(refs.envRoot.transform);
-            debris1.transform.position = new Vector3(-9.2f, -3.9f, 0f);
-            SpriteRenderer debRend1 = debris1.AddComponent<SpriteRenderer>();
-            debRend1.sprite = debrisSp;
-            debRend1.sortingOrder = 1;
+            GameObject deskLockersObj = new GameObject("Deco_DeskWallLockers");
+            deskLockersObj.transform.SetParent(refs.envRoot.transform);
+            deskLockersObj.transform.position = new Vector3(2.0f, -2.8f, 0f);
+            deskLockersObj.transform.localScale = new Vector3(1.1f, 1.2f, 1f);
+            SpriteRenderer deskLockRend = deskLockersObj.AddComponent<SpriteRenderer>();
+            deskLockRend.sprite = lockersSp;
+            deskLockRend.sortingOrder = -5;
 
-            GameObject debris2 = new GameObject("Deco_FloorDebris_2");
-            debris2.transform.SetParent(refs.envRoot.transform);
-            debris2.transform.position = new Vector3(5.5f, -3.9f, 0f);
-            SpriteRenderer debRend2 = debris2.AddComponent<SpriteRenderer>();
-            debRend2.sprite = debrisSp;
-            debRend2.sortingOrder = 1;
-
-            // Warning Beacon above Decoy Exit
-            GameObject beaconObj = new GameObject("Deco_WarningBeacon_Exit");
-            beaconObj.transform.SetParent(refs.puzzleRoot.transform);
-            beaconObj.transform.position = new Vector3(8.5f, -1.2f, 0f);
-            SpriteRenderer bRend = beaconObj.AddComponent<SpriteRenderer>();
-            bRend.sprite = beaconSp;
-            bRend.sortingOrder = 5;
-
-            GameObject beaconLightObj = new GameObject("Beacon_Light");
-            beaconLightObj.transform.SetParent(beaconObj.transform);
-            beaconLightObj.transform.localPosition = Vector3.zero;
-            Light2D bLight = beaconLightObj.AddComponent<Light2D>();
-            bLight.lightType = Light2D.LightType.Point;
-            bLight.pointLightOuterRadius = 2.2f;
-            bLight.color = new Color(1.0f, 0.65f, 0.15f, 1f);
-            bLight.intensity = 0.55f;
-
-            FlickeringLight2D bFlicker = beaconLightObj.AddComponent<FlickeringLight2D>();
-            bFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
-            bFlicker.BaseIntensity = 0.55f;
-
-            // Observation Platform A (X: -4.5 to -1.5, Y: -1.0)
+            // =========================================================================
+            // 5. OBSERVATION PLATFORM A (ELEVATED CATWALK, BLAST DOOR & REAL EXIT)
+            // =========================================================================
             GameObject platformA = new GameObject("Observation_Platform_A");
             platformA.transform.SetParent(refs.envRoot.transform);
             platformA.transform.position = new Vector3(-3.0f, -1.0f, 0f);
             BoxCollider2D platCol = platformA.AddComponent<BoxCollider2D>();
             platCol.size = new Vector2(3.2f, 0.4f);
 
-            for (float px = -4.5f; px <= -1.5f; px += 1.0f)
+            for (float px = -4.0f; px <= -2.0f; px += 2.0f)
             {
                 GameObject seg = new GameObject($"PlatSeg_{px}");
                 seg.transform.SetParent(platformA.transform);
                 seg.transform.position = new Vector3(px, -1.0f, 0f);
                 seg.transform.localScale = new Vector3(1.0f, 0.4f, 1f);
                 SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
+                rend.sprite = heavyPlatSp;
                 rend.sortingOrder = 1;
             }
 
-            // Pressure Plate at (3.0, -3.9)
+            GameObject platALeftRail = new GameObject("PlatARail_Left");
+            platALeftRail.transform.SetParent(platformA.transform);
+            platALeftRail.transform.position = new Vector3(-4.0f, -0.6f, 0f);
+            platALeftRail.transform.localScale = new Vector3(1.1f, 0.6f, 1f);
+            SpriteRenderer rrL = platALeftRail.AddComponent<SpriteRenderer>();
+            rrL.sprite = railingSp;
+            rrL.sortingOrder = 3;
+
+            GameObject platARightRail = new GameObject("PlatARail_Right");
+            platARightRail.transform.SetParent(platformA.transform);
+            platARightRail.transform.position = new Vector3(-2.0f, -0.6f, 0f);
+            platARightRail.transform.localScale = new Vector3(1.1f, 0.6f, 1f);
+            SpriteRenderer rrR = platARightRail.AddComponent<SpriteRenderer>();
+            rrR.sprite = railingSp;
+            rrR.sortingOrder = 3;
+
+            float[] platAColXs = new float[] { -4.4f, -1.6f };
+            foreach (var colX in platAColXs)
+            {
+                GameObject colObj = new GameObject($"PlatASupport_{colX}");
+                colObj.transform.SetParent(platformA.transform);
+                colObj.transform.position = new Vector3(colX, -2.5f, 0f);
+                colObj.transform.localScale = new Vector3(0.5f, 3.0f, 1f);
+                SpriteRenderer colRend = colObj.AddComponent<SpriteRenderer>();
+                colRend.sprite = trussSp;
+                colRend.sortingOrder = -1;
+                colRend.color = new Color(0.24f, 0.27f, 0.32f, 0.95f);
+            }
+
+            GameObject platABeam = new GameObject("PlatA_UnderBeam");
+            platABeam.transform.SetParent(platformA.transform);
+            platABeam.transform.position = new Vector3(-3.0f, -1.3f, 0f);
+            platABeam.transform.localScale = new Vector3(1.6f, 0.5f, 1f);
+            SpriteRenderer pabRend = platABeam.AddComponent<SpriteRenderer>();
+            pabRend.sprite = trussSp;
+            pabRend.sortingOrder = 0;
+            pabRend.color = new Color(0.35f, 0.38f, 0.44f, 1f);
+
+            GameObject blastDoorFrameA = new GameObject("PlatformA_BlastDoorFrame");
+            blastDoorFrameA.transform.SetParent(platformA.transform);
+            blastDoorFrameA.transform.position = new Vector3(-3.0f, 0.4f, 0f);
+            SpriteRenderer bdfRend = blastDoorFrameA.AddComponent<SpriteRenderer>();
+            bdfRend.sprite = blastDoorSp;
+            bdfRend.sortingOrder = -5;
+
+            GameObject exitSignA = new GameObject("PlatformA_ExitLightbox");
+            exitSignA.transform.SetParent(platformA.transform);
+            exitSignA.transform.position = new Vector3(-3.0f, 1.7f, 0f);
+            exitSignA.transform.localScale = new Vector3(1.2f, 1.0f, 1f);
+            SpriteRenderer esRendA = exitSignA.AddComponent<SpriteRenderer>();
+            esRendA.sprite = exitSignSp;
+            esRendA.sortingOrder = 4;
+
+            GameObject platALightObj = new GameObject("PlatformA_DoorwayLamp");
+            platALightObj.transform.SetParent(platformA.transform);
+            platALightObj.transform.position = new Vector3(-3.0f, 2.1f, 0f);
+            Light2D platALight = platALightObj.AddComponent<Light2D>();
+            platALight.lightType = Light2D.LightType.Point;
+            platALight.pointLightOuterRadius = 6.0f;
+            platALight.pointLightInnerRadius = 0.8f;
+            platALight.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            platALight.intensity = 2.2f;
+
+            FlickeringLight2D platAFlicker = platALightObj.AddComponent<FlickeringLight2D>();
+            platAFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
+            platAFlicker.BaseIntensity = 2.2f;
+
+            // =========================================================================
+            // 6. PUZZLE MECHANICS: PRESSURE PLATE & MOVABLE CUBE
+            // =========================================================================
             GameObject plateObj = new GameObject("PressurePlate");
             plateObj.transform.SetParent(refs.puzzleRoot.transform);
             plateObj.transform.position = new Vector3(3.0f, -3.9f, 0f);
@@ -1394,7 +2242,6 @@ namespace GlitchVerse.Editor
             SetPrivateField(plateComp, "plateGlowLight", plateLight);
             SetPrivateField(plateComp, "depressTarget", plateObj.transform);
 
-            // Movable Cube at (-2.0, -3.4)
             GameObject cubeObj = new GameObject("MovableCube");
             cubeObj.transform.SetParent(refs.puzzleRoot.transform);
             cubeObj.transform.position = new Vector3(-2.0f, -3.4f, 0f);
@@ -1428,10 +2275,54 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.director, "pressurePlate", plateComp);
             SetPrivateField(refs.triggers, "pressurePlate", plateComp);
 
-            // Checkpoint 2: Scripted Fake Exit Prank & Difficulty Upgrade 01B (Level 01)
-            Sprite barrierSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/security_barrier_grid.png");
-            Sprite switchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png") ?? AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/secondary_breaker_switch.png");
-            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+            // =========================================================================
+            // 7. DECOY EXIT BLAST DOOR & ILLUMINATED EXIT :) LIGHTBOX (X: 8.5)
+            // =========================================================================
+            refs.exitDoor.transform.position = new Vector3(8.5f, -2.7f, 0f);
+            var decoyRend = refs.exitDoor.GetComponent<SpriteRenderer>();
+            if (decoyRend != null)
+            {
+                decoyRend.sprite = blastDoorSp;
+                decoyRend.sortingOrder = 4;
+            }
+
+            GameObject decoySignObj = new GameObject("Decoy_ExitLightbox");
+            decoySignObj.transform.SetParent(refs.puzzleRoot.transform);
+            decoySignObj.transform.position = new Vector3(8.5f, -1.3f, 0f);
+            decoySignObj.transform.localScale = new Vector3(1.2f, 1.0f, 1f);
+            SpriteRenderer dSignRend = decoySignObj.AddComponent<SpriteRenderer>();
+            dSignRend.sprite = exitSignSp;
+            dSignRend.sortingOrder = 5;
+
+            GameObject decoySpotObj = new GameObject("Decoy_DoorwayLamp");
+            decoySpotObj.transform.SetParent(refs.puzzleRoot.transform);
+            decoySpotObj.transform.position = new Vector3(8.5f, -0.8f, 0f);
+            Light2D dSpot = decoySpotObj.AddComponent<Light2D>();
+            dSpot.lightType = Light2D.LightType.Point;
+            dSpot.pointLightOuterRadius = 5.5f;
+            dSpot.pointLightInnerRadius = 0.6f;
+            dSpot.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            dSpot.intensity = 2.0f;
+
+            GameObject beaconObj = new GameObject("Deco_WarningBeacon_Exit");
+            beaconObj.transform.SetParent(refs.puzzleRoot.transform);
+            beaconObj.transform.position = new Vector3(8.5f, -0.5f, 0f);
+            SpriteRenderer bRend = beaconObj.AddComponent<SpriteRenderer>();
+            bRend.sprite = beaconSp;
+            bRend.sortingOrder = 5;
+
+            GameObject beaconLightObj = new GameObject("Beacon_Light");
+            beaconLightObj.transform.SetParent(beaconObj.transform);
+            beaconLightObj.transform.localPosition = Vector3.zero;
+            Light2D bLight = beaconLightObj.AddComponent<Light2D>();
+            bLight.lightType = Light2D.LightType.Point;
+            bLight.pointLightOuterRadius = 2.4f;
+            bLight.color = new Color(1.0f, 0.65f, 0.15f, 1f);
+            bLight.intensity = 0.65f;
+
+            FlickeringLight2D bFlicker = beaconLightObj.AddComponent<FlickeringLight2D>();
+            bFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
+            bFlicker.BaseIntensity = 0.65f;
 
             GameObject realDoorObj = Object.Instantiate(refs.exitDoor.gameObject, refs.puzzleRoot.transform);
             realDoorObj.name = "RealExitDoor_PlatformA";
@@ -1439,7 +2330,24 @@ namespace GlitchVerse.Editor
             realDoorObj.SetActive(false);
             ExitDoor realDoorComp = realDoorObj.GetComponent<ExitDoor>();
 
-            // 1. Security Barrier (Blocks doorway on Observation Platform A until Echo switch is held)
+            var realDoorRend = realDoorObj.GetComponent<SpriteRenderer>();
+            if (realDoorRend != null)
+            {
+                realDoorRend.sprite = blastDoorSp;
+                realDoorRend.sortingOrder = 4;
+            }
+
+            for (int i = realDoorObj.transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = realDoorObj.transform.GetChild(i);
+                if (child.name == "ExitTriggerZone") continue;
+                if (child.name == "Door_StatusLight") continue;
+                Object.DestroyImmediate(child.gameObject);
+            }
+
+            // =========================================================================
+            // 8. SECURITY BARRIER ON OBSERVATION PLATFORM A
+            // =========================================================================
             GameObject barrierObj = new GameObject("RealExit_SecurityBarrier");
             barrierObj.transform.SetParent(refs.puzzleRoot.transform);
             barrierObj.transform.position = new Vector3(-3.0f, 0.4f, 0f);
@@ -1481,36 +2389,66 @@ namespace GlitchVerse.Editor
             SetPrivateField(barrierComp, "barrierLight", barLight);
             SetPrivateField(barrierComp, "signText", barText);
             SetPrivateField(barrierComp, "isLocked", true);
-            barrierObj.SetActive(false); // Managed by FakeExitPrank
+            barrierObj.SetActive(false);
 
-            // 2. Observation / Maintenance Platform B (X: 4.0 to 7.0, Y: -1.4)
+            // =========================================================================
+            // 9. OBSERVATION PLATFORM B (SUSPENDED CHASM CATWALK & ECHO SWITCH)
+            // =========================================================================
             GameObject platformB = new GameObject("Observation_Platform_B");
             platformB.transform.SetParent(refs.envRoot.transform);
             platformB.transform.position = new Vector3(5.5f, -1.4f, 0f);
             BoxCollider2D platBCol = platformB.AddComponent<BoxCollider2D>();
             platBCol.size = new Vector2(3.0f, 0.4f);
 
-            for (float px = 4.0f; px <= 7.0f; px += 1.0f)
+            for (float px = 4.5f; px <= 6.5f; px += 2.0f)
             {
                 GameObject seg = new GameObject($"PlatBSeg_{px}");
                 seg.transform.SetParent(platformB.transform);
                 seg.transform.position = new Vector3(px, -1.4f, 0f);
                 seg.transform.localScale = new Vector3(1.0f, 0.4f, 1f);
                 SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
+                rend.sprite = heavyPlatSp;
                 rend.sortingOrder = 1;
             }
 
-            // Hazard Caution Stripes on Platform B edge
-            GameObject platBHazard = new GameObject("PlatB_HazardStripes");
-            platBHazard.transform.SetParent(platformB.transform);
-            platBHazard.transform.localPosition = new Vector3(0f, -0.2f, 0f);
-            platBHazard.transform.localScale = new Vector3(3.0f, 0.2f, 1f);
-            SpriteRenderer pbhRend = platBHazard.AddComponent<SpriteRenderer>();
-            pbhRend.sprite = hazardSp;
-            pbhRend.sortingOrder = 2;
+            for (float rx = 4.8f; rx <= 6.2f; rx += 1.4f)
+            {
+                GameObject rail = new GameObject($"PlatBRail_{rx}");
+                rail.transform.SetParent(platformB.transform);
+                rail.transform.position = new Vector3(rx, -1.0f, 0f);
+                rail.transform.localScale = new Vector3(1.5f, 0.6f, 1f);
+                SpriteRenderer rr = rail.AddComponent<SpriteRenderer>();
+                rr.sprite = railingSp;
+                rr.sortingOrder = 3;
+            }
 
-            // Warning Beacon above Platform B
+            float[] platBColXs = new float[] { 4.2f, 6.8f };
+            foreach (var colX in platBColXs)
+            {
+                GameObject colObj = new GameObject($"PlatBSuspension_{colX}");
+                colObj.transform.SetParent(platformB.transform);
+                colObj.transform.position = new Vector3(colX, 1.8f, 0f);
+                colObj.transform.localScale = new Vector3(0.4f, 6.0f, 1f);
+                SpriteRenderer colRend = colObj.AddComponent<SpriteRenderer>();
+                colRend.sprite = trussSp;
+                colRend.sortingOrder = -1;
+                colRend.color = new Color(0.24f, 0.27f, 0.32f, 0.95f);
+            }
+
+            GameObject pbbLightObj = new GameObject("PlatB_LanternLight");
+            pbbLightObj.transform.SetParent(platformB.transform);
+            pbbLightObj.transform.position = new Vector3(5.5f, 0.1f, 0f);
+            Light2D pbbLight = pbbLightObj.AddComponent<Light2D>();
+            pbbLight.lightType = Light2D.LightType.Point;
+            pbbLight.pointLightOuterRadius = 4.5f;
+            pbbLight.pointLightInnerRadius = 0.5f;
+            pbbLight.color = new Color(1.0f, 0.70f, 0.30f, 1f);
+            pbbLight.intensity = 1.8f;
+
+            FlickeringLight2D pbbFlicker = pbbLightObj.AddComponent<FlickeringLight2D>();
+            pbbFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
+            pbbFlicker.BaseIntensity = 1.15f;
+
             GameObject platBBeacon = new GameObject("Deco_PlatB_Beacon");
             platBBeacon.transform.SetParent(refs.envRoot.transform);
             platBBeacon.transform.position = new Vector3(5.5f, 0.4f, 0f);
@@ -1518,20 +2456,6 @@ namespace GlitchVerse.Editor
             pbbRend.sprite = beaconSp;
             pbbRend.sortingOrder = 3;
 
-            GameObject pbbLightObj = new GameObject("PlatB_BeaconLight");
-            pbbLightObj.transform.SetParent(platBBeacon.transform);
-            pbbLightObj.transform.localPosition = Vector3.zero;
-            Light2D pbbLight = pbbLightObj.AddComponent<Light2D>();
-            pbbLight.lightType = Light2D.LightType.Point;
-            pbbLight.pointLightOuterRadius = 3.0f;
-            pbbLight.color = new Color(0.85f, 0f, 1f, 1f); // Holographic Magenta Beacon
-            pbbLight.intensity = 0.8f;
-
-            FlickeringLight2D pbbFlicker = pbbLightObj.AddComponent<FlickeringLight2D>();
-            pbbFlicker.Mode = FlickeringLight2D.FlickerMode.SubtleFluorescent;
-            pbbFlicker.BaseIntensity = 0.8f;
-
-            // Draped interlock conduit bundles bridging Platform B across ceiling to Platform A
             float[] conduitXs = new float[] { 5.5f, 3.5f, 1.5f, -0.5f, -2.5f };
             foreach (var cx in conduitXs)
             {
@@ -1540,12 +2464,11 @@ namespace GlitchVerse.Editor
                 interlockCable.transform.position = new Vector3(cx, 3.8f, 0f);
                 interlockCable.transform.localScale = new Vector3(1.8f, 0.7f, 1f);
                 SpriteRenderer icRend = interlockCable.AddComponent<SpriteRenderer>();
-                icRend.sprite = cableSp;
-                icRend.color = new Color(0.85f, 0.1f, 1.0f, 0.8f); // Magenta energy conduit
+                icRend.sprite = cablesSp;
+                icRend.color = new Color(0.85f, 0.1f, 1.0f, 0.8f);
                 icRend.sortingOrder = -3;
             }
 
-            // 3. Temporal Echo Switch Console on Platform B
             GameObject switchObj = new GameObject("SecondarySwitch_ConsoleB");
             switchObj.transform.SetParent(refs.puzzleRoot.transform);
             switchObj.transform.position = new Vector3(5.5f, -1.0f, 0f);
@@ -1553,7 +2476,7 @@ namespace GlitchVerse.Editor
             SpriteRenderer swRend = switchObj.AddComponent<SpriteRenderer>();
             swRend.sprite = switchSp;
             swRend.sortingOrder = 4;
-            swRend.color = new Color(0.25f, 0.28f, 0.35f, 0.7f); // Initially unpowered
+            swRend.color = new Color(0.25f, 0.28f, 0.35f, 0.7f);
 
             BoxCollider2D swCol = switchObj.AddComponent<BoxCollider2D>();
             swCol.isTrigger = true;
@@ -1565,8 +2488,8 @@ namespace GlitchVerse.Editor
             Light2D swLight = swLightObj.AddComponent<Light2D>();
             swLight.lightType = Light2D.LightType.Point;
             swLight.pointLightOuterRadius = 2.4f;
-            swLight.color = new Color(0.85f, 0f, 1f, 1f); // Holographic Magenta
-            swLight.intensity = 0.25f; // Dim when unpowered
+            swLight.color = new Color(0.85f, 0f, 1f, 1f);
+            swLight.intensity = 0.25f;
 
             GameObject swCanvasObj = new GameObject("Switch_ConsoleUI");
             swCanvasObj.transform.SetParent(switchObj.transform);
@@ -1593,8 +2516,9 @@ namespace GlitchVerse.Editor
             SetPrivateField(switchComp, "isPowered", false);
             SetPrivateField(switchComp, "isActivated", false);
 
-            // 4. Dual Moving Red Lasers between Platform B and Platform A
-            // Laser A — Tall Vertical Bar sweeping horizontally across cube traversal route (X: 0.5 to 1.8, Y: -2.5) - ACTIVE FROM START
+            // =========================================================================
+            // 10. DUAL MOVING RED LASERS (LASER A & LASER B)
+            // =========================================================================
             GameObject laserAObj = new GameObject("LaserA_Vertical");
             laserAObj.transform.SetParent(refs.puzzleRoot.transform);
             laserAObj.transform.position = new Vector3(1.15f, -2.5f, 0f);
@@ -1626,7 +2550,6 @@ namespace GlitchVerse.Editor
             SetPrivateField(laserAComp, "activeOnStart", true);
             laserAComp.SetHazardActive(true);
 
-            // Laser B — Horizontal Bar sweeping vertically (X: -0.5, Y: -3.2 to -1.3) - ACTIVATED BY BETRAYAL PRANK
             GameObject laserBObj = new GameObject("LaserB_Horizontal");
             laserBObj.transform.SetParent(refs.puzzleRoot.transform);
             laserBObj.transform.position = new Vector3(-0.5f, -2.2f, 0f);
@@ -1658,7 +2581,9 @@ namespace GlitchVerse.Editor
             SetPrivateField(laserBComp, "activeOnStart", false);
             laserBComp.SetHazardActive(false);
 
-            // 5. Wire FakeExitPrank with door, barrier, switch, and moving lasers
+            // =========================================================================
+            // 11. WIRE SCRIPTED BETRAYAL PRANK
+            // =========================================================================
             FakeExitPrank prank = refs.exitDoor.gameObject.AddComponent<FakeExitPrank>();
             SetPrivateField(prank, "decoyDoor", refs.exitDoor);
             SetPrivateField(prank, "realDoor", realDoorComp);
@@ -1671,6 +2596,92 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.hud, "echoSwitch", switchComp);
             SetPrivateField(refs.director, "echoSwitch", switchComp);
             SetPrivateField(refs.triggers, "echoSwitch", switchComp);
+
+            // =========================================================================
+            // 12. FOREGROUND FRAMING SILHOUETTES (SORTING ORDER 12)
+            // =========================================================================
+            GameObject fgRoot = GameObject.Find("--- FOREGROUND ---");
+            if (fgRoot != null)
+            {
+                for (int i = fgRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(fgRoot.transform.GetChild(i).gameObject);
+                }
+            }
+            else
+            {
+                fgRoot = new GameObject("--- FOREGROUND ---");
+            }
+
+            GameObject fgTopLeft = new GameObject("FG_Framing_TopLeft");
+            fgTopLeft.transform.SetParent(fgRoot.transform);
+            fgTopLeft.transform.position = new Vector3(-6.0f, 5.4f, 0f);
+            fgTopLeft.transform.localScale = new Vector3(2.5f, 1.2f, 1f);
+            SpriteRenderer fgRendTL = fgTopLeft.AddComponent<SpriteRenderer>();
+            fgRendTL.sprite = fgSp;
+            fgRendTL.sortingOrder = 12;
+
+            GameObject fgTopRight = new GameObject("FG_Framing_TopRight");
+            fgTopRight.transform.SetParent(fgRoot.transform);
+            fgTopRight.transform.position = new Vector3(6.0f, 5.4f, 0f);
+            fgTopRight.transform.localScale = new Vector3(-2.5f, 1.2f, 1f);
+            SpriteRenderer fgRendTR = fgTopRight.AddComponent<SpriteRenderer>();
+            fgRendTR.sprite = fgSp;
+            fgRendTR.sortingOrder = 12;
+
+            // =========================================================================
+            // 13. STREAMLINED SURVEILLANCE HUD
+            // =========================================================================
+            var hudCanvas = refs.hud.GetComponent<Canvas>();
+            if (hudCanvas != null)
+            {
+                Text titleTxt = refs.hud.transform.Find("TitleText")?.GetComponent<Text>();
+                if (titleTxt != null)
+                {
+                    titleTxt.fontSize = 14;
+                    titleTxt.color = new Color(0.45f, 0.65f, 0.75f, 0.70f);
+                    titleTxt.rectTransform.anchoredPosition = new Vector2(35f, -25f);
+                }
+
+                Text levelTxt = refs.hud.transform.Find("LevelText")?.GetComponent<Text>();
+                if (levelTxt != null)
+                {
+                    levelTxt.text = "CONTAINMENT 01 // FIRST LIE";
+                    levelTxt.fontSize = 16;
+                    levelTxt.color = new Color(0.95f, 0.80f, 0.55f, 0.90f);
+                    levelTxt.rectTransform.anchoredPosition = new Vector2(35f, -48f);
+                }
+
+                Text timerTxt = refs.hud.transform.Find("TimerText")?.GetComponent<Text>();
+                if (timerTxt != null)
+                {
+                    timerTxt.fontSize = 13;
+                    timerTxt.color = new Color(0.65f, 0.72f, 0.80f, 0.65f);
+                    timerTxt.rectTransform.anchoredPosition = new Vector2(35f, -70f);
+                }
+
+                Text instTxt = refs.hud.transform.Find("InstructionsText")?.GetComponent<Text>();
+                if (instTxt != null)
+                {
+                    instTxt.fontSize = 13;
+                    instTxt.color = new Color(0.65f, 0.68f, 0.72f, 0.65f);
+                    instTxt.rectTransform.anchoredPosition = new Vector2(35f, 25f);
+                }
+
+                Text echoTxt = refs.hud.transform.Find("EchoStatusText")?.GetComponent<Text>();
+                if (echoTxt != null)
+                {
+                    echoTxt.fontSize = 13;
+                    echoTxt.color = new Color(0.85f, 0.20f, 0.95f, 0.70f);
+                    echoTxt.rectTransform.anchoredPosition = new Vector2(35f, 48f);
+                }
+            }
+
+            // In edit mode, disable fullscreen overlays so scene and camera views are pristine
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+            var subBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subBanner != null) subBanner.SetActive(false);
 
             SaveChamberScene("Level01.unity");
         }
