@@ -1183,6 +1183,9 @@ namespace GlitchVerse.Editor
             // Chapter II: INVERSION Modular Environmental Art
             GenerateChapter02Sprites();
 
+            // Chapter III: BETRAYAL Modular Environmental Art
+            GenerateChapter03Sprites();
+
             AssetDatabase.Refresh();
         }
 
@@ -1829,6 +1832,763 @@ namespace GlitchVerse.Editor
 
                 // Bottom flange (Y: 6 to 9)
                 if (y >= 6) return new Color(0.24f, 0.28f, 0.33f, 1f);
+
+                return Color.clear;
+            });
+        }
+        #endregion
+
+        #region Chapter III: Betrayal Procedural Sprites
+        private static void GenerateChapter03Sprites()
+        {
+            // 1. Chapter III Cryo Lab Backdrop (256x144)
+            // Derelict testing facility backdrop: cold clinical concrete walls, observation galleries, distant glowing specimen pods in misty bays, overhead catwalks and fluorescent light cones
+            CreateSpriteAsset("Environment/Chapter03/ch3_cryo_lab_bg.png", 256, 144, (x, y) =>
+            {
+                float nx = x / 255.0f;
+                float ny = y / 143.0f;
+
+                // Base grimy clinical laboratory wall gradient
+                Color wallColor = Color.Lerp(
+                    new Color(0.04f, 0.06f, 0.08f, 1f), // Deep shadow at base
+                    new Color(0.09f, 0.13f, 0.17f, 1f), // Cold slate/charcoal concrete
+                    ny
+                );
+
+                // Subtle concrete tile seams (horizontal panel lines every 36px, vertical every 64px)
+                if (y % 36 == 0 || x % 64 == 0)
+                {
+                    wallColor = new Color(0.03f, 0.04f, 0.06f, 1f);
+                }
+
+                // Surface texture & stain variation
+                float noise = (Mathf.Sin(x * 0.12f + y * 0.08f) + Mathf.Cos(x * 0.06f - y * 0.14f)) * 0.5f;
+                wallColor += new Color(noise * 0.015f, noise * 0.02f, noise * 0.025f, 0f);
+
+                // Overhead technical bay ceiling & conduit channels (Y > 115)
+                if (y >= 115)
+                {
+                    if (y == 115 || y == 135) return new Color(0.05f, 0.07f, 0.09f, 1f); // Steel support flange
+                    if (x % 32 <= 1) return new Color(0.07f, 0.09f, 0.12f, 1f); // Vertical hanger
+                }
+
+                // Distant elevated catwalk gallery (Y: 96 to 102)
+                if (y >= 96 && y <= 102)
+                {
+                    if (y == 102) return new Color(0.14f, 0.18f, 0.22f, 1f); // Handrail top
+                    if (y == 96 || y == 97) return new Color(0.08f, 0.11f, 0.14f, 1f); // Deck plate
+                    if (x % 16 <= 1) return new Color(0.10f, 0.14f, 0.18f, 1f); // Rail post
+                }
+
+                // Deep Background Research Bays with Glowing Cryo Pod Silhouettes
+                // Bay 1: X: 35 to 85, Y: 25 to 85
+                // Bay 2: X: 170 to 225, Y: 25 to 85
+                bool inBay1 = (x >= 35 && x <= 85 && y >= 25 && y <= 85);
+                bool inBay2 = (x >= 170 && x <= 225 && y >= 25 && y <= 85);
+                if (inBay1 || inBay2)
+                {
+                    // Recessed alcove shadow frame
+                    if (x == 35 || x == 85 || x == 170 || x == 225 || y == 85)
+                    {
+                        return new Color(0.03f, 0.05f, 0.07f, 1f);
+                    }
+
+                    // Distant glowing pod cylinders (X centers: 48, 72 in bay 1; 183, 212 in bay 2)
+                    int[] podCenters = { 48, 72, 183, 212 };
+                    foreach (int pc in podCenters)
+                    {
+                        int pDist = Mathf.Abs(x - pc);
+                        if (pDist <= 7 && y >= 32 && y <= 75)
+                        {
+                            // Pod metal caps
+                            if (y <= 36 || y >= 72) return new Color(0.10f, 0.14f, 0.18f, 1f);
+                            // Distant cyan stasis glow with shadow specimen silhouette
+                            if (pDist <= 4 && y >= 44 && y <= 62)
+                            {
+                                return new Color(0.05f, 0.12f, 0.16f, 1f); // Dark specimen shadow
+                            }
+                            return new Color(0.12f, 0.42f, 0.54f, 1f); // Ambient cyan liquid glow
+                        }
+                    }
+                }
+
+                // Overhead Cold Fluorescent Lamps casting downward light cones (X centers: 60, 130, 200 at Y: 125)
+                int[] lampXs = { 60, 130, 200 };
+                foreach (int lx in lampXs)
+                {
+                    // Lamp fixture
+                    if (Mathf.Abs(x - lx) <= 12 && y >= 122 && y <= 126)
+                    {
+                        if (Mathf.Abs(x - lx) <= 10 && y >= 123 && y <= 125) return new Color(0.85f, 0.95f, 1.0f, 1f); // Fluorescent tube
+                        return new Color(0.15f, 0.18f, 0.22f, 1f); // Steel housing
+                    }
+
+                    // Subtle downward cone of cold light
+                    float coneDistX = Mathf.Abs(x - lx);
+                    float coneY = (122 - y) / 100.0f;
+                    if (coneY > 0 && coneDistX < (16f + coneY * 28f))
+                    {
+                        float intensity = (1.0f - coneDistX / (16f + coneY * 28f)) * (1.0f - coneY * 0.6f);
+                        wallColor = Color.Lerp(wallColor, new Color(0.18f, 0.38f, 0.48f, 1f), intensity * 0.25f);
+                    }
+                }
+
+                // Psychological Storytelling: Dried Biohazard / Blood drip stains on back wall (X: 118 to 142, Y: 30 to 95)
+                if (x >= 118 && x <= 142 && y >= 30 && y <= 95)
+                {
+                    float dripNoise = Mathf.Sin(x * 1.5f) * Mathf.Cos(y * 0.35f);
+                    if (dripNoise > 0.45f)
+                    {
+                        wallColor = Color.Lerp(wallColor, new Color(0.20f, 0.06f, 0.05f, 1f), 0.55f); // Dried dark crimson biohazard stain
+                    }
+                }
+
+                return wallColor;
+            });
+
+            // 2. Chapter III Translucent Specimen Cryo Tube (64x96)
+            // Translucent glass stasis pod with bubbling cyan liquid, shadowy humanoid specimen, cracked spiderweb glass, pneumatic endcaps
+            CreateSpriteAsset("Environment/Chapter03/ch3_specimen_cryo_tube.png", 64, 96, (x, y) =>
+            {
+                // Perimeter clearance
+                if (x < 6 || x >= 58 || y < 2 || y >= 94) return Color.clear;
+
+                // Base Platform Mount (Y: 2 to 18)
+                if (y <= 18)
+                {
+                    if (y <= 6) return new Color(0.12f, 0.15f, 0.18f, 1f); // Bottom steel base flange
+                    if (y >= 14) return new Color(0.18f, 0.22f, 0.26f, 1f); // Top collar ring
+                    // Hazard yellow warning chevron collar trim
+                    if (y >= 8 && y <= 12)
+                    {
+                        if ((x + y) / 3 % 2 == 0) return new Color(0.85f, 0.70f, 0.15f, 1f); // Caution yellow
+                        return new Color(0.10f, 0.12f, 0.14f, 1f); // Charcoal black
+                    }
+                    if (x == 12 || x == 51) return new Color(0.28f, 0.34f, 0.40f, 1f); // Fluid drainage pipe coupler
+                    return new Color(0.15f, 0.18f, 0.22f, 1f);
+                }
+
+                // Top Pneumatic Dome & Pressure Manifold (Y: 78 to 94)
+                if (y >= 78)
+                {
+                    if (y >= 90)
+                    {
+                        // Suspension brackets & hoisting lugs
+                        if (x >= 24 && x <= 39) return new Color(0.22f, 0.26f, 0.30f, 1f);
+                        return Color.clear;
+                    }
+                    if (y >= 84) return new Color(0.16f, 0.20f, 0.24f, 1f); // Upper dome plate
+                    // Top collar with pressure gauge dial at X: 44, Y: 81
+                    float gdx = x - 44f;
+                    float gdy = y - 81f;
+                    if (gdx * gdx + gdy * gdy <= 16f)
+                    {
+                        if (gdx * gdx + gdy * gdy <= 9f)
+                        {
+                            if (gdx == gdy) return new Color(0.9f, 0.15f, 0.15f, 1f); // Needle
+                            return new Color(0.85f, 0.90f, 0.95f, 1f); // Gauge face
+                        }
+                        return new Color(0.10f, 0.12f, 0.14f, 1f); // Gauge bezel
+                    }
+                    return new Color(0.20f, 0.24f, 0.28f, 1f);
+                }
+
+                // Glass Chamber (X: 10 to 53, Y: 19 to 77)
+                if (x < 10 || x > 53) return Color.clear;
+
+                // Glass Outer Framing & Curvature Highlights
+                if (x == 10 || x == 53) return new Color(0.20f, 0.35f, 0.45f, 0.9f); // Glass seal bead
+                if (x == 11 || x == 12) return new Color(0.65f, 0.92f, 1.0f, 0.85f); // Left specular highlight reflection
+                if (x == 51 || x == 52) return new Color(0.35f, 0.65f, 0.80f, 0.70f); // Right rim highlight
+
+                // Spiderweb Impact Fracture Cracks on Glass (radiating from X: 26, Y: 52)
+                float cdx = x - 26f;
+                float cdy = y - 52f;
+                float cDist = Mathf.Sqrt(cdx * cdx + cdy * cdy);
+                if (cDist < 22f)
+                {
+                    // Crack lines radiating outwards
+                    float angle = Mathf.Atan2(cdy, cdx);
+                    float crackPattern = Mathf.Sin(angle * 7f + cDist * 0.4f);
+                    if (Mathf.Abs(crackPattern) < 0.18f && cDist > 3f)
+                    {
+                        return new Color(0.92f, 0.98f, 1.0f, 0.95f); // Bright white-cyan cracked glass line
+                    }
+                    if (cDist <= 3f) return new Color(0.95f, 0.98f, 1.0f, 1.0f); // Impact center
+                }
+
+                // Humanoid Specimen Silhouette inside Cryo Fluid
+                // Head: circle at (32, 62) radius 5
+                // Torso: box from Y: 42 to 57, width 14 (X: 25 to 39)
+                // Limbs: X: 21 to 24 and X: 40 to 43 from Y: 24 to 48
+                bool isSpecimen = false;
+                float hdx = x - 32f;
+                float hdy = y - 62f;
+                if (hdx * hdx + hdy * hdy <= 25f) isSpecimen = true;
+                if (y >= 42 && y <= 57 && x >= 25 && x <= 39) isSpecimen = true;
+                if (y >= 24 && y <= 45 && ((x >= 22 && x <= 26) || (x >= 38 && x <= 42))) isSpecimen = true;
+
+                if (isSpecimen)
+                {
+                    // Dark distorted silhouette immersed in fluid
+                    return new Color(0.04f, 0.12f, 0.16f, 0.88f);
+                }
+
+                // Glowing Cyan Stasis Solution with Rising Bubbles
+                float bubble = Mathf.Sin(x * 1.8f) * Mathf.Cos(y * 2.2f);
+                if (bubble > 0.82f) return new Color(0.70f, 0.95f, 1.0f, 0.80f); // Stasis bubble
+
+                // Base fluid gradient (translucent cyan)
+                float depthFactor = (y - 19) / 58.0f;
+                return Color.Lerp(
+                    new Color(0.08f, 0.55f, 0.70f, 0.75f),
+                    new Color(0.18f, 0.75f, 0.90f, 0.65f),
+                    depthFactor
+                );
+            });
+
+            // 3. Chapter III Broken / Ruptured Specimen Pod (64x96)
+            // Blown out glass shards, empty severed specimen restraints, coolant puddle on floor
+            CreateSpriteAsset("Environment/Chapter03/ch3_broken_specimen_tank.png", 64, 96, (x, y) =>
+            {
+                if (x < 6 || x >= 58 || y < 2 || y >= 94) return Color.clear;
+
+                // Heavy base pedestal
+                if (y <= 18)
+                {
+                    if (y <= 6) return new Color(0.12f, 0.15f, 0.18f, 1f);
+                    if (y >= 8 && y <= 12)
+                    {
+                        if ((x + y) / 3 % 2 == 0) return new Color(0.85f, 0.70f, 0.15f, 1f);
+                        return new Color(0.10f, 0.12f, 0.14f, 1f);
+                    }
+                    return new Color(0.18f, 0.22f, 0.26f, 1f);
+                }
+
+                // Heavy top cap
+                if (y >= 78)
+                {
+                    if (y >= 90)
+                    {
+                        if (x >= 24 && x <= 39) return new Color(0.22f, 0.26f, 0.30f, 1f);
+                        return Color.clear;
+                    }
+                    return new Color(0.18f, 0.22f, 0.26f, 1f);
+                }
+
+                // Ruptured / shattered cavity
+                if (x < 10 || x > 53) return Color.clear;
+
+                // Jagged broken glass shards at bottom rim (Y: 19 to 32)
+                if (y <= 32)
+                {
+                    int shardHeight = 22 + (int)(Mathf.Abs(Mathf.Sin(x * 0.75f)) * 10);
+                    if (y <= shardHeight)
+                    {
+                        if (y == shardHeight) return new Color(0.85f, 0.95f, 1.0f, 0.9f); // Shard tip
+                        return new Color(0.12f, 0.45f, 0.58f, 0.7f);
+                    }
+                }
+
+                // Jagged broken glass shards hanging from top rim (Y: 66 to 77)
+                if (y >= 66)
+                {
+                    int topShardY = 74 - (int)(Mathf.Abs(Mathf.Cos(x * 0.85f)) * 8);
+                    if (y >= topShardY)
+                    {
+                        if (y == topShardY) return new Color(0.85f, 0.95f, 1.0f, 0.9f);
+                        return new Color(0.12f, 0.45f, 0.58f, 0.7f);
+                    }
+                }
+
+                // Severed empty metal restraints hanging down center
+                if (x >= 30 && x <= 34 && y >= 40 && y <= 68)
+                {
+                    if (y % 4 == 0) return new Color(0.35f, 0.40f, 0.46f, 1f); // Chain links
+                    return new Color(0.18f, 0.22f, 0.26f, 1f);
+                }
+
+                // Dangling severed coolant hose with blue fluid drop
+                if (x >= 46 && x <= 48 && y >= 38 && y <= 68)
+                {
+                    if (y == 38) return new Color(0.20f, 0.85f, 1.0f, 1f); // Dripping droplet
+                    return new Color(0.12f, 0.14f, 0.16f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 4. Chapter III Medical-Industrial Server Rack (48x96)
+            // Electronic telemetry cabinet with vertical LED arrays, oscilloscope display, drive bays, and draped patch cables
+            CreateSpriteAsset("Environment/Chapter03/ch3_server_monitoring_rack.png", 48, 96, (x, y) =>
+            {
+                if (x < 2 || x >= 46 || y < 2 || y >= 94) return Color.clear;
+
+                // Outer charcoal metal cabinet frame
+                if (x <= 4 || x >= 43 || y <= 4 || y >= 92) return new Color(0.08f, 0.10f, 0.13f, 1f);
+                if (x == 5 || x == 42 || y == 5 || y == 91) return new Color(0.16f, 0.19f, 0.23f, 1f);
+
+                // Tier divider rails (Y: 26, 48, 70)
+                if (y == 26 || y == 27 || y == 48 || y == 49 || y == 70 || y == 71)
+                {
+                    return new Color(0.22f, 0.26f, 0.30f, 1f);
+                }
+
+                // TIER 1 (Top, Y: 72 to 90): Telemetry LED Indicator Arrays
+                if (y >= 72 && y <= 90)
+                {
+                    // Vertical LED columns at X: 10, 16, 22, 28
+                    if ((x == 10 || x == 16 || x == 22) && y % 3 == 0)
+                    {
+                        // Blinking cyan & green status telemetry
+                        if (y > 82) return new Color(0.15f, 0.88f, 1.0f, 1f); // Cyan LED
+                        return new Color(0.20f, 0.85f, 0.35f, 1f); // Green LED
+                    }
+                    if (x == 28 && y % 4 == 0) return new Color(1.0f, 0.72f, 0.15f, 1f); // Amber warning LED
+
+                    // Diagnostic readout screen at X: 34 to 40, Y: 76 to 86
+                    if (x >= 34 && x <= 40 && y >= 76 && y <= 86)
+                    {
+                        if (x == 34 || x == 40 || y == 76 || y == 86) return new Color(0.06f, 0.08f, 0.10f, 1f);
+                        if (y % 2 == 0) return new Color(0.10f, 0.40f, 0.50f, 1f);
+                        return new Color(0.05f, 0.15f, 0.20f, 1f);
+                    }
+                    return new Color(0.10f, 0.12f, 0.15f, 1f);
+                }
+
+                // TIER 2 (Upper-Mid, Y: 50 to 69): Diagnostic Oscilloscope Screen (X: 8 to 39)
+                if (y >= 50 && y <= 69)
+                {
+                    if (x >= 8 && x <= 39 && y >= 53 && y <= 66)
+                    {
+                        // Screen bezel
+                        if (x == 8 || x == 39 || y == 53 || y == 66) return new Color(0.05f, 0.07f, 0.09f, 1f);
+                        // Oscilloscope green sine waveform trace
+                        float waveY = 59.5f + Mathf.Sin((x - 8) * 0.45f) * 4f;
+                        if (Mathf.Abs(y - waveY) < 0.8f) return new Color(0.25f, 0.95f, 0.45f, 1f); // Bright green trace
+                        // Screen phosphor grid lines
+                        if ((x - 8) % 6 == 0 || (y - 53) % 4 == 0) return new Color(0.05f, 0.18f, 0.10f, 1f);
+                        return new Color(0.03f, 0.10f, 0.06f, 1f); // Dark screen glass
+                    }
+                    return new Color(0.11f, 0.13f, 0.16f, 1f);
+                }
+
+                // TIER 3 (Lower-Mid, Y: 28 to 47): Storage Drive Array
+                if (y >= 28 && y <= 47)
+                {
+                    // Horizontal drive caddies with status pins
+                    if (y % 6 <= 1) return new Color(0.06f, 0.08f, 0.10f, 1f); // Seam
+                    if (x == 10 && y % 6 == 3) return new Color(0.15f, 0.85f, 1.0f, 1f); // Drive active cyan LED
+                    if (x == 14 && y % 6 == 3) return new Color(0.20f, 0.80f, 0.30f, 1f);
+                    return new Color(0.13f, 0.15f, 0.19f, 1f);
+                }
+
+                // TIER 4 (Bottom, Y: 6 to 25): Power Transformer Unit & Hanging Cables
+                if (y >= 6 && y <= 25)
+                {
+                    // Louvered vent slots
+                    if (y % 3 == 0 && x >= 10 && x <= 37) return new Color(0.05f, 0.06f, 0.08f, 1f);
+                    // Draped patch cable loom (curving down from X: 12 to 24)
+                    float cableY = 16f - Mathf.Abs(x - 18) * 0.6f;
+                    if (Mathf.Abs(y - cableY) < 1.0f && x >= 12 && x <= 24)
+                    {
+                        return new Color(0.75f, 0.20f, 0.15f, 1f); // Red patch cord
+                    }
+                    return new Color(0.10f, 0.12f, 0.15f, 1f);
+                }
+
+                return new Color(0.10f, 0.12f, 0.15f, 1f);
+            });
+
+            // 5. Chapter III Clinical Workstation with Shattered Screen (64x48)
+            // Stainless steel examination desk with cracked CRT terminal, keyboard, paper reports, and chemical stains
+            CreateSpriteAsset("Environment/Chapter03/ch3_clinical_workstation.png", 64, 48, (x, y) =>
+            {
+                if (x < 2 || x >= 62 || y < 2 || y >= 46) return Color.clear;
+
+                // Desk Legs & Pedestals (Y: 2 to 22)
+                if (y <= 22)
+                {
+                    bool isLeg = (x >= 4 && x <= 16) || (x >= 48 && x <= 60);
+                    if (isLeg)
+                    {
+                        if (x == 4 || x == 16 || x == 48 || x == 60) return new Color(0.14f, 0.17f, 0.21f, 1f);
+                        if (y % 6 == 0) return new Color(0.10f, 0.12f, 0.15f, 1f); // Drawer seam
+                        return new Color(0.20f, 0.24f, 0.29f, 1f); // Stainless steel drawer face
+                    }
+                    return Color.clear; // Open leg well
+                }
+
+                // Desk Worktop Surface (Y: 23 to 26)
+                if (y >= 23 && y <= 26)
+                {
+                    if (y == 26) return new Color(0.35f, 0.40f, 0.46f, 1f); // Brushed stainless top bevel
+                    // Chemical / blood drip smear at X: 22 to 30
+                    if (x >= 22 && x <= 30) return new Color(0.24f, 0.08f, 0.06f, 1f);
+                    return new Color(0.22f, 0.26f, 0.31f, 1f);
+                }
+
+                // CRT Monitor & Equipment (Y: 27 to 45)
+                // Monitor casing: X: 16 to 46, Y: 27 to 45
+                if (x >= 16 && x <= 46 && y >= 27 && y <= 45)
+                {
+                    // Monitor pedestal (Y: 27 to 29)
+                    if (y <= 29)
+                    {
+                        if (x >= 26 && x <= 36) return new Color(0.12f, 0.14f, 0.17f, 1f);
+                        // Keyboard next to monitor (Y: 27 to 28, X: 8 to 22)
+                        return Color.clear;
+                    }
+
+                    // CRT housing bezel
+                    if (x <= 18 || x >= 44 || y <= 31 || y >= 44) return new Color(0.12f, 0.15f, 0.18f, 1f);
+
+                    // Shattered Screen Glass (X: 19 to 43, Y: 32 to 43)
+                    float sdcX = x - 31f;
+                    float sdcY = y - 37.5f;
+                    float distFromCenter = Mathf.Sqrt(sdcX * sdcX + sdcY * sdcY);
+
+                    // Impact spiderweb crack radiating from (31, 37.5)
+                    float starAngle = Mathf.Atan2(sdcY, sdcX);
+                    float starRays = Mathf.Abs(Mathf.Sin(starAngle * 5f));
+                    if (starRays < 0.25f || distFromCenter < 2.5f)
+                    {
+                        return new Color(0.92f, 0.98f, 1.0f, 1f); // Sharp white fracture lines
+                    }
+
+                    // CRT blue phosphor glow behind cracked glass
+                    if (distFromCenter < 7f) return new Color(0.15f, 0.45f, 0.60f, 1f);
+                    return new Color(0.06f, 0.14f, 0.20f, 1f);
+                }
+
+                // Keyboard terminal (X: 6 to 18, Y: 27 to 29)
+                if (x >= 6 && x <= 18 && y >= 27 && y <= 29)
+                {
+                    if ((x + y) % 2 == 0) return new Color(0.22f, 0.25f, 0.30f, 1f);
+                    return new Color(0.08f, 0.10f, 0.12f, 1f);
+                }
+
+                // Paper diagnostic printout ribbon draped over edge (X: 50 to 56, Y: 20 to 30)
+                if (x >= 50 && x <= 56 && y >= 20 && y <= 30)
+                {
+                    if (y % 3 == 0) return new Color(0.35f, 0.35f, 0.35f, 1f); // Text lines
+                    return new Color(0.85f, 0.85f, 0.82f, 1f); // Aged clinical paper
+                }
+
+                return Color.clear;
+            });
+
+            // 6. Chapter III Time Freeze (F) Stasis Emitter Rig (48x48)
+            // Heavy experimental stasis beam projector rig with magnetic focal coils, cyan lens core, and hazard striping
+            CreateSpriteAsset("Environment/Chapter03/ch3_time_freeze_emitter_rig.png", 48, 48, (x, y) =>
+            {
+                if (x < 2 || x >= 46 || y < 2 || y >= 46) return Color.clear;
+
+                // Mounting bracket plate & cooling fins
+                if (x <= 6 || x >= 41)
+                {
+                    if (y % 4 <= 1) return new Color(0.12f, 0.15f, 0.18f, 1f); // Cooling fin slot
+                    return new Color(0.24f, 0.28f, 0.34f, 1f);
+                }
+
+                // Annular Stasis Field Focal Coils (Center: 24, 24)
+                float dx = x - 23.5f;
+                float dy = y - 23.5f;
+                float distSq = dx * dx + dy * dy;
+
+                // Outer Coil Ring (radius 18 to 22) with hazard warning trim
+                if (distSq >= 324f && distSq <= 484f)
+                {
+                    if ((x + y) / 3 % 2 == 0) return new Color(0.85f, 0.70f, 0.15f, 1f); // Hazard yellow
+                    return new Color(0.10f, 0.12f, 0.15f, 1f); // Black
+                }
+
+                // Copper Inductive Magnetic Field Windings (radius 12 to 17)
+                if (distSq >= 144f && distSq <= 289f)
+                {
+                    if ((x * y) % 4 == 0) return new Color(0.82f, 0.48f, 0.22f, 1f); // Copper wire highlight
+                    return new Color(0.62f, 0.32f, 0.14f, 1f); // Copper coil shadow
+                }
+
+                // Inner Focal Aperture Collar (radius 6 to 11)
+                if (distSq >= 36f && distSq <= 121f)
+                {
+                    return new Color(0.16f, 0.20f, 0.25f, 1f);
+                }
+
+                // Central Stasis Projector Core (radius < 6)
+                if (distSq < 36f)
+                {
+                    if (distSq <= 9f) return new Color(0.92f, 0.98f, 1.0f, 1f); // White-hot stasis emitter center
+                    return new Color(0.15f, 0.88f, 1.0f, 1f); // Brilliant cyan stasis glow
+                }
+
+                return new Color(0.12f, 0.15f, 0.18f, 1f);
+            });
+
+            // 7. Chapter III Clinical Interrogation Console (48x48)
+            // Medical-industrial kiosk for the Y/N forced-death prank with dual status indicators (clinical green / hostile red)
+            CreateSpriteAsset("Environment/Chapter03/ch3_interrogation_console.png", 48, 48, (x, y) =>
+            {
+                if (x < 4 || x >= 44 || y < 2 || y >= 46) return Color.clear;
+
+                // Pedestal Base (Y: 2 to 14)
+                if (y <= 14)
+                {
+                    if (y <= 5) return new Color(0.14f, 0.17f, 0.21f, 1f);
+                    if (x >= 18 && x <= 30) return new Color(0.20f, 0.24f, 0.29f, 1f); // Support column
+                    return Color.clear;
+                }
+
+                // Angled Console Head (X: 6 to 42, Y: 15 to 44)
+                if (x <= 7 || x >= 41 || y == 15 || y >= 43) return new Color(0.10f, 0.12f, 0.15f, 1f);
+
+                // Upper Status Indicator Lamp (X: 34 to 38, Y: 36 to 40) — Clinical Green "ACCEPTED"
+                if (x >= 34 && x <= 38 && y >= 36 && y <= 40)
+                {
+                    if (x == 36 && y == 38) return new Color(0.85f, 1.0f, 0.85f, 1f);
+                    return new Color(0.15f, 0.88f, 0.35f, 1f); // Clinical green
+                }
+
+                // Lower Status Indicator Lamp (X: 34 to 38, Y: 26 to 30) — Alarming Red "BETRAYAL"
+                if (x >= 34 && x <= 38 && y >= 26 && y <= 30)
+                {
+                    if (x == 36 && y == 28) return new Color(1.0f, 0.85f, 0.85f, 1f);
+                    return new Color(1.0f, 0.15f, 0.22f, 1f); // Hostile red
+                }
+
+                // Biometric Palm Pad (X: 10 to 18, Y: 22 to 34)
+                if (x >= 10 && x <= 18 && y >= 22 && y <= 34)
+                {
+                    if (x == 10 || x == 18 || y == 22 || y == 34) return new Color(0.06f, 0.08f, 0.10f, 1f);
+                    if (y % 2 == 0) return new Color(0.15f, 0.55f, 0.70f, 1f);
+                    return new Color(0.08f, 0.25f, 0.35f, 1f);
+                }
+
+                // Terminal Text Readout Screen (X: 20 to 32, Y: 22 to 34)
+                if (x >= 20 && x <= 32 && y >= 22 && y <= 34)
+                {
+                    if (x == 20 || x == 32 || y == 22 || y == 34) return new Color(0.06f, 0.08f, 0.10f, 1f);
+                    if (y == 31 || y == 28 || y == 25) return new Color(0.20f, 0.85f, 1.0f, 1f); // Telemetry text rows
+                    return new Color(0.04f, 0.12f, 0.16f, 1f);
+                }
+
+                // Stenciled Subject Decal at top (Y: 38 to 41, X: 10 to 28)
+                if (y >= 38 && y <= 41 && x >= 10 && x <= 28)
+                {
+                    if (y == 39) return new Color(0.85f, 0.70f, 0.15f, 1f); // Warning strip
+                }
+
+                return new Color(0.18f, 0.22f, 0.27f, 1f); // Stainless console casing
+            });
+
+            // 8. Chapter III Laboratory Wall Tile (128x128)
+            // Grimy off-white/gray composite laboratory wall panel with horizontal conduit runs and biohazard markings
+            CreateSpriteAsset("Environment/Chapter03/ch3_lab_wall_tiles.png", 128, 128, (x, y) =>
+            {
+                // Perimeter joint bevel
+                if (x == 0 || x == 127 || y == 0 || y == 127) return new Color(0.05f, 0.07f, 0.09f, 1f);
+                if (x == 1 || x == 126 || y == 1 || y == 126) return new Color(0.12f, 0.15f, 0.18f, 1f);
+
+                // Base grimy clinical panel
+                float ny = y / 127.0f;
+                Color panel = Color.Lerp(
+                    new Color(0.10f, 0.13f, 0.16f, 1f),
+                    new Color(0.16f, 0.20f, 0.24f, 1f),
+                    ny
+                );
+
+                // Horizontal Electrical Conduit Raceway at Y: 60 to 68
+                if (y >= 60 && y <= 68)
+                {
+                    if (y == 60 || y == 68) return new Color(0.06f, 0.08f, 0.10f, 1f);
+                    if (x % 32 <= 2) return new Color(0.28f, 0.32f, 0.38f, 1f); // Mounting bracket
+                    return new Color(0.14f, 0.18f, 0.22f, 1f); // Conduit casing
+                }
+
+                // Rivets along perimeter (every 16px)
+                bool isRivet = (x == 6 || x == 121 || y == 6 || y == 121) && (x % 16 == 0 || y % 16 == 0);
+                if (isRivet) return new Color(0.30f, 0.35f, 0.42f, 1f);
+
+                // Faded Biohazard Stencil near top-right (Center: 100, 100)
+                float bdx = x - 100f;
+                float bdy = y - 100f;
+                float bdist = Mathf.Sqrt(bdx * bdx + bdy * bdy);
+                if (bdist <= 14f && bdist >= 5f)
+                {
+                    float bAngle = Mathf.Atan2(bdy, bdx);
+                    if (Mathf.Sin(bAngle * 3f) > 0.3f)
+                    {
+                        panel = Color.Lerp(panel, new Color(0.85f, 0.65f, 0.12f, 1f), 0.35f); // Faded yellow biohazard
+                    }
+                }
+
+                // Surface scuffs and dried water stain drip marks
+                float stainNoise = Mathf.Sin(x * 0.25f + y * 0.12f) * Mathf.Cos(x * 0.08f);
+                if (stainNoise > 0.65f) panel = Color.Lerp(panel, new Color(0.08f, 0.09f, 0.10f, 1f), 0.45f);
+
+                return panel;
+            });
+
+            // 9. Chapter III Laboratory Catwalk Deck (128x64)
+            // Perforated non-slip diamond grip walkway with rubberized yellow safety edge trim and structural I-beam underframe
+            CreateSpriteAsset("Environment/Chapter03/ch3_lab_catwalk_deck.png", 128, 64, (x, y) =>
+            {
+                if (y < 2 || y >= 62) return Color.clear;
+
+                // Non-slip Walking Surface (Y: 52 to 61)
+                if (y >= 52)
+                {
+                    // Rubberized high-visibility yellow caution trim on top lip
+                    if (y >= 59)
+                    {
+                        if ((x + y) / 4 % 2 == 0) return new Color(0.85f, 0.70f, 0.15f, 1f);
+                        return new Color(0.12f, 0.14f, 0.16f, 1f);
+                    }
+                    if (y >= 56) return new Color(0.28f, 0.33f, 0.38f, 1f); // Steel deck plate
+                    // Diamond perforation grid
+                    if ((x % 8 == 0 || (x + 4) % 8 == 0) && y % 3 == 0) return new Color(0.06f, 0.08f, 0.10f, 1f); // Perforation hole
+                    return new Color(0.20f, 0.24f, 0.28f, 1f);
+                }
+
+                // Catwalk Face Plate & Rivet Seam (Y: 40 to 51)
+                if (y >= 40)
+                {
+                    if (y == 40 || y == 51) return new Color(0.08f, 0.10f, 0.12f, 1f);
+                    if (x % 16 == 0 && (y == 43 || y == 48)) return new Color(0.35f, 0.40f, 0.46f, 1f); // Steel rivet
+                    return new Color(0.14f, 0.17f, 0.21f, 1f);
+                }
+
+                // Structural Hollow Truss Framework (Y: 6 to 39)
+                // Diagonal cross-brace trusses
+                int trussPeriod = 32;
+                int localX = x % trussPeriod;
+                bool isTrussBar = Mathf.Abs(localX - (y - 6)) <= 3 || Mathf.Abs((trussPeriod - localX) - (y - 6)) <= 3;
+                if (isTrussBar)
+                {
+                    if (localX % 4 == 0) return new Color(0.22f, 0.26f, 0.31f, 1f);
+                    return new Color(0.16f, 0.19f, 0.24f, 1f);
+                }
+
+                // Bottom flange (Y: 2 to 6)
+                if (y <= 6) return new Color(0.20f, 0.24f, 0.29f, 1f);
+
+                return Color.clear; // Open hollow space behind truss
+            });
+
+            // 10. Chapter III Quarantine Barrier Airlock Gate (48x80)
+            // Heavy motorized blast barrier with diagonal hazard chevrons, pneumatic cylinders, and quarantine warning beacon
+            CreateSpriteAsset("Environment/Chapter03/ch3_quarantine_barrier_gate.png", 48, 80, (x, y) =>
+            {
+                if (x < 2 || x >= 46 || y < 2 || y >= 78) return Color.clear;
+
+                // Vertical Frame Columns (X: 2 to 8 and X: 39 to 45)
+                if (x <= 8 || x >= 39)
+                {
+                    if (x == 2 || x == 8 || x == 39 || x == 45) return new Color(0.08f, 0.10f, 0.13f, 1f);
+                    if (y % 12 == 0) return new Color(0.35f, 0.40f, 0.46f, 1f); // Bolt
+                    return new Color(0.20f, 0.24f, 0.28f, 1f);
+                }
+
+                // Motorized Blast Gate Core (X: 9 to 38, Y: 4 to 75)
+                if (y <= 6 || y >= 73) return new Color(0.12f, 0.15f, 0.18f, 1f);
+
+                // Central Warning Beacon at Y: 38 to 44
+                if (y >= 38 && y <= 44 && x >= 20 && x <= 27)
+                {
+                    if (x >= 22 && x <= 25 && y >= 40 && y <= 42) return new Color(1.0f, 0.85f, 0.20f, 1f); // Amber core
+                    return new Color(0.85f, 0.15f, 0.22f, 1f); // Red beacon rim
+                }
+
+                // Diagonal Yellow/Black Quarantine Hazard Chevrons
+                int chevron = (x + y) / 6;
+                if (chevron % 2 == 0) return new Color(0.85f, 0.70f, 0.15f, 1f); // Yellow chevron
+                return new Color(0.10f, 0.12f, 0.14f, 1f); // Black chevron
+            });
+
+            // 11. Chapter III Foreground Laboratory Pipes & Wiring (128x64)
+            // Heavy foreground conduit silhouettes, dripping chemical manifold, dangling frayed diagnostic wires at sorting order 12
+            CreateSpriteAsset("Environment/Chapter03/ch3_foreground_lab_pipes.png", 128, 64, (x, y) =>
+            {
+                // Main Horizontal Pipe Manifold across bottom (Y: 0 to 18)
+                if (y <= 18)
+                {
+                    if (y <= 2 || y == 18) return new Color(0.03f, 0.04f, 0.05f, 1f);
+                    if (x % 32 <= 3) return new Color(0.07f, 0.09f, 0.11f, 1f); // Pipe coupling ring
+                    if (y >= 14 && y <= 16) return new Color(0.12f, 0.15f, 0.18f, 1f); // Top rim highlight
+                    return new Color(0.05f, 0.06f, 0.08f, 1f);
+                }
+
+                // Vertical Riser Pipe at X: 24 to 32 (Y: 18 to 63)
+                if (x >= 24 && x <= 32)
+                {
+                    if (x == 24 || x == 32) return new Color(0.03f, 0.04f, 0.05f, 1f);
+                    if (x == 26) return new Color(0.10f, 0.13f, 0.16f, 1f);
+                    return new Color(0.05f, 0.07f, 0.09f, 1f);
+                }
+
+                // Valve Handwheel at X: 28, Y: 42 (radius 9)
+                float vdx = x - 28f;
+                float vdy = y - 42f;
+                float vdistSq = vdx * vdx + vdy * vdy;
+                if (vdistSq <= 81f && vdistSq >= 36f)
+                {
+                    if (vdistSq >= 64f) return new Color(0.15f, 0.18f, 0.22f, 1f);
+                    return new Color(0.08f, 0.10f, 0.12f, 1f);
+                }
+                if (vdistSq <= 12f) return new Color(0.18f, 0.22f, 0.26f, 1f); // Center hub
+
+                // Dangling severed diagnostic wire harnesses hanging down from top
+                // Wire 1: X: 84 curving down to Y: 22
+                float w1x = 84f + Mathf.Sin((64 - y) * 0.12f) * 6f;
+                if (Mathf.Abs(x - w1x) < 1.0f && y >= 22)
+                {
+                    if (y <= 24) return new Color(0.85f, 0.65f, 0.15f, 1f); // Exposed copper strand
+                    return new Color(0.04f, 0.05f, 0.06f, 1f);
+                }
+
+                // Wire 2: X: 104 curving down to Y: 30
+                float w2x = 104f - Mathf.Sin((64 - y) * 0.09f) * 8f;
+                if (Mathf.Abs(x - w2x) < 1.0f && y >= 30)
+                {
+                    if (y <= 32) return new Color(0.20f, 0.85f, 1.0f, 1f); // Exposed cyan strand
+                    return new Color(0.04f, 0.05f, 0.06f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 12. Chapter III Overhead Fluorescent Tube Fixture (32x16)
+            // Industrial fluorescent lamp housing with cold white/cyan tubes, rusted wire guard cage, suspension chains
+            CreateSpriteAsset("Environment/Chapter03/ch3_lab_fluorescent_lamp.png", 32, 16, (x, y) =>
+            {
+                if (x < 2 || x >= 30 || y < 1 || y >= 15) return Color.clear;
+
+                // Ceiling suspension brackets (Y: 12 to 14 at X: 6 and 25)
+                if (y >= 12 && ((x >= 5 && x <= 7) || (x >= 24 && x <= 26)))
+                {
+                    return new Color(0.18f, 0.22f, 0.26f, 1f);
+                }
+
+                // Fixture steel hood (Y: 8 to 11)
+                if (y >= 8 && y <= 11)
+                {
+                    if (y == 11) return new Color(0.12f, 0.15f, 0.18f, 1f);
+                    return new Color(0.22f, 0.26f, 0.30f, 1f);
+                }
+
+                // Fluorescent Tube & Protective Wire Cage (Y: 2 to 7)
+                if (y >= 2 && y <= 7)
+                {
+                    // Wire guard mesh
+                    if (x % 5 == 0 || y == 2) return new Color(0.15f, 0.18f, 0.20f, 1f);
+                    // Glowing fluorescent tube
+                    if (y >= 4 && y <= 5 && x >= 4 && x <= 27)
+                    {
+                        return new Color(0.92f, 0.98f, 1.0f, 1f); // Bright cold white-cyan tube
+                    }
+                    return new Color(0.35f, 0.75f, 0.90f, 0.85f); // Light glow aura
+                }
 
                 return Color.clear;
             });
@@ -4100,104 +4860,317 @@ namespace GlitchVerse.Editor
         {
             var atmo = new ChapterAtmosphereConfig
             {
-                ambientColor = new Color(0.30f, 0.72f, 0.90f, 1f), // Cold cobalt/cyan laboratory lighting
-                ambientIntensity = 0.70f,
-                spawnLampColor = new Color(0f, 0.94f, 1f, 1f),
-                spawnLampIntensity = 1.05f,
+                ambientColor = new Color(0.18f, 0.24f, 0.32f, 1f), // Cold dark clinical laboratory lighting
+                ambientIntensity = 0.65f,
+                spawnLampColor = new Color(0.35f, 0.85f, 1.0f, 1f),
+                spawnLampIntensity = 1.25f,
                 spawnLampFlicker = FlickeringLight2D.FlickerMode.SlowBreathing,
                 particleType = AtmosphericParticleEmitter.AtmosphereType.CryoStasisMist,
-                architectMonitorColor = new Color(0f, 0.94f, 1f, 0.95f)
+                architectMonitorColor = new Color(0.15f, 0.85f, 1.0f, 0.95f)
             };
 
             var refs = SetupBaseChamber("CONTAINMENT 03 // TEMPORAL FREEZE", 3, "Level04", false, atmo);
 
-            Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
-            Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+            // Chapter III: Modular Atmospheric Sprite Palette
+            Sprite ch3BgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_cryo_lab_bg.png");
+            Sprite ch3PodSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_specimen_cryo_tube.png");
+            Sprite ch3BrokenPodSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_broken_specimen_tank.png");
+            Sprite ch3ServerSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_server_monitoring_rack.png");
+            Sprite ch3WorkstationSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_clinical_workstation.png");
+            Sprite ch3EmitterRigSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_time_freeze_emitter_rig.png");
+            Sprite ch3InterrogationSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_interrogation_console.png");
+            Sprite ch3WallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_lab_wall_tiles.png");
+            Sprite ch3DeckSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_lab_catwalk_deck.png");
+            Sprite ch3QuarantineGateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_quarantine_barrier_gate.png");
+            Sprite ch3FgPipesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_foreground_lab_pipes.png");
+            Sprite ch3LampSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter03/ch3_lab_fluorescent_lamp.png");
+
+            Sprite railingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/platform_railing.png");
+            Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
             Sprite plateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pressure_plate.png");
-            Sprite cubeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cube_crate.png");
-            Sprite terminalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/lab_terminal.png");
-            Sprite podSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/containment_pod.png");
-            Sprite quarantineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png");
-            Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
+            Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
+            Sprite exitSignSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png") ?? AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/door_frame.png");
+            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
 
             // Enable Time Freeze (F)
             refs.abilityCtrl.AllowTimeFreeze = true;
 
-            // Environmental Dressing: Damaged Scientific Terminals
-            GameObject terminal1 = new GameObject("Deco_LabTerminal_1");
-            terminal1.transform.SetParent(refs.envRoot.transform);
-            terminal1.transform.position = new Vector3(-7.5f, -2.5f, 0f);
-            SpriteRenderer termRend1 = terminal1.AddComponent<SpriteRenderer>();
-            termRend1.sprite = terminalSp;
-            termRend1.sortingOrder = -5;
+            // Clean up old prototype monitor / background shapes
+            GameObject oldMonitor = GameObject.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor);
 
-            GameObject terminal2 = new GameObject("Deco_LabTerminal_2");
-            terminal2.transform.SetParent(refs.envRoot.transform);
-            terminal2.transform.position = new Vector3(8.5f, -0.5f, 0f);
-            SpriteRenderer termRend2 = terminal2.AddComponent<SpriteRenderer>();
-            termRend2.sprite = terminalSp;
-            termRend2.sortingOrder = -5;
+            GameObject oldLight = GameObject.Find("Chamber_Spotlight");
+            if (oldLight != null) Object.DestroyImmediate(oldLight);
 
-            // Cryo Containment Specimen Pods
+            GameObject bgOldRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgOldRoot != null)
+            {
+                for (int i = bgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(bgOldRoot.transform.GetChild(i).gameObject);
+                }
+            }
+
+            GameObject fgOldRoot = GameObject.Find("--- FOREGROUND ---");
+            if (fgOldRoot != null)
+            {
+                for (int i = fgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(fgOldRoot.transform.GetChild(i).gameObject);
+                }
+            }
+
+            // =========================================================================
+            // 1. VISUAL ENVIRONMENT ROOT (CH03_VisualEnvironment)
+            // =========================================================================
+            GameObject ch03EnvRoot = new GameObject("CH03_VisualEnvironment");
+            ch03EnvRoot.transform.position = Vector3.zero;
+
+            // A. Deep Derelict Cryo Lab Backdrop (Sorting Order: -25, Unlit Material)
+            GameObject labBackdrop = new GameObject("BG_CryoLabBackdrop");
+            labBackdrop.transform.SetParent(ch03EnvRoot.transform);
+            labBackdrop.transform.position = new Vector3(0.5f, 0.8f, 2.0f);
+            labBackdrop.transform.localScale = new Vector3(7.5f, 4.5f, 1f);
+            SpriteRenderer labRend = labBackdrop.AddComponent<SpriteRenderer>();
+            labRend.sprite = ch3BgSp;
+            labRend.sortingOrder = -25;
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            if (unlitShader != null) labRend.material = new Material(unlitShader);
+            labRend.color = Color.white;
+
+            // B. Clinical Concrete Wall Panels along Left Bunker Wall (Sorting Order: -22)
+            GameObject bunkerWallGroup = new GameObject("BG_ClinicalLabWall");
+            bunkerWallGroup.transform.SetParent(ch03EnvRoot.transform);
+            for (float wx = -10.0f; wx <= -6.0f; wx += 2.0f)
+            {
+                for (float wy = -3.0f; wy <= 3.0f; wy += 2.0f)
+                {
+                    GameObject wTile = new GameObject($"LabWallTile_{wx}_{wy}");
+                    wTile.transform.SetParent(bunkerWallGroup.transform);
+                    wTile.transform.position = new Vector3(wx, wy, 0f);
+                    SpriteRenderer wtr = wTile.AddComponent<SpriteRenderer>();
+                    wtr.sprite = ch3WallSp;
+                    wtr.sortingOrder = -22;
+                    wtr.color = new Color(0.85f, 0.90f, 0.95f, 0.9f);
+                }
+            }
+
+            // C. Translucent Specimen Cryo Pods & Ruptured Research Tanks (Sorting Order: -8)
+            // Pod 1 (Far Left, intact with specimen and cold cyan stasis glow)
             GameObject pod1 = new GameObject("Deco_CryoPod_1");
-            pod1.transform.SetParent(refs.envRoot.transform);
-            pod1.transform.position = new Vector3(-4.8f, -2.0f, 0f);
-            SpriteRenderer podRend1 = pod1.AddComponent<SpriteRenderer>();
-            podRend1.sprite = podSp;
-            podRend1.sortingOrder = -8;
+            pod1.transform.SetParent(ch03EnvRoot.transform);
+            pod1.transform.position = new Vector3(-6.8f, -2.1f, 0f);
+            pod1.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            SpriteRenderer p1Rend = pod1.AddComponent<SpriteRenderer>();
+            p1Rend.sprite = ch3PodSp;
+            p1Rend.sortingOrder = -8;
 
-            GameObject podLight1Obj = new GameObject("Pod_Glow_1");
-            podLight1Obj.transform.SetParent(pod1.transform);
-            podLight1Obj.transform.localPosition = Vector3.zero;
-            Light2D podLight1 = podLight1Obj.AddComponent<Light2D>();
-            podLight1.lightType = Light2D.LightType.Point;
-            podLight1.pointLightOuterRadius = 2.2f;
-            podLight1.color = new Color(0f, 0.94f, 1f, 1f);
-            podLight1.intensity = 0.45f;
+            GameObject pod1LightObj = new GameObject("Pod1_CyanGlow");
+            pod1LightObj.transform.SetParent(pod1.transform);
+            pod1LightObj.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            Light2D p1Light = pod1LightObj.AddComponent<Light2D>();
+            p1Light.lightType = Light2D.LightType.Point;
+            p1Light.pointLightInnerRadius = 0.3f;
+            p1Light.pointLightOuterRadius = 2.2f;
+            p1Light.color = new Color(0.12f, 0.85f, 1.0f, 1f);
+            p1Light.intensity = 0.75f;
+            FlickeringLight2D p1Flicker = pod1LightObj.AddComponent<FlickeringLight2D>();
+            p1Flicker.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
+            p1Flicker.BaseIntensity = 0.75f;
 
-            FlickeringLight2D podFlicker1 = podLight1Obj.AddComponent<FlickeringLight2D>();
-            podFlicker1.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
-            podFlicker1.BaseIntensity = 0.45f;
+            // Pod 2 (Near Interrogation, Ruptured / shattered with dangling empty restraints and coolant puddle)
+            GameObject pod2Broken = new GameObject("Deco_CryoPod_2_Ruptured");
+            pod2Broken.transform.SetParent(ch03EnvRoot.transform);
+            pod2Broken.transform.position = new Vector3(-4.8f, -2.1f, 0f);
+            pod2Broken.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            SpriteRenderer p2Rend = pod2Broken.AddComponent<SpriteRenderer>();
+            p2Rend.sprite = ch3BrokenPodSp;
+            p2Rend.sortingOrder = -8;
 
-            GameObject pod2 = new GameObject("Deco_CryoPod_2");
-            pod2.transform.SetParent(refs.envRoot.transform);
-            pod2.transform.position = new Vector3(4.5f, -2.0f, 0f);
-            SpriteRenderer podRend2 = pod2.AddComponent<SpriteRenderer>();
-            podRend2.sprite = podSp;
-            podRend2.sortingOrder = -8;
+            // Pod 3 (Midground Right, intact glowing specimen pod)
+            GameObject pod3 = new GameObject("Deco_CryoPod_3");
+            pod3.transform.SetParent(ch03EnvRoot.transform);
+            pod3.transform.position = new Vector3(3.8f, -2.1f, 0f);
+            pod3.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            SpriteRenderer p3Rend = pod3.AddComponent<SpriteRenderer>();
+            p3Rend.sprite = ch3PodSp;
+            p3Rend.sortingOrder = -8;
 
-            // Quarantine Warning Decal
-            GameObject guarDecal = new GameObject("Deco_QuarantineAlert");
-            guarDecal.transform.SetParent(refs.envRoot.transform);
-            guarDecal.transform.position = new Vector3(0f, 2.5f, 0f);
-            SpriteRenderer qdRend = guarDecal.AddComponent<SpriteRenderer>();
-            qdRend.sprite = quarantineSp;
-            qdRend.sortingOrder = -5;
+            GameObject pod3LightObj = new GameObject("Pod3_CyanGlow");
+            pod3LightObj.transform.SetParent(pod3.transform);
+            pod3LightObj.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            Light2D p3Light = pod3LightObj.AddComponent<Light2D>();
+            p3Light.lightType = Light2D.LightType.Point;
+            p3Light.pointLightInnerRadius = 0.3f;
+            p3Light.pointLightOuterRadius = 2.2f;
+            p3Light.color = new Color(0.12f, 0.85f, 1.0f, 1f);
+            p3Light.intensity = 0.75f;
+            FlickeringLight2D p3Flicker = pod3LightObj.AddComponent<FlickeringLight2D>();
+            p3Flicker.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
+            p3Flicker.BaseIntensity = 0.75f;
 
-            // High Contrast Dark Backdrop behind the Echo puzzle flight path (X: -2 to 3)
-            GameObject echoContrastBackdrop = new GameObject("EchoPath_ContrastBackdrop");
-            echoContrastBackdrop.transform.SetParent(refs.envRoot.transform);
-            echoContrastBackdrop.transform.position = new Vector3(0.5f, -1.5f, 0f);
-            echoContrastBackdrop.transform.localScale = new Vector3(5.5f, 3.5f, 1f);
-            SpriteRenderer ecbRend = echoContrastBackdrop.AddComponent<SpriteRenderer>();
-            ecbRend.sprite = wallSp;
-            ecbRend.sortingOrder = -12;
-            ecbRend.color = new Color(0.04f, 0.06f, 0.09f, 0.95f); // Deep dark backdrop ensures Echo ghost stands out!
+            // Pod 4 (Far Right research bay, dim silhouette pod)
+            GameObject pod4 = new GameObject("Deco_CryoPod_4");
+            pod4.transform.SetParent(ch03EnvRoot.transform);
+            pod4.transform.position = new Vector3(5.8f, -2.1f, 0f);
+            pod4.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            SpriteRenderer p4Rend = pod4.AddComponent<SpriteRenderer>();
+            p4Rend.sprite = ch3PodSp;
+            p4Rend.sortingOrder = -8;
 
-            // Checkpoint 3: Impossible Question Forced-Death Prank (Level 03)
+            // D. Medical-Industrial Server Telemetry Racks (Sorting Order: -6)
+            GameObject serverRack1 = new GameObject("Deco_ServerRack_Left");
+            serverRack1.transform.SetParent(ch03EnvRoot.transform);
+            serverRack1.transform.position = new Vector3(-8.2f, -2.2f, 0f);
+            serverRack1.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
+            SpriteRenderer sr1Rend = serverRack1.AddComponent<SpriteRenderer>();
+            sr1Rend.sprite = ch3ServerSp;
+            sr1Rend.sortingOrder = -6;
+
+            GameObject serverRack2 = new GameObject("Deco_ServerRack_Right");
+            serverRack2.transform.SetParent(ch03EnvRoot.transform);
+            serverRack2.transform.position = new Vector3(7.6f, -0.8f, 0f);
+            serverRack2.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
+            SpriteRenderer sr2Rend = serverRack2.AddComponent<SpriteRenderer>();
+            sr2Rend.sprite = ch3ServerSp;
+            sr2Rend.sortingOrder = -6;
+
+            // E. Clinical Workstations with Shattered CRT Screens (Sorting Order: -6)
+            GameObject desk1 = new GameObject("Deco_ClinicalWorkstation_1");
+            desk1.transform.SetParent(ch03EnvRoot.transform);
+            desk1.transform.position = new Vector3(-3.2f, -2.8f, 0f);
+            desk1.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
+            SpriteRenderer d1Rend = desk1.AddComponent<SpriteRenderer>();
+            d1Rend.sprite = ch3WorkstationSp;
+            d1Rend.sortingOrder = -6;
+
+            GameObject desk2 = new GameObject("Deco_ClinicalWorkstation_2");
+            desk2.transform.SetParent(ch03EnvRoot.transform);
+            desk2.transform.position = new Vector3(5.0f, -0.6f, 0f);
+            desk2.transform.localScale = new Vector3(1.0f, 1.0f, 1f);
+            SpriteRenderer d2Rend = desk2.AddComponent<SpriteRenderer>();
+            d2Rend.sprite = ch3WorkstationSp;
+            d2Rend.sortingOrder = -6;
+
+            // F. Overhead Industrial Fluorescent Tube Fixtures with Downward Cold Light Cones (Sorting Order: -5)
+            float[] lampPositions = { -4.5f, 1.5f, 6.5f };
+            for (int i = 0; i < lampPositions.Length; i++)
+            {
+                float lx = lampPositions[i];
+                GameObject flLamp = new GameObject($"Deco_FluorescentLamp_{i}");
+                flLamp.transform.SetParent(ch03EnvRoot.transform);
+                flLamp.transform.position = new Vector3(lx, 4.2f, 0f);
+                flLamp.transform.localScale = new Vector3(1.4f, 1.2f, 1f);
+                SpriteRenderer flRend = flLamp.AddComponent<SpriteRenderer>();
+                flRend.sprite = ch3LampSp;
+                flRend.sortingOrder = -5;
+
+                GameObject flLightObj = new GameObject($"LampLight_{i}");
+                flLightObj.transform.SetParent(flLamp.transform);
+                flLightObj.transform.localPosition = new Vector3(0f, -0.2f, 0f);
+                Light2D flLight = flLightObj.AddComponent<Light2D>();
+                flLight.lightType = Light2D.LightType.Point;
+                flLight.pointLightInnerRadius = 0.4f;
+                flLight.pointLightOuterRadius = 3.2f;
+                flLight.color = new Color(0.85f, 0.95f, 1.0f, 1f);
+                flLight.intensity = 0.85f;
+            }
+
+            // G. Foreground Laboratory Silhouettes (Sorting Order: 12)
+            GameObject fgPipesLeft = new GameObject("FG_LabPipes_Left");
+            fgPipesLeft.transform.SetParent(ch03EnvRoot.transform);
+            fgPipesLeft.transform.position = new Vector3(-7.5f, -4.8f, 0f);
+            fgPipesLeft.transform.localScale = new Vector3(2.2f, 1.6f, 1f);
+            SpriteRenderer fgplRend = fgPipesLeft.AddComponent<SpriteRenderer>();
+            fgplRend.sprite = ch3FgPipesSp;
+            fgplRend.sortingOrder = 12;
+
+            GameObject fgPipesRight = new GameObject("FG_LabPipes_Right");
+            fgPipesRight.transform.SetParent(ch03EnvRoot.transform);
+            fgPipesRight.transform.position = new Vector3(6.5f, -4.8f, 0f);
+            fgPipesRight.transform.localScale = new Vector3(-2.2f, 1.6f, 1f);
+            SpriteRenderer fgprRend = fgPipesRight.AddComponent<SpriteRenderer>();
+            fgprRend.sprite = ch3FgPipesSp;
+            fgprRend.sortingOrder = 12;
+
+            // =========================================================================
+            // 2. MAIN LABORATORY WALKWAY & FLOOR PLATFORM (Y: -4.0)
+            // =========================================================================
+            Transform chamberFloor = refs.envRoot.transform.Find("Chamber_Floor");
+            if (chamberFloor != null)
+            {
+                for (int i = chamberFloor.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(chamberFloor.GetChild(i).gameObject);
+                }
+
+                for (float fx = -10.0f; fx <= 10.0f; fx += 2.0f)
+                {
+                    GameObject pTile = new GameObject($"LabCatwalkDeck_{fx}");
+                    pTile.transform.SetParent(chamberFloor);
+                    pTile.transform.position = new Vector3(fx, -4.0f, 0f);
+                    SpriteRenderer pr = pTile.AddComponent<SpriteRenderer>();
+                    pr.sprite = ch3DeckSp;
+                    pr.sortingOrder = 0;
+
+                    GameObject underStrut = new GameObject($"UnderDeck_{fx}");
+                    underStrut.transform.SetParent(chamberFloor);
+                    underStrut.transform.position = new Vector3(fx, -4.8f, 0f);
+                    underStrut.transform.localScale = new Vector3(1.0f, 0.8f, 1f);
+                    SpriteRenderer usr = underStrut.AddComponent<SpriteRenderer>();
+                    usr.sprite = ch3DeckSp;
+                    usr.sortingOrder = -2;
+                    usr.color = new Color(0.12f, 0.15f, 0.18f, 0.9f);
+                }
+
+                // Safety railings along floor
+                for (float rx = -10.0f; rx <= -6.0f; rx += 1.0f)
+                {
+                    GameObject rail = new GameObject($"FloorRail_{rx}");
+                    rail.transform.SetParent(chamberFloor);
+                    rail.transform.position = new Vector3(rx, -3.75f, 0f);
+                    SpriteRenderer rr = rail.AddComponent<SpriteRenderer>();
+                    rr.sprite = railingSp;
+                    rr.sortingOrder = 3;
+                }
+            }
+
+            // =========================================================================
+            // 3. CLINICAL INTERROGATION KIOSK & IMPOSSIBLE QUESTION PRANK (X: -5.0)
+            // =========================================================================
             GameObject questionPrankObj = new GameObject("ImpossibleQuestionPrankController");
             questionPrankObj.transform.SetParent(refs.puzzleRoot.transform);
             ImpossibleQuestionPrank questionPrank = questionPrankObj.AddComponent<ImpossibleQuestionPrank>();
             SetPrivateField(questionPrank, "questionPromptText", refs.questionPromptText);
             SetPrivateField(questionPrank, "triggerX", -5.0f);
 
-            // Movable Cube before Laser 1 at (X: -4.2, Y: -3.4)
+            GameObject interrogationConsoleObj = new GameObject("Deco_InterrogationConsole");
+            interrogationConsoleObj.transform.SetParent(refs.puzzleRoot.transform);
+            interrogationConsoleObj.transform.position = new Vector3(-5.0f, -3.15f, 0f);
+            SpriteRenderer icRend = interrogationConsoleObj.AddComponent<SpriteRenderer>();
+            icRend.sprite = ch3InterrogationSp;
+            icRend.sortingOrder = 2;
+
+            GameObject interrogationLightObj = new GameObject("Interrogation_IndicatorLight");
+            interrogationLightObj.transform.SetParent(interrogationConsoleObj.transform);
+            interrogationLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            Light2D icLight = interrogationLightObj.AddComponent<Light2D>();
+            icLight.lightType = Light2D.LightType.Point;
+            icLight.pointLightInnerRadius = 0.2f;
+            icLight.pointLightOuterRadius = 1.6f;
+            icLight.color = new Color(0.20f, 0.95f, 0.45f, 1f); // Clinical deceptive green
+            icLight.intensity = 0.85f;
+
+            // =========================================================================
+            // 4. MOVABLE STASIS BATTERY CUBE (X: -4.2, Y: -3.4)
+            // =========================================================================
             GameObject cubeObj = new GameObject("MovableCube");
             cubeObj.transform.SetParent(refs.puzzleRoot.transform);
             cubeObj.transform.position = new Vector3(-4.2f, -3.4f, 0f);
 
             SpriteRenderer cubeRend = cubeObj.AddComponent<SpriteRenderer>();
-            cubeRend.sprite = cubeSp;
+            cubeRend.sprite = ch3EmitterRigSp;
             cubeRend.sortingOrder = 3;
 
             BoxCollider2D cubeCol = cubeObj.AddComponent<BoxCollider2D>();
@@ -4211,13 +5184,15 @@ namespace GlitchVerse.Editor
             MovableCube cubeComp = cubeObj.AddComponent<MovableCube>();
             SetPrivateField(cubeComp, "spriteRenderer", cubeRend);
 
-            // Moving Freezable Hazard Laser 1 (Blocks cube path; requires Time Freeze F)
+            // =========================================================================
+            // 5. MOVING FREEZABLE HAZARD LASER 1 (X: -1.8, Y: -3.5, requires Time Freeze F)
+            // =========================================================================
             GameObject hazardObj1 = new GameObject("FreezableLaser_Barrier_1");
             hazardObj1.transform.SetParent(refs.puzzleRoot.transform);
             hazardObj1.transform.position = new Vector3(-1.8f, -3.5f, 0f);
 
             SpriteRenderer hazRend1 = hazardObj1.AddComponent<SpriteRenderer>();
-            hazRend1.sprite = hazardSp;
+            hazRend1.sprite = laserSp;
             hazRend1.sortingOrder = 3;
 
             GameObject hazLight1 = new GameObject("Hazard1_Glow");
@@ -4225,9 +5200,10 @@ namespace GlitchVerse.Editor
             hazLight1.transform.localPosition = Vector3.zero;
             Light2D hl1 = hazLight1.AddComponent<Light2D>();
             hl1.lightType = Light2D.LightType.Point;
-            hl1.pointLightOuterRadius = 2.0f;
+            hl1.pointLightInnerRadius = 0.3f;
+            hl1.pointLightOuterRadius = 1.8f;
             hl1.color = new Color(1.0f, 0.15f, 0.25f, 1f);
-            hl1.intensity = 0.8f;
+            hl1.intensity = 0.9f;
 
             BoxCollider2D hazCol1 = hazardObj1.AddComponent<BoxCollider2D>();
             hazCol1.size = new Vector2(0.5f, 1.8f);
@@ -4239,7 +5215,26 @@ namespace GlitchVerse.Editor
             SetPrivateField(hazardComp1, "moveSpeed", 3.2f);
             SetPrivateField(hazardComp1, "hazardRenderer", hazRend1);
 
-            // Pressure Plate A at (X: 0.5, Y: -3.9) — Cube opens Blast Gate A
+            // Stasis Projector Rig Housings at laser base and ceiling
+            GameObject emit1Base = new GameObject("Emitter_StasisRig_1_Base");
+            emit1Base.transform.SetParent(hazardObj1.transform);
+            emit1Base.transform.localPosition = new Vector3(0f, -0.9f, 0f);
+            emit1Base.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+            SpriteRenderer e1bRend = emit1Base.AddComponent<SpriteRenderer>();
+            e1bRend.sprite = ch3EmitterRigSp;
+            e1bRend.sortingOrder = 8;
+
+            GameObject emit1Top = new GameObject("Emitter_StasisRig_1_Top");
+            emit1Top.transform.SetParent(hazardObj1.transform);
+            emit1Top.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            emit1Top.transform.localScale = new Vector3(0.8f, -0.8f, 1f);
+            SpriteRenderer e1tRend = emit1Top.AddComponent<SpriteRenderer>();
+            e1tRend.sprite = ch3EmitterRigSp;
+            e1tRend.sortingOrder = 8;
+
+            // =========================================================================
+            // 6. PRESSURE PLATE A (X: 0.5, Y: -3.9) — Opens Blast Gate A
+            // =========================================================================
             GameObject plateObj = new GameObject("PressurePlate");
             plateObj.transform.SetParent(refs.puzzleRoot.transform);
             plateObj.transform.position = new Vector3(0.5f, -3.9f, 0f);
@@ -4257,29 +5252,38 @@ namespace GlitchVerse.Editor
             SetPrivateField(plateComp, "plateTopRenderer", plateRend);
             SetPrivateField(plateComp, "depressTarget", plateObj.transform);
 
-            // Blast Gate A (Security Barrier interlocked with Pressure Plate A) at X: 1.6, Y: -2.7
+            // Heavy diagnostic conduit harness linking pressure plate to Gate A
+            GameObject plateConduit = new GameObject("Deco_PlateToGateConduit");
+            plateConduit.transform.SetParent(plateObj.transform);
+            plateConduit.transform.position = new Vector3(1.05f, -3.95f, 0f);
+            plateConduit.transform.localScale = new Vector3(1.1f, 0.8f, 1f);
+            SpriteRenderer pcRend = plateConduit.AddComponent<SpriteRenderer>();
+            pcRend.sprite = cableSp;
+            pcRend.sortingOrder = -5;
+
+            // =========================================================================
+            // 7. BLAST GATE A (QUARANTINE AIRLOCK AT X: 1.6, Y: -2.7)
+            // =========================================================================
             GameObject gateAObj = new GameObject("SecurityBarrier_GateA");
             gateAObj.transform.SetParent(refs.puzzleRoot.transform);
             gateAObj.transform.position = new Vector3(1.6f, -2.7f, 0f);
 
             SpriteRenderer gaRend = gateAObj.AddComponent<SpriteRenderer>();
-            gaRend.sprite = hazardSp;
-            gaRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            gaRend.sprite = ch3QuarantineGateSp;
             gaRend.sortingOrder = 8;
-            gaRend.drawMode = SpriteDrawMode.Sliced;
-            gaRend.size = new Vector2(0.35f, 2.4f);
 
             BoxCollider2D gaCol = gateAObj.AddComponent<BoxCollider2D>();
-            gaCol.size = new Vector2(0.35f, 2.4f);
+            gaCol.size = new Vector2(0.48f, 2.4f);
 
             GameObject gaLightObj = new GameObject("GateA_Light");
             gaLightObj.transform.SetParent(gateAObj.transform);
             gaLightObj.transform.localPosition = Vector3.zero;
             Light2D gaLight = gaLightObj.AddComponent<Light2D>();
             gaLight.lightType = Light2D.LightType.Point;
-            gaLight.pointLightOuterRadius = 2.2f;
+            gaLight.pointLightInnerRadius = 0.2f;
+            gaLight.pointLightOuterRadius = 1.8f;
             gaLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
-            gaLight.intensity = 1.2f;
+            gaLight.intensity = 1.0f;
 
             SecurityBarrier gateAComp = gateAObj.AddComponent<SecurityBarrier>();
             SetPrivateField(gateAComp, "barrierCollider", gaCol);
@@ -4287,22 +5291,34 @@ namespace GlitchVerse.Editor
             SetPrivateField(gateAComp, "barrierLight", gaLight);
             plateComp.TargetBarrier = gateAComp;
 
-            // Catwalk Gantry beyond Gate A at X: 2.0 to 4.2, Y: -1.2
+            // =========================================================================
+            // 8. GANTRY CATWALK BEYOND GATE A (X: 2.0 to 4.2, Y: -1.2)
+            // =========================================================================
             GameObject gantryCatwalk = new GameObject("Gantry_Catwalk");
             gantryCatwalk.transform.SetParent(refs.envRoot.transform);
             gantryCatwalk.transform.position = new Vector3(3.1f, -1.2f, 0f);
             BoxCollider2D gantryCol = gantryCatwalk.AddComponent<BoxCollider2D>();
             gantryCol.size = new Vector2(2.4f, 0.35f);
 
-            for (float px = 2.0f; px <= 4.2f; px += 0.7f)
+            for (float px = 2.0f; px <= 4.2f; px += 1.1f)
             {
                 GameObject seg = new GameObject($"GantrySeg_{px}");
                 seg.transform.SetParent(gantryCatwalk.transform);
                 seg.transform.position = new Vector3(px, -1.2f, 0f);
-                seg.transform.localScale = new Vector3(0.7f, 0.35f, 1f);
+                seg.transform.localScale = new Vector3(0.9f, 0.5f, 1f);
                 SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
+                rend.sprite = ch3DeckSp;
                 rend.sortingOrder = 1;
+            }
+
+            for (float rx = 2.0f; rx <= 4.2f; rx += 1.0f)
+            {
+                GameObject gRail = new GameObject($"GantryRail_{rx}");
+                gRail.transform.SetParent(gantryCatwalk.transform);
+                gRail.transform.position = new Vector3(rx, -0.95f, 0f);
+                SpriteRenderer gr = gRail.AddComponent<SpriteRenderer>();
+                gr.sprite = railingSp;
+                gr.sortingOrder = 3;
             }
 
             // Step up to gantry at X: 1.8, Y: -2.6
@@ -4311,14 +5327,20 @@ namespace GlitchVerse.Editor
             stepGantry.transform.position = new Vector3(1.8f, -2.6f, 0f);
             BoxCollider2D sgCol = stepGantry.AddComponent<BoxCollider2D>();
             sgCol.size = new Vector2(0.8f, 0.35f);
+            SpriteRenderer sgRend = stepGantry.AddComponent<SpriteRenderer>();
+            sgRend.sprite = ch3DeckSp;
+            sgRend.sortingOrder = 1;
+            stepGantry.transform.localScale = new Vector3(0.7f, 0.4f, 1f);
 
-            // EchoSwitch Terminal on Gantry at (X: 2.8, Y: -0.85)
+            // =========================================================================
+            // 9. ECHOSWITCH TERMINAL ON GANTRY (X: 2.8, Y: -0.85)
+            // =========================================================================
             GameObject echoSwitchObj = new GameObject("EchoSwitch_Terminal");
             echoSwitchObj.transform.SetParent(refs.puzzleRoot.transform);
             echoSwitchObj.transform.position = new Vector3(2.8f, -0.85f, 0f);
 
             SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
-            switchRend.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
+            switchRend.sprite = echoSwitchSp;
             switchRend.sortingOrder = 2;
 
             BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
@@ -4330,9 +5352,10 @@ namespace GlitchVerse.Editor
             switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
             Light2D switchLight = switchLightObj.AddComponent<Light2D>();
             switchLight.lightType = Light2D.LightType.Point;
-            switchLight.pointLightOuterRadius = 3.0f;
+            switchLight.pointLightInnerRadius = 0.2f;
+            switchLight.pointLightOuterRadius = 1.8f;
             switchLight.color = new Color(0.85f, 0f, 1f, 1f);
-            switchLight.intensity = 0.7f;
+            switchLight.intensity = 0.85f;
 
             SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
@@ -4344,13 +5367,15 @@ namespace GlitchVerse.Editor
             SetPrivateField(echoSwitchComp, "latching", false);
             SetPrivateField(echoSwitchComp, "isPowered", true);
 
-            // Moving Freezable Hazard Laser 2 (Across lower floor corridor at X: 4.8)
+            // =========================================================================
+            // 10. MOVING FREEZABLE HAZARD LASER 2 (X: 4.8, Y: 0.0, lower corridor)
+            // =========================================================================
             GameObject hazardObj2 = new GameObject("FreezableLaser_Barrier_2");
             hazardObj2.transform.SetParent(refs.puzzleRoot.transform);
             hazardObj2.transform.position = new Vector3(4.8f, 0.0f, 0f);
 
             SpriteRenderer hazRend2 = hazardObj2.AddComponent<SpriteRenderer>();
-            hazRend2.sprite = hazardSp;
+            hazRend2.sprite = laserSp;
             hazRend2.sortingOrder = 3;
 
             GameObject hazLight2 = new GameObject("Hazard2_Glow");
@@ -4358,9 +5383,10 @@ namespace GlitchVerse.Editor
             hazLight2.transform.localPosition = Vector3.zero;
             Light2D hl2 = hazLight2.AddComponent<Light2D>();
             hl2.lightType = Light2D.LightType.Point;
-            hl2.pointLightOuterRadius = 2.0f;
+            hl2.pointLightInnerRadius = 0.3f;
+            hl2.pointLightOuterRadius = 1.8f;
             hl2.color = new Color(1.0f, 0.15f, 0.25f, 1f);
-            hl2.intensity = 0.8f;
+            hl2.intensity = 0.9f;
 
             BoxCollider2D hazCol2 = hazardObj2.AddComponent<BoxCollider2D>();
             hazCol2.size = new Vector2(0.5f, 1.8f);
@@ -4372,29 +5398,46 @@ namespace GlitchVerse.Editor
             SetPrivateField(hazardComp2, "moveSpeed", 3.5f);
             SetPrivateField(hazardComp2, "hazardRenderer", hazRend2);
 
-            // Security Barrier Exit at X: 6.0, Y: -2.7 (Controlled by EchoSwitch_Terminal)
+            // Projector rig housings at top and bottom of Laser 2
+            GameObject emit2Top = new GameObject("Emitter_StasisRig_2_Top");
+            emit2Top.transform.SetParent(hazardObj2.transform);
+            emit2Top.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            emit2Top.transform.localScale = new Vector3(0.8f, -0.8f, 1f);
+            SpriteRenderer e2tRend = emit2Top.AddComponent<SpriteRenderer>();
+            e2tRend.sprite = ch3EmitterRigSp;
+            e2tRend.sortingOrder = 8;
+
+            GameObject emit2Base = new GameObject("Emitter_StasisRig_2_Base");
+            emit2Base.transform.SetParent(hazardObj2.transform);
+            emit2Base.transform.localPosition = new Vector3(0f, -0.9f, 0f);
+            emit2Base.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+            SpriteRenderer e2bRend = emit2Base.AddComponent<SpriteRenderer>();
+            e2bRend.sprite = ch3EmitterRigSp;
+            e2bRend.sortingOrder = 8;
+
+            // =========================================================================
+            // 11. SECURITY BARRIER EXIT (X: 6.0, Y: -2.7, controlled by EchoSwitch)
+            // =========================================================================
             GameObject exitBarrierObj = new GameObject("SecurityBarrier_Exit");
             exitBarrierObj.transform.SetParent(refs.puzzleRoot.transform);
             exitBarrierObj.transform.position = new Vector3(6.0f, -2.7f, 0f);
 
             SpriteRenderer ebRend = exitBarrierObj.AddComponent<SpriteRenderer>();
-            ebRend.sprite = hazardSp;
-            ebRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            ebRend.sprite = ch3QuarantineGateSp;
             ebRend.sortingOrder = 8;
-            ebRend.drawMode = SpriteDrawMode.Sliced;
-            ebRend.size = new Vector2(0.35f, 2.4f);
 
             BoxCollider2D ebCol = exitBarrierObj.AddComponent<BoxCollider2D>();
-            ebCol.size = new Vector2(0.35f, 2.4f);
+            ebCol.size = new Vector2(0.48f, 2.4f);
 
             GameObject ebLightObj = new GameObject("ExitBarrier_Light");
             ebLightObj.transform.SetParent(exitBarrierObj.transform);
             ebLightObj.transform.localPosition = Vector3.zero;
             Light2D ebLight = ebLightObj.AddComponent<Light2D>();
             ebLight.lightType = Light2D.LightType.Point;
-            ebLight.pointLightOuterRadius = 2.4f;
+            ebLight.pointLightInnerRadius = 0.2f;
+            ebLight.pointLightOuterRadius = 1.8f;
             ebLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
-            ebLight.intensity = 1.3f;
+            ebLight.intensity = 0.95f;
 
             SecurityBarrier exitBarrierComp = exitBarrierObj.AddComponent<SecurityBarrier>();
             SetPrivateField(exitBarrierComp, "barrierCollider", ebCol);
@@ -4405,9 +5448,29 @@ namespace GlitchVerse.Editor
             SetPrivateField(echoSwitchComp, "targetBarrier", exitBarrierComp);
             echoSwitchComp.TargetBarrier = exitBarrierComp;
 
-            // Elevated Exit Doorway at (X: 8.5, Y: -2.5)
+            // =========================================================================
+            // 12. ELEVATED EXIT DOORWAY & LIGHTING (X: 8.5, Y: -2.5)
+            // =========================================================================
             refs.exitDoor.transform.position = new Vector3(8.5f, -2.5f, 0f);
 
+            GameObject exitSignObj = new GameObject("Deco_ExitSign");
+            exitSignObj.transform.SetParent(refs.exitDoor.transform);
+            exitSignObj.transform.localPosition = new Vector3(0f, 1.35f, 0f);
+            SpriteRenderer esRend = exitSignObj.AddComponent<SpriteRenderer>();
+            esRend.sprite = exitSignSp;
+            esRend.sortingOrder = 5;
+
+            GameObject exitDoorSpotObj = new GameObject("ExitDoor_Spotlight");
+            exitDoorSpotObj.transform.SetParent(refs.exitDoor.transform);
+            exitDoorSpotObj.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+            Light2D exitDoorSpot = exitDoorSpotObj.AddComponent<Light2D>();
+            exitDoorSpot.lightType = Light2D.LightType.Point;
+            exitDoorSpot.pointLightInnerRadius = 0.3f;
+            exitDoorSpot.pointLightOuterRadius = 3.2f;
+            exitDoorSpot.color = new Color(0.85f, 0.95f, 1.0f, 1f);
+            exitDoorSpot.intensity = 1.25f;
+
+            // Wire HUD & Level Director references
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
@@ -4415,6 +5478,13 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.hud, "pressurePlate", plateComp);
             SetPrivateField(refs.director, "pressurePlate", plateComp);
             SetPrivateField(refs.triggers, "pressurePlate", plateComp);
+
+            // Ensure intro overlay panels are clean in edit mode
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+
+            var subtitleBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subtitleBanner != null) subtitleBanner.SetActive(false);
 
             SaveChamberScene("Level03.unity");
         }
