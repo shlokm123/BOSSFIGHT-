@@ -60,6 +60,12 @@ namespace GlitchVerse.Narrative
                 pressurePlate.OnPlateStateChanged += HandlePlateStateChanged;
             }
 
+            // Subscribe to EchoSwitch events
+            if (echoSwitch != null)
+            {
+                echoSwitch.OnSwitchStateChanged += HandleSwitchStateChanged;
+            }
+
             // Trigger Entry Commentary when chapter intro concludes (or after brief delay if already concluded)
             if (ChapterIntroController.Current != null && ChapterIntroController.Current.IsIntroPlaying)
             {
@@ -103,6 +109,30 @@ namespace GlitchVerse.Narrative
             if (pressurePlate != null)
             {
                 pressurePlate.OnPlateStateChanged -= HandlePlateStateChanged;
+            }
+
+            if (echoSwitch != null)
+            {
+                echoSwitch.OnSwitchStateChanged -= HandleSwitchStateChanged;
+            }
+        }
+
+        private void HandleSwitchStateChanged(bool active)
+        {
+            if (active && ArchitectDialogue.Current != null)
+            {
+                string activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (activeScene == "Level05")
+                {
+                    ArchitectDialogue.Current.Speak(
+                        "You've learned not to trust me. Have you learned what to trust?",
+                        "PARANOIA RESOLVED",
+                        3.4f,
+                        "ch5_trust_rule",
+                        0f,
+                        priority: true
+                    );
+                }
             }
         }
 

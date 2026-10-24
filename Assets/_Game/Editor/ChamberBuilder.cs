@@ -2650,6 +2650,8 @@ namespace GlitchVerse.Editor
             Sprite terminalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/lab_terminal.png");
             Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
 
+            Sprite hazardLaserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+
             // Powers: Gravity (G), Dimension Swap (Q), Echo (H/C)
             refs.abilityCtrl.AllowGravity = true;
             refs.abilityCtrl.AllowDimensionSwap = true;
@@ -2681,15 +2683,24 @@ namespace GlitchVerse.Editor
             // True Route Visual Clue: Intact Neon Conduits leading UP from spawn bulkhead
             GameObject verticalConduit = new GameObject("Deco_TruePath_Conduit");
             verticalConduit.transform.SetParent(refs.envRoot.transform);
-            verticalConduit.transform.position = new Vector3(-7.5f, 0f, 0f);
+            verticalConduit.transform.position = new Vector3(-7.5f, 0.5f, 0f);
             verticalConduit.transform.rotation = Quaternion.Euler(0, 0, 90f);
-            verticalConduit.transform.localScale = new Vector3(8f, 1.2f, 1f);
+            verticalConduit.transform.localScale = new Vector3(7.5f, 1.2f, 1f);
             SpriteRenderer vcRend = verticalConduit.AddComponent<SpriteRenderer>();
             vcRend.sprite = pipeSp;
             vcRend.sortingOrder = -6;
-            vcRend.color = new Color(0.2f, 0.8f, 1.0f, 0.9f);
+            vcRend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
 
-            // Ceiling Bulkhead Pathway (Y = 3.8)
+            GameObject vLightObj = new GameObject("TruePath_Conduit_Light");
+            vLightObj.transform.SetParent(verticalConduit.transform);
+            vLightObj.transform.localPosition = Vector3.zero;
+            Light2D vLight = vLightObj.AddComponent<Light2D>();
+            vLight.lightType = Light2D.LightType.Point;
+            vLight.pointLightOuterRadius = 3.5f;
+            vLight.color = new Color(0.1f, 0.85f, 1.0f, 1f);
+            vLight.intensity = 0.8f;
+
+            // Ceiling Walkway 1 (Y = 3.8)
             GameObject ceilPlat1 = new GameObject("Ceiling_Walkway_1");
             ceilPlat1.transform.SetParent(refs.puzzleRoot.transform);
             ceilPlat1.transform.position = new Vector3(-2.5f, 3.8f, 0f);
@@ -2701,7 +2712,17 @@ namespace GlitchVerse.Editor
             BoxCollider2D cpCol1 = ceilPlat1.AddComponent<BoxCollider2D>();
             cpCol1.size = new Vector2(6f, 0.6f);
 
-            // EchoSwitch inverted on the ceiling walkway at (X: -2.0, Y: 3.4)
+            // Intact Cyan Conduit along ceiling walkway
+            GameObject ceilConduit = new GameObject("Deco_Ceiling_Conduit");
+            ceilConduit.transform.SetParent(refs.envRoot.transform);
+            ceilConduit.transform.position = new Vector3(-2.5f, 4.15f, 0f);
+            ceilConduit.transform.localScale = new Vector3(6.0f, 1.0f, 1f);
+            SpriteRenderer ccRend = ceilConduit.AddComponent<SpriteRenderer>();
+            ccRend.sprite = pipeSp;
+            ccRend.sortingOrder = -6;
+            ccRend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+
+            // Echo-only Security Switch inverted on the ceiling walkway at (X: -2.0, Y: 3.4)
             GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
             echoSwitchObj.transform.SetParent(ceilPlat1.transform);
             echoSwitchObj.transform.localPosition = new Vector3(0.5f, -0.35f, 0f);
@@ -2715,17 +2736,91 @@ namespace GlitchVerse.Editor
             switchCol.isTrigger = true;
             switchCol.size = new Vector2(1.2f, 0.4f);
 
-            EchoSwitch echoSwitchComp = echoSwitchObj.AddComponent<EchoSwitch>();
+            GameObject switchLightObj = new GameObject("EchoSwitch_Light");
+            switchLightObj.transform.SetParent(echoSwitchObj.transform);
+            switchLightObj.transform.localPosition = Vector3.zero;
+            Light2D switchLight = switchLightObj.AddComponent<Light2D>();
+            switchLight.lightType = Light2D.LightType.Point;
+            switchLight.pointLightOuterRadius = 2.2f;
+            switchLight.color = new Color(0.85f, 0f, 1f, 1f);
+            switchLight.intensity = 1.0f;
+
+            SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "glowLight", switchLight);
             SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+            SetPrivateField(echoSwitchComp, "allowPlayerActivation", false);
+            SetPrivateField(echoSwitchComp, "allowEchoActivation", true);
+            SetPrivateField(echoSwitchComp, "holdGraceDuration", 4.5f);
+            SetPrivateField(echoSwitchComp, "latching", false);
+            SetPrivateField(echoSwitchComp, "isPowered", true);
 
-            // Dimension Alpha Platform (Ceiling mid-span, X: 1.5, Y: 3.0)
-            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Ceiling_1",
-                new Vector3(1.5f, 3.0f, 0f), new Vector2(3.5f, 0.4f), alphaSp, DimensionType.Alpha);
+            // Mid-span Platform: Dimension Beta Platform 1 (X: 1.2, Y: 3.0) with intact conduit
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Ceiling_1",
+                new Vector3(1.2f, 3.0f, 0f), new Vector2(2.5f, 0.4f), betaSp, DimensionType.Beta);
 
-            // Dimension Beta Platform (Ceiling bridge to vault, X: 4.8, Y: 3.2)
-            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Ceiling_2",
+            GameObject midConduit = new GameObject("Deco_MidConduit_Beta");
+            midConduit.transform.SetParent(refs.envRoot.transform);
+            midConduit.transform.position = new Vector3(1.2f, 3.3f, 0f);
+            midConduit.transform.localScale = new Vector3(2.5f, 0.8f, 1f);
+            SpriteRenderer mcRend = midConduit.AddComponent<SpriteRenderer>();
+            mcRend.sprite = pipeSp;
+            mcRend.sortingOrder = -6;
+            mcRend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+
+            // SECTION 2: Final Test of the Discovered Rule (Conflicting choices)
+            // Choice A: Dimension Alpha Platform (Deceptive route: severed cables & sweeping laser)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_TrapPlatform",
+                new Vector3(4.5f, 1.4f, 0f), new Vector2(3.0f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            GameObject frayedAlpha = new GameObject("Deco_FrayedCables_Alpha");
+            frayedAlpha.transform.SetParent(refs.envRoot.transform);
+            frayedAlpha.transform.position = new Vector3(4.5f, 1.0f, 0f);
+            SpriteRenderer faRend = frayedAlpha.AddComponent<SpriteRenderer>();
+            faRend.sprite = cableSp;
+            faRend.sortingOrder = 1;
+            faRend.color = new Color(0.9f, 0.2f, 0.1f, 0.9f);
+
+            // Sweeping laser hazard across the deceptive Alpha platform
+            GameObject alphaLaserObj = new GameObject("MovingLaser_AlphaTrap");
+            alphaLaserObj.transform.SetParent(refs.puzzleRoot.transform);
+            alphaLaserObj.transform.position = new Vector3(3.5f, 1.7f, 0f);
+            SpriteRenderer alRend = alphaLaserObj.AddComponent<SpriteRenderer>();
+            alRend.sprite = hazardLaserSp;
+            alRend.color = new Color(1.0f, 0.1f, 0.2f, 0.9f);
+            alRend.sortingOrder = 6;
+            alRend.drawMode = SpriteDrawMode.Sliced;
+            alRend.size = new Vector2(0.25f, 0.8f);
+            BoxCollider2D alCol = alphaLaserObj.AddComponent<BoxCollider2D>();
+            alCol.size = new Vector2(0.25f, 0.8f);
+            alCol.isTrigger = true;
+            MovingLaserHazard alHazard = alphaLaserObj.AddComponent<MovingLaserHazard>();
+            alHazard.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(3.2f, 1.7f, 0f), new Vector3(5.5f, 1.7f, 0f), 2.2f, 0.5f, startActive: true);
+            SetPrivateField(alHazard, "laserRenderer", alRend);
+            SetPrivateField(alHazard, "activeOnStart", true);
+            alHazard.SetHazardActive(true);
+
+            // Choice B: Dimension Beta Platform (Truthful route: intact cyan conduit into exit)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_TrueBridge",
                 new Vector3(4.8f, 3.2f, 0f), new Vector2(3.5f, 0.4f), betaSp, DimensionType.Beta);
+
+            GameObject betaConduit = new GameObject("Deco_TrueConduit_Beta");
+            betaConduit.transform.SetParent(refs.envRoot.transform);
+            betaConduit.transform.position = new Vector3(4.8f, 3.5f, 0f);
+            betaConduit.transform.localScale = new Vector3(3.5f, 0.8f, 1f);
+            SpriteRenderer bc2Rend = betaConduit.AddComponent<SpriteRenderer>();
+            bc2Rend.sprite = pipeSp;
+            bc2Rend.sortingOrder = -6;
+            bc2Rend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+
+            GameObject betaLightObj = new GameObject("TrueBeta_Light");
+            betaLightObj.transform.SetParent(betaConduit.transform);
+            betaLightObj.transform.localPosition = Vector3.zero;
+            Light2D betaLight = betaLightObj.AddComponent<Light2D>();
+            betaLight.lightType = Light2D.LightType.Point;
+            betaLight.pointLightOuterRadius = 3.0f;
+            betaLight.color = new Color(0.1f, 0.85f, 1.0f, 1f);
+            betaLight.intensity = 0.85f;
 
             // Exit Landing Platform (X: 8.5, Y: 1.8)
             GameObject exitPlat = new GameObject("Exit_LandingPlatform");
@@ -2738,6 +2833,38 @@ namespace GlitchVerse.Editor
             epRend.sortingOrder = 2;
             BoxCollider2D epCol = exitPlat.AddComponent<BoxCollider2D>();
             epCol.size = new Vector2(4f, 0.6f);
+
+            // Security Barrier Exit at X: 7.0, Y: 2.7 (Guarding ExitDoor, unlocked by EchoSwitch_Ceiling)
+            GameObject exitBarrierObj = new GameObject("SecurityBarrier_Exit");
+            exitBarrierObj.transform.SetParent(refs.puzzleRoot.transform);
+            exitBarrierObj.transform.position = new Vector3(7.0f, 2.7f, 0f);
+
+            SpriteRenderer ebRend = exitBarrierObj.AddComponent<SpriteRenderer>();
+            ebRend.sprite = hazardLaserSp;
+            ebRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            ebRend.sortingOrder = 8;
+            ebRend.drawMode = SpriteDrawMode.Sliced;
+            ebRend.size = new Vector2(0.35f, 2.4f);
+
+            BoxCollider2D ebCol = exitBarrierObj.AddComponent<BoxCollider2D>();
+            ebCol.size = new Vector2(0.35f, 2.4f);
+
+            GameObject ebLightObj = new GameObject("ExitBarrier_Light");
+            ebLightObj.transform.SetParent(exitBarrierObj.transform);
+            ebLightObj.transform.localPosition = Vector3.zero;
+            Light2D ebLight = ebLightObj.AddComponent<Light2D>();
+            ebLight.lightType = Light2D.LightType.Point;
+            ebLight.pointLightOuterRadius = 2.5f;
+            ebLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            ebLight.intensity = 1.3f;
+
+            SecurityBarrier exitBarrierComp = exitBarrierObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(exitBarrierComp, "barrierCollider", ebCol);
+            SetPrivateField(exitBarrierComp, "barrierRenderer", ebRend);
+            SetPrivateField(exitBarrierComp, "barrierLight", ebLight);
+
+            SetPrivateField(echoSwitchComp, "targetBarrier", exitBarrierComp);
+            echoSwitchComp.TargetBarrier = exitBarrierComp;
 
             // Position Exit Door on the high security upper landing
             refs.exitDoor.transform.position = new Vector3(8.5f, 2.7f, 0f);
@@ -2776,6 +2903,25 @@ namespace GlitchVerse.Editor
             SpriteRenderer hsRend = hazardStripes.AddComponent<SpriteRenderer>();
             hsRend.sprite = stripesSp;
             hsRend.sortingOrder = 3;
+
+            // Stationary floor pit hazard under the trap zone
+            GameObject pitLaser = new GameObject("Hazard_FloorPit");
+            pitLaser.transform.SetParent(refs.puzzleRoot.transform);
+            pitLaser.transform.position = new Vector3(2.0f, -3.85f, 0f);
+            SpriteRenderer plRend = pitLaser.AddComponent<SpriteRenderer>();
+            plRend.sprite = hazardLaserSp;
+            plRend.color = new Color(1.0f, 0.15f, 0.25f, 0.9f);
+            plRend.sortingOrder = 6;
+            plRend.drawMode = SpriteDrawMode.Sliced;
+            plRend.size = new Vector2(4.5f, 0.3f);
+            BoxCollider2D plCol = pitLaser.AddComponent<BoxCollider2D>();
+            plCol.size = new Vector2(4.5f, 0.3f);
+            plCol.isTrigger = true;
+            MovingLaserHazard plHazard = pitLaser.AddComponent<MovingLaserHazard>();
+            plHazard.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(2.0f, -3.85f, 0f), new Vector3(2.0f, -3.85f, 0f), 0f, 0f, startActive: true);
+            SetPrivateField(plHazard, "laserRenderer", plRend);
+            SetPrivateField(plHazard, "activeOnStart", true);
+            plHazard.SetHazardActive(true);
 
             // Add ParanoiaTrapPrank
             GameObject paranoiaPrankObj = new GameObject("ParanoiaTrapPrankController");
