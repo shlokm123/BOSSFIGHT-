@@ -210,8 +210,13 @@ namespace GlitchVerse.UI
             }
         }
 
+        public GameObject CompletionPanel => completionPanel;
+
         private void HandleLevelComplete()
         {
+            // In the final level (Level07), FinalEndingController handles the cinematic plot-twist ending sequence
+            if (levelDirector != null && levelDirector.IsFinalLevel) return;
+
             if (completionPanel != null)
             {
                 completionPanel.SetActive(true);

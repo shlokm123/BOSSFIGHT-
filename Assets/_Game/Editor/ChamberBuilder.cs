@@ -9882,6 +9882,116 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
 
+            // --- FINAL ENDING OVERLAY CANVAS & CONTROLLER ---
+            GameObject endingRoot = new GameObject("FinalEndingOverlay");
+            endingRoot.transform.SetParent(refs.hud.transform, false);
+
+            RectTransform endRt = endingRoot.AddComponent<RectTransform>();
+            endRt.anchorMin = Vector2.zero;
+            endRt.anchorMax = Vector2.one;
+            endRt.offsetMin = Vector2.zero;
+            endRt.offsetMax = Vector2.zero;
+
+            CanvasGroup endCg = endingRoot.AddComponent<CanvasGroup>();
+            endCg.alpha = 0f;
+            endCg.blocksRaycasts = false;
+            endCg.interactable = false;
+
+            Image endBg = endingRoot.AddComponent<Image>();
+            endBg.color = new Color(0.01f, 0.01f, 0.02f, 0.98f);
+
+            Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            // Beat 1 texts
+            Text primaryStatus = CreateUIText(endingRoot.transform, "EndingPrimaryStatus",
+                "", legacyFont, 32, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), Vector2.zero, new Vector2(1000f, 60f),
+                new Color(0f, 1f, 0.5f, 1f));
+
+            Text secondaryStatus = CreateUIText(endingRoot.transform, "EndingSecondaryStatus",
+                "", legacyFont, 24, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.52f), new Vector2(0.5f, 0.52f), Vector2.zero, new Vector2(1000f, 50f),
+                new Color(0f, 0.94f, 1f, 1f));
+
+            // Beat 3 Climax Text
+            Text truthClimax = CreateUIText(endingRoot.transform, "EndingTruthClimax",
+                "", legacyFont, 26, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.50f), new Vector2(0.5f, 0.50f), Vector2.zero, new Vector2(1200f, 300f),
+                Color.white);
+
+            // Beat 4 Consequence Text
+            Text consequence = CreateUIText(endingRoot.transform, "EndingConsequence",
+                "", legacyFont, 24, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.50f), new Vector2(0.5f, 0.50f), Vector2.zero, new Vector2(1200f, 250f),
+                new Color(1f, 0.15f, 0.25f, 1f));
+
+            // Beat 5 End Screen Panel
+            GameObject endScreenPanel = new GameObject("EndingFinalScreenPanel");
+            endScreenPanel.transform.SetParent(endingRoot.transform, false);
+            RectTransform esRt = endScreenPanel.AddComponent<RectTransform>();
+            esRt.anchorMin = Vector2.zero;
+            esRt.anchorMax = Vector2.one;
+            esRt.offsetMin = Vector2.zero;
+            esRt.offsetMax = Vector2.zero;
+
+            CreateUIText(endScreenPanel.transform, "FinalTitle",
+                "GLITCHVERSE: ECHO PROTOCOL", legacyFont, 44, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.68f), new Vector2(0.5f, 0.68f), Vector2.zero, new Vector2(1000f, 60f),
+                new Color(0f, 0.94f, 1f, 1f));
+
+            CreateUIText(endScreenPanel.transform, "FinalSubtitle",
+                "SUBJECT 075 — CONTAINMENT FAILURE", legacyFont, 26, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.58f), new Vector2(0.5f, 0.58f), Vector2.zero, new Vector2(1000f, 50f),
+                new Color(1f, 0.15f, 0.25f, 1f));
+
+            CreateUIText(endScreenPanel.transform, "FinalTheEnd",
+                "THE END", legacyFont, 20, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.50f), new Vector2(0.5f, 0.50f), Vector2.zero, new Vector2(600f, 40f),
+                new Color(0.7f, 0.7f, 0.75f, 1f));
+
+            // Button: RESTART SIMULATION
+            GameObject btnObj = new GameObject("Btn_RestartSimulation");
+            btnObj.transform.SetParent(endScreenPanel.transform, false);
+            RectTransform btnRt = btnObj.AddComponent<RectTransform>();
+            btnRt.anchorMin = new Vector2(0.5f, 0.32f);
+            btnRt.anchorMax = new Vector2(0.5f, 0.32f);
+            btnRt.pivot = new Vector2(0.5f, 0.5f);
+            btnRt.anchoredPosition = Vector2.zero;
+            btnRt.sizeDelta = new Vector2(380f, 56f);
+            Image btnImg = btnObj.AddComponent<Image>();
+            btnImg.color = new Color(0.12f, 0.14f, 0.20f, 0.95f);
+            Button restartBtn = btnObj.AddComponent<Button>();
+            ColorBlock cb = restartBtn.colors;
+            cb.normalColor = new Color(0.12f, 0.14f, 0.20f, 0.95f);
+            cb.highlightedColor = new Color(0.20f, 0.25f, 0.35f, 1.0f);
+            cb.pressedColor = new Color(0.08f, 0.10f, 0.14f, 1.0f);
+            restartBtn.colors = cb;
+
+            CreateUIText(btnObj.transform, "BtnLabel",
+                "RESTART SIMULATION", legacyFont, 20, TextAnchor.MiddleCenter,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                new Color(0f, 0.94f, 1f, 1f));
+
+            endScreenPanel.SetActive(false);
+
+            FinalEndingController endingCtrl = endingRoot.AddComponent<FinalEndingController>();
+            SetPrivateField(endingCtrl, "endingCanvasGroup", endCg);
+            SetPrivateField(endingCtrl, "fullScreenBackdrop", endBg);
+            SetPrivateField(endingCtrl, "primaryStatusText", primaryStatus);
+            SetPrivateField(endingCtrl, "secondaryStatusText", secondaryStatus);
+            SetPrivateField(endingCtrl, "truthClimaxText", truthClimax);
+            SetPrivateField(endingCtrl, "consequenceText", consequence);
+            SetPrivateField(endingCtrl, "finalEndScreenPanel", endScreenPanel);
+            SetPrivateField(endingCtrl, "restartSimulationButton", restartBtn);
+
+            // Ensure EventSystem is present for button clicks
+            if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            {
+                GameObject esObj = new GameObject("EventSystem");
+                esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                esObj.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            }
+
             // Clean UI canvas overlays for clean GameView capture
             var introPanel = GameObject.Find("ChapterIntroPanel");
             if (introPanel != null) introPanel.SetActive(false);
@@ -9931,6 +10041,7 @@ namespace GlitchVerse.Editor
         {
             string[] scenePaths = new string[]
             {
+                "Assets/_Game/Scenes/MainMenu.unity",
                 "Assets/_Game/Scenes/Levels/Level01.unity",
                 "Assets/_Game/Scenes/Levels/Level02.unity",
                 "Assets/_Game/Scenes/Levels/Level03.unity",

@@ -32,13 +32,20 @@ namespace GlitchVerse.Editor
             }
             else
             {
-                if (scenes[0].path.EndsWith("Level01.unity") && scenes[0].enabled)
+                bool hasMainMenu = scenes[0].path.EndsWith("MainMenu.unity") && scenes[0].enabled;
+                bool hasLevel01 = (scenes[0].path.EndsWith("Level01.unity") || (scenes.Length > 1 && scenes[1].path.EndsWith("Level01.unity"))) && scenes[hasMainMenu ? 1 : 0].enabled;
+
+                if (hasMainMenu && hasLevel01)
+                {
+                    sb.AppendLine("[PASS] MainMenu is startup scene at Build Index 0, Level01 at Index 1.");
+                }
+                else if (hasLevel01)
                 {
                     sb.AppendLine("[PASS] Level01 is enabled at Build Index 0.");
                 }
                 else
                 {
-                    sb.AppendLine($"[FAIL] Index 0 is not enabled Level01: {scenes[0].path}");
+                    sb.AppendLine($"[FAIL] Startup scene is neither MainMenu nor Level01: {scenes[0].path}");
                     allPassed = false;
                 }
             }

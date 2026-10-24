@@ -248,7 +248,7 @@ namespace GlitchVerse.Core
             Time.timeScale = 1.0f;
             if (isFinalLevel && isLevelCompleted)
             {
-                SceneManager.LoadScene(0);
+                SceneManager.LoadScene("MainMenu");
                 return;
             }
             if (GameSession.Instance != null)

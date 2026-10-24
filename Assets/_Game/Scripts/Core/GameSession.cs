@@ -67,7 +67,7 @@ namespace GlitchVerse.Core
             var dir = LevelDirector.Current;
             if (dir != null && dir.IsFinalLevel && dir.IsLevelCompleted)
             {
-                SceneManager.LoadScene(0);
+                SceneManager.LoadScene("MainMenu");
                 return;
             }
             Scene activeScene = SceneManager.GetActiveScene();
@@ -81,6 +81,17 @@ namespace GlitchVerse.Core
         {
             currentLevelIndex = index;
             currentLevelName = name;
+        }
+
+        /// <summary>
+        /// Fully resets the current campaign session state.
+        /// </summary>
+        public void ResetSession()
+        {
+            sessionElapsedTime = 0f;
+            currentLevelIndex = 1;
+            currentLevelName = "CONTAINMENT 01";
+            resetCount = 0;
         }
     }
 }
