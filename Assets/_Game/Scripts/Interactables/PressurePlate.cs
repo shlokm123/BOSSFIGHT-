@@ -44,6 +44,7 @@ namespace GlitchVerse.Interactables
 
         private void FixedUpdate()
         {
+            if (plateCollider == null) plateCollider = GetComponent<BoxCollider2D>();
             // Continuous physical overlap evaluation for foolproof trigger detection
             if (plateCollider != null)
             {

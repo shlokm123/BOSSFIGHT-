@@ -3013,14 +3013,40 @@ namespace GlitchVerse.Editor
             qdR1.sprite = quarantineSp;
             qdR1.sortingOrder = -5;
 
+            // In-world Lore Consoles showing escalating external threat
+            GameObject console1 = new GameObject("Deco_LoreConsole_1");
+            console1.transform.SetParent(refs.envRoot.transform);
+            console1.transform.position = new Vector3(-6.8f, -0.6f, 0f);
+            SpriteRenderer c1R = console1.AddComponent<SpriteRenderer>();
+            c1R.sprite = beaconSp;
+            c1R.sortingOrder = 2;
+            c1R.color = new Color(0f, 0.85f, 1f, 1f);
+
+            GameObject console2 = new GameObject("Deco_LoreConsole_2");
+            console2.transform.SetParent(refs.envRoot.transform);
+            console2.transform.position = new Vector3(2.8f, -3.2f, 0f);
+            SpriteRenderer c2R = console2.AddComponent<SpriteRenderer>();
+            c2R.sprite = beaconSp;
+            c2R.sortingOrder = 2;
+            c2R.color = new Color(1.0f, 0.75f, 0.1f, 1f);
+
+            GameObject console3 = new GameObject("Deco_LoreConsole_3");
+            console3.transform.SetParent(refs.envRoot.transform);
+            console3.transform.position = new Vector3(7.2f, 3.6f, 0f);
+            SpriteRenderer c3R = console3.AddComponent<SpriteRenderer>();
+            c3R.sprite = beaconSp;
+            c3R.sortingOrder = 2;
+            c3R.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+
             // Add Narrative Progression Trigger Controller
             GameObject truthTriggersObj = new GameObject("TruthChamberNarrativeTriggers");
             truthTriggersObj.transform.SetParent(refs.puzzleRoot.transform);
             TruthChamberTriggers truthTriggers = truthTriggersObj.AddComponent<TruthChamberTriggers>();
-            SetPrivateField(truthTriggers, "stage2TriggerX", 1.0f);
-            SetPrivateField(truthTriggers, "stage3TriggerX", 6.5f);
+            SetPrivateField(truthTriggers, "stage1TriggerX", -2.0f);
+            SetPrivateField(truthTriggers, "stage2TriggerX", 2.5f);
+            SetPrivateField(truthTriggers, "stage3TriggerX", 7.6f);
 
-            // --- STAGE 1: Blast Gate & Elevated Echo Switch ---
+            // --- STAGE 1: Blast Gate & Elevated Echo-Only Switch ---
             // Elevated Platform at X: -5.5, Y: -1.2
             GameObject echoPlat = new GameObject("Stage1_EchoPlatform");
             echoPlat.transform.SetParent(refs.puzzleRoot.transform);
@@ -3046,42 +3072,92 @@ namespace GlitchVerse.Editor
             switchCol.isTrigger = true;
             switchCol.size = new Vector2(1.2f, 0.4f);
 
-            EchoSwitch echoSwitchComp = echoSwitchObj.AddComponent<EchoSwitch>();
+            GameObject s1LightObj = new GameObject("EchoSwitch_Light");
+            s1LightObj.transform.SetParent(echoSwitchObj.transform);
+            s1LightObj.transform.localPosition = Vector3.zero;
+            Light2D s1Light = s1LightObj.AddComponent<Light2D>();
+            s1Light.lightType = Light2D.LightType.Point;
+            s1Light.pointLightOuterRadius = 2.4f;
+            s1Light.color = new Color(0.85f, 0f, 1f, 1f);
+            s1Light.intensity = 1.0f;
+
+            SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "glowLight", s1Light);
             SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+            SetPrivateField(echoSwitchComp, "allowPlayerActivation", false);
+            SetPrivateField(echoSwitchComp, "allowEchoActivation", true);
+            SetPrivateField(echoSwitchComp, "holdGraceDuration", 5.0f);
+            SetPrivateField(echoSwitchComp, "latching", false);
+            SetPrivateField(echoSwitchComp, "isPowered", true);
 
             // Stage 1 Retracting Blast Gate at X: -3.0
             GameObject blastGateObj = new GameObject("Stage1_BlastGate");
             blastGateObj.transform.SetParent(refs.puzzleRoot.transform);
             blastGateObj.transform.position = new Vector3(-3.0f, -2.5f, 0f);
             SpriteRenderer bgRend = blastGateObj.AddComponent<SpriteRenderer>();
-            bgRend.sprite = wallSp;
-            bgRend.drawMode = SpriteDrawMode.Tiled;
-            bgRend.size = new Vector2(0.8f, 3.2f);
-            bgRend.sortingOrder = 3;
-            bgRend.color = new Color(0.8f, 0.2f, 0.25f, 1f);
+            bgRend.sprite = hazardLaserSp;
+            bgRend.drawMode = SpriteDrawMode.Sliced;
+            bgRend.size = new Vector2(0.35f, 3.2f);
+            bgRend.sortingOrder = 8;
+            bgRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
             BoxCollider2D bgCol = blastGateObj.AddComponent<BoxCollider2D>();
-            bgCol.size = new Vector2(0.8f, 3.2f);
+            bgCol.size = new Vector2(0.35f, 3.2f);
 
-            // Wire Stage 1 EchoSwitch to control retracting blast gate via TruthChamberTriggers
+            GameObject bgLightObj = new GameObject("BlastGate_Light");
+            bgLightObj.transform.SetParent(blastGateObj.transform);
+            bgLightObj.transform.localPosition = Vector3.zero;
+            Light2D bgLight = bgLightObj.AddComponent<Light2D>();
+            bgLight.lightType = Light2D.LightType.Point;
+            bgLight.pointLightOuterRadius = 3.0f;
+            bgLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            bgLight.intensity = 1.2f;
+
+            SecurityBarrier seal1BarrierComp = blastGateObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(seal1BarrierComp, "barrierCollider", bgCol);
+            SetPrivateField(seal1BarrierComp, "barrierRenderer", bgRend);
+            SetPrivateField(seal1BarrierComp, "barrierLight", bgLight);
+
+            SetPrivateField(echoSwitchComp, "targetBarrier", seal1BarrierComp);
+            echoSwitchComp.TargetBarrier = seal1BarrierComp;
+
             SetPrivateField(truthTriggers, "echoSwitch", echoSwitchComp);
             SetPrivateField(truthTriggers, "blastGate", blastGateObj);
 
             // --- STAGE 2: Electrified Pit & Freezable Moving Laser Hazard ---
+            // Lethal floor hazard pit across X: -2.0 to 2.0 at Y: -3.85
+            GameObject pitHazard = new GameObject("Hazard_PitFloor");
+            pitHazard.transform.SetParent(refs.puzzleRoot.transform);
+            pitHazard.transform.position = new Vector3(0f, -3.85f, 0f);
+            SpriteRenderer phRend = pitHazard.AddComponent<SpriteRenderer>();
+            phRend.sprite = hazardLaserSp;
+            phRend.drawMode = SpriteDrawMode.Sliced;
+            phRend.size = new Vector2(4.5f, 0.3f);
+            phRend.sortingOrder = 6;
+            phRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            BoxCollider2D phCol = pitHazard.AddComponent<BoxCollider2D>();
+            phCol.size = new Vector2(4.5f, 0.3f);
+            phCol.isTrigger = true;
+            MovingLaserHazard phHazard = pitHazard.AddComponent<MovingLaserHazard>();
+            phHazard.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(0f, -3.85f, 0f), new Vector3(0f, -3.85f, 0f), 0f, 0f, startActive: true);
+            SetPrivateField(phHazard, "laserRenderer", phRend);
+            SetPrivateField(phHazard, "activeOnStart", true);
+            phHazard.SetHazardActive(true);
+
             // Create FreezableHazard that sweeps across the pit at Y = -2.5
             GameObject hazardObj = new GameObject("Stage2_FreezableLaserHazard");
             hazardObj.transform.SetParent(refs.puzzleRoot.transform);
-            hazardObj.transform.position = new Vector3(-1.0f, -2.5f, 0f);
+            hazardObj.transform.position = new Vector3(-0.5f, -2.5f, 0f);
 
             SpriteRenderer hzRend = hazardObj.AddComponent<SpriteRenderer>();
             hzRend.sprite = hazardLaserSp;
-            hzRend.drawMode = SpriteDrawMode.Tiled;
-            hzRend.size = new Vector2(1.8f, 0.8f);
-            hzRend.sortingOrder = 4;
+            hzRend.drawMode = SpriteDrawMode.Sliced;
+            hzRend.size = new Vector2(1.8f, 0.6f);
+            hzRend.sortingOrder = 7;
             hzRend.color = new Color(1.0f, 0.15f, 0.25f, 1f);
 
             BoxCollider2D hzCol = hazardObj.AddComponent<BoxCollider2D>();
-            hzCol.size = new Vector2(1.8f, 0.8f);
+            hzCol.size = new Vector2(1.8f, 0.6f);
 
             FreezableHazard fHazard = hazardObj.AddComponent<FreezableHazard>();
             SetPrivateField(fHazard, "offsetA", new Vector3(-1.2f, 0f, 0f));
@@ -3089,10 +3165,10 @@ namespace GlitchVerse.Editor
             SetPrivateField(fHazard, "moveSpeed", 3.2f);
             SetPrivateField(fHazard, "hazardRenderer", hzRend);
 
-            // Ground platform after the pit at X: 3.2, Y: -4.0
+            // Ground platform after the pit at X: 2.8, Y: -4.0
             GameObject pitExitPlat = new GameObject("Stage2_PitExitFloor");
             pitExitPlat.transform.SetParent(refs.puzzleRoot.transform);
-            pitExitPlat.transform.position = new Vector3(3.2f, -4.0f, 0f);
+            pitExitPlat.transform.position = new Vector3(2.8f, -4.0f, 0f);
             SpriteRenderer peRend = pitExitPlat.AddComponent<SpriteRenderer>();
             peRend.sprite = floorSp;
             peRend.drawMode = SpriteDrawMode.Tiled;
@@ -3102,27 +3178,46 @@ namespace GlitchVerse.Editor
             peCol.size = new Vector2(2.5f, 1.0f);
 
             // --- STAGE 3: Massive Lower Barrier & Inverted Ceiling Dimension Shaft ---
-            // Huge vertical bulkhead from floor up to Y: 1.5 at X: 4.5
+            // Huge vertical bulkhead from floor up to Y: 1.8 at X: 4.5
             GameObject vaultBulkhead = new GameObject("Stage3_VaultBarrier");
             vaultBulkhead.transform.SetParent(refs.puzzleRoot.transform);
-            vaultBulkhead.transform.position = new Vector3(4.5f, -1.5f, 0f);
+            vaultBulkhead.transform.position = new Vector3(4.5f, -1.2f, 0f);
             SpriteRenderer vbRend = vaultBulkhead.AddComponent<SpriteRenderer>();
             vbRend.sprite = wallSp;
             vbRend.drawMode = SpriteDrawMode.Tiled;
-            vbRend.size = new Vector2(1.0f, 5.5f);
+            vbRend.size = new Vector2(1.0f, 6.0f);
             vbRend.sortingOrder = 3;
             vbRend.color = new Color(0.2f, 0.22f, 0.28f, 1f);
             BoxCollider2D vbCol = vaultBulkhead.AddComponent<BoxCollider2D>();
-            vbCol.size = new Vector2(1.0f, 5.5f);
+            vbCol.size = new Vector2(1.0f, 6.0f);
 
             // Upper Ceiling Dimension Platforms (requires Gravity Inversion [G] to walk on ceiling):
-            // Dimension Alpha Platform (Ceiling, X: 4.2, Y: 2.8)
+            // Dimension Alpha Platform (Ceiling, X: 4.2, Y: 3.2)
             CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Ceiling_Stage3",
-                new Vector3(4.2f, 2.8f, 0f), new Vector2(3.0f, 0.4f), alphaSp, DimensionType.Alpha);
+                new Vector3(4.2f, 3.2f, 0f), new Vector2(3.0f, 0.4f), alphaSp, DimensionType.Alpha);
 
-            // Dimension Beta Platform (Ceiling, X: 7.0, Y: 2.8)
+            // Dimension Beta Platform (Ceiling, X: 6.2, Y: 3.2)
             CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Ceiling_Stage3",
-                new Vector3(7.0f, 2.8f, 0f), new Vector2(3.0f, 0.4f), betaSp, DimensionType.Beta);
+                new Vector3(6.2f, 3.2f, 0f), new Vector2(3.0f, 0.4f), betaSp, DimensionType.Beta);
+
+            // Mid-shaft barrier preventing dropping early
+            GameObject midShaftHazard = new GameObject("Hazard_MidShaftDrop");
+            midShaftHazard.transform.SetParent(refs.puzzleRoot.transform);
+            midShaftHazard.transform.position = new Vector3(5.2f, 0.8f, 0f);
+            SpriteRenderer msRend = midShaftHazard.AddComponent<SpriteRenderer>();
+            msRend.sprite = hazardLaserSp;
+            msRend.drawMode = SpriteDrawMode.Sliced;
+            msRend.size = new Vector2(2.2f, 0.3f);
+            msRend.sortingOrder = 6;
+            msRend.color = new Color(1.0f, 0.15f, 0.25f, 0.9f);
+            BoxCollider2D msCol = midShaftHazard.AddComponent<BoxCollider2D>();
+            msCol.size = new Vector2(2.2f, 0.3f);
+            msCol.isTrigger = true;
+            MovingLaserHazard msHazard = midShaftHazard.AddComponent<MovingLaserHazard>();
+            msHazard.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(5.2f, 0.8f, 0f), new Vector3(5.2f, 0.8f, 0f), 0f, 0f, startActive: true);
+            SetPrivateField(msHazard, "laserRenderer", msRend);
+            SetPrivateField(msHazard, "activeOnStart", true);
+            msHazard.SetHazardActive(true);
 
             // --- STAGE 4: Final Quarantine Vault & Exit Door ---
             // Floor of final vault at X: 8.5, Y: -2.0
@@ -3137,14 +3232,39 @@ namespace GlitchVerse.Editor
             BoxCollider2D vfCol = vaultFloor.AddComponent<BoxCollider2D>();
             vfCol.size = new Vector2(4.5f, 0.6f);
 
-            // Final Quarantine Exit Door at X: 8.5, Y: -1.0
-            refs.exitDoor.transform.position = new Vector3(8.5f, -1.1f, 0f);
-            refs.exitDoor.SetUnlocked(true); // Reaching vault door allows breach into ending sequence
+            // Security Barrier guarding the Exit Door at X: 7.6, Y: -1.1
+            GameObject finalBarrierObj = new GameObject("SecurityBarrier_FinalVault");
+            finalBarrierObj.transform.SetParent(refs.puzzleRoot.transform);
+            finalBarrierObj.transform.position = new Vector3(7.6f, -1.1f, 0f);
+
+            SpriteRenderer fbRend = finalBarrierObj.AddComponent<SpriteRenderer>();
+            fbRend.sprite = hazardLaserSp;
+            fbRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            fbRend.sortingOrder = 8;
+            fbRend.drawMode = SpriteDrawMode.Sliced;
+            fbRend.size = new Vector2(0.35f, 2.4f);
+
+            BoxCollider2D fbCol = finalBarrierObj.AddComponent<BoxCollider2D>();
+            fbCol.size = new Vector2(0.35f, 2.4f);
+
+            GameObject fbLightObj = new GameObject("FinalBarrier_Light");
+            fbLightObj.transform.SetParent(finalBarrierObj.transform);
+            fbLightObj.transform.localPosition = Vector3.zero;
+            Light2D fbLight = fbLightObj.AddComponent<Light2D>();
+            fbLight.lightType = Light2D.LightType.Point;
+            fbLight.pointLightOuterRadius = 2.4f;
+            fbLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            fbLight.intensity = 1.3f;
+
+            SecurityBarrier finalBarrierComp = finalBarrierObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(finalBarrierComp, "barrierCollider", fbCol);
+            SetPrivateField(finalBarrierComp, "barrierRenderer", fbRend);
+            SetPrivateField(finalBarrierComp, "barrierLight", fbLight);
 
             // Pressure Plate inside vault to trigger door seal
             GameObject plateObj = new GameObject("Vault_FinalTriggerPlate");
             plateObj.transform.SetParent(refs.puzzleRoot.transform);
-            plateObj.transform.position = new Vector3(7.0f, -1.6f, 0f);
+            plateObj.transform.position = new Vector3(6.8f, -1.6f, 0f);
             SpriteRenderer plateRend = plateObj.AddComponent<SpriteRenderer>();
             plateRend.sprite = plateSp;
             plateRend.sortingOrder = 2;
@@ -3154,12 +3274,17 @@ namespace GlitchVerse.Editor
             PressurePlate vaultPlate = plateObj.AddComponent<PressurePlate>();
             SetPrivateField(vaultPlate, "plateRenderer", plateRend);
             SetPrivateField(vaultPlate, "depressVisual", plateObj.transform);
+            vaultPlate.TargetBarrier = finalBarrierComp;
+
+            // Final Quarantine Exit Door at X: 8.5, Y: -1.1
+            refs.exitDoor.transform.position = new Vector3(8.5f, -1.1f, 0f);
+            refs.exitDoor.SetUnlocked(true); // Exit door ready; physical passage guarded by SecurityBarrier_FinalVault
 
             // Wire Director and HUD
             SetPrivateField(refs.hud, "pressurePlate", vaultPlate);
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "pressurePlate", vaultPlate);
-            SetPrivateField(refs.director, "echoSwitch", null);
+            SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
 
             SaveChamberScene("Level06.unity");

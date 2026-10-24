@@ -13,13 +13,15 @@ namespace GlitchVerse.Narrative
     public class TruthChamberTriggers : MonoBehaviour
     {
         [Header("Progression Trigger Positions")]
-        [SerializeField] private float stage2TriggerX = 1.0f; // After crossing frozen laser
-        [SerializeField] private float stage3TriggerX = 6.0f; // Inside final vault before exit door
+        [SerializeField] private float stage1TriggerX = -2.0f; // After crossing Echo quarantine seal 1
+        [SerializeField] private float stage2TriggerX = 2.5f;  // After crossing frozen laser node
+        [SerializeField] private float stage3TriggerX = 7.6f;  // In final vault before exit door
 
         [Header("Stage 1 Blast Gate & Echo Synchronization")]
         [SerializeField] private EchoSwitch echoSwitch;
         [SerializeField] private GameObject blastGate;
 
+        private bool stage1Triggered = false;
         private bool stage2Triggered = false;
         private bool stage3Triggered = false;
         private PlayerController2D player;
@@ -64,7 +66,24 @@ namespace GlitchVerse.Narrative
 
             float px = player.transform.position.x;
 
-            // Stage 2: Crossing moving hazard
+            // Stage 1: Breaching initial quarantine gate
+            if (!stage1Triggered && px >= stage1TriggerX)
+            {
+                stage1Triggered = true;
+                if (ArchitectDialogue.Current != null)
+                {
+                    ArchitectDialogue.Current.Speak(
+                        "You've spent six chambers proving you can escape.",
+                        "CONTAINMENT PROTOCOL",
+                        3.4f,
+                        "truth_stage1_escape",
+                        0f,
+                        priority: true
+                    );
+                }
+            }
+
+            // Stage 2: Crossing frozen hazard node
             if (!stage2Triggered && px >= stage2TriggerX)
             {
                 stage2Triggered = true;
@@ -72,27 +91,27 @@ namespace GlitchVerse.Narrative
                 {
                     ArchitectDialogue.Current.Speak(
                         "Not once did you ask why the doors were locked.",
-                        "CONTAINMENT PROTOCOL",
-                        3.2f,
-                        "truth_stage2",
-                        10f,
+                        "EXTERNAL THREAT",
+                        3.4f,
+                        "truth_stage2_doors",
+                        0f,
                         priority: true
                     );
                 }
             }
 
-            // Stage 3: Reaching final vault
+            // Stage 3: Approaching final quarantine vault door
             if (!stage3Triggered && px >= stage3TriggerX)
             {
                 stage3Triggered = true;
                 if (ArchitectDialogue.Current != null)
                 {
                     ArchitectDialogue.Current.Speak(
-                        "There's something outside you don't understand.",
-                        "EXTERNAL THREAT",
-                        3.5f,
-                        "truth_stage3",
-                        10f,
+                        "There is still time to turn back.",
+                        "FINAL WARNING",
+                        3.6f,
+                        "truth_stage3_turnback",
+                        0f,
                         priority: true
                     );
                 }
