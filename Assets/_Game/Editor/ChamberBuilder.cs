@@ -1180,12 +1180,669 @@ namespace GlitchVerse.Editor
                 return Color.clear;
             });
 
+            // Chapter II: INVERSION Modular Environmental Art
+            GenerateChapter02Sprites();
+
             AssetDatabase.Refresh();
         }
+
+        #region Chapter II: Inversion Procedural Sprites
+        private static void GenerateChapter02Sprites()
+        {
+            // 1. Chapter II Gravity Abyss Backdrop (256x256)
+            // Vast broken anti-gravity industrial abyss with central gravity reactor tower, circular gantry rings, cyan core, and amber beacon pinlights
+            CreateSpriteAsset("Environment/Chapter02/ch2_gravity_abyss_bg.png", 256, 256, (x, y) =>
+            {
+                // Deep background gradient (cold industrial slate-blue chasm)
+                float ny = y / 255.0f;
+                float nx = x / 255.0f;
+                float vertDist = Mathf.Abs(ny - 0.5f) * 2.0f;
+                float horizDist = Mathf.Abs(nx - 0.5f) * 2.0f;
+
+                // Base slate chasm
+                Color baseChasm = Color.Lerp(
+                    new Color(0.04f, 0.07f, 0.12f, 1f), // Deep dark abyss shadow
+                    new Color(0.10f, 0.17f, 0.24f, 1f), // Atmospheric steel-cyan haze
+                    1.0f - vertDist * 0.4f
+                );
+
+                // Subtle organic rock/cavern noise
+                float noise = (Mathf.Sin(x * 0.08f + y * 0.05f) + Mathf.Cos(x * 0.04f - y * 0.09f)) * 0.5f;
+                baseChasm += new Color(noise * 0.02f, noise * 0.03f, noise * 0.04f, 0f);
+
+                // Side cliff silhouettes (dark framing bunker architecture)
+                if (x < 36)
+                {
+                    float cliffEdge = 24f + Mathf.Sin(y * 0.07f) * 8f;
+                    if (x < cliffEdge)
+                    {
+                        if (x % 8 == 0 || y % 16 == 0) return new Color(0.03f, 0.04f, 0.06f, 1f);
+                        return new Color(0.05f, 0.07f, 0.09f, 1f);
+                    }
+                }
+                if (x > 220)
+                {
+                    float cliffEdge = 230f - Mathf.Sin(y * 0.08f) * 8f;
+                    if (x > cliffEdge)
+                    {
+                        if (x % 8 == 0 || y % 16 == 0) return new Color(0.03f, 0.04f, 0.06f, 1f);
+                        return new Color(0.05f, 0.07f, 0.09f, 1f);
+                    }
+                }
+
+                // Central Gravity Reactor Tower (X: 145 to 185)
+                float towerCenterX = 165f;
+                float distFromTower = Mathf.Abs(x - towerCenterX);
+
+                // Cyan core bloom / atmospheric radiance
+                if (distFromTower < 45f)
+                {
+                    float bloomFactor = Mathf.Clamp01(1.0f - distFromTower / 45f);
+                    float yBloom = 1.0f - Mathf.Abs(ny - 0.55f) * 0.8f;
+                    baseChasm = Color.Lerp(baseChasm, new Color(0.18f, 0.55f, 0.72f, 1f), bloomFactor * yBloom * 0.45f);
+                }
+
+                // Vertical reactor shaft (X: 161 to 169)
+                if (x >= 161 && x <= 169)
+                {
+                    if (x == 165) return new Color(0.92f, 0.98f, 1.0f, 1f); // White-hot plasma core line
+                    if (x >= 163 && x <= 167) return new Color(0.20f, 0.88f, 1.0f, 1f); // Intense cyan core
+                    return new Color(0.08f, 0.35f, 0.45f, 1f); // Conduit casing edge
+                }
+
+                // Structural reactor column struts (X: 157 to 160 and 170 to 173)
+                if ((x >= 157 && x <= 160) || (x >= 170 && x <= 173))
+                {
+                    if (y % 12 <= 1) return new Color(0.04f, 0.06f, 0.08f, 1f); // Horizontal joint
+                    return new Color(0.09f, 0.13f, 0.18f, 1f); // Heavy steel strut
+                }
+
+                // Multi-tier Circular Gantry Rings (Y centers: 55, 110, 165, 220)
+                int[] ringYs = { 55, 110, 165, 220 };
+                foreach (int ry in ringYs)
+                {
+                    float dx = (x - towerCenterX) / 34.0f;
+                    float dy = (y - ry) / 7.0f;
+                    float ringDistSq = dx * dx + dy * dy;
+
+                    // Ring thickness between 0.7 and 1.0
+                    if (ringDistSq >= 0.65f && ringDistSq <= 1.05f)
+                    {
+                        // Outer edge beacon pinlights at gantry ends
+                        if (Mathf.Abs(x - towerCenterX) > 30f && Mathf.Abs(y - ry) <= 2)
+                        {
+                            return new Color(1.0f, 0.75f, 0.35f, 1f); // Warm maintenance amber pinlight
+                        }
+                        if (y % 2 == 0) return new Color(0.12f, 0.18f, 0.24f, 1f); // Catwalk deck
+                        return new Color(0.06f, 0.10f, 0.14f, 1f); // Catwalk under-girder
+                    }
+                }
+
+                // Suspended Crane Cables (vertical lines hanging through chasm)
+                if ((x == 60 || x == 92 || x == 124 || x == 205) && (y > 40 && y < 240))
+                {
+                    if (y % 2 == 0) return new Color(0.15f, 0.20f, 0.26f, 1f);
+                    return new Color(0.08f, 0.11f, 0.15f, 1f);
+                }
+
+                // Distant Skewed Cargo Silhouettes (tilted containers in zero-g)
+                // Cube 1: near (75, 145), rotated
+                float cx1 = (x - 75f) * 0.866f - (y - 145f) * 0.5f;
+                float cy1 = (x - 75f) * 0.5f + (y - 145f) * 0.866f;
+                if (Mathf.Abs(cx1) < 12f && Mathf.Abs(cy1) < 10f)
+                {
+                    if (Mathf.Abs(cx1) > 10f || Mathf.Abs(cy1) > 8f) return new Color(0.06f, 0.09f, 0.13f, 1f); // Silhouette edge
+                    return new Color(0.09f, 0.14f, 0.19f, 1f);
+                }
+
+                // Cube 2: near (105, 80), rotated opposite
+                float cx2 = (x - 105f) * 0.707f + (y - 80f) * 0.707f;
+                float cy2 = -(x - 105f) * 0.707f + (y - 80f) * 0.707f;
+                if (Mathf.Abs(cx2) < 9f && Mathf.Abs(cy2) < 8f)
+                {
+                    if (Mathf.Abs(cx2) > 7f || Mathf.Abs(cy2) > 6f) return new Color(0.05f, 0.08f, 0.11f, 1f);
+                    return new Color(0.08f, 0.12f, 0.16f, 1f);
+                }
+
+                // Distant amber pinlights on deep background catwalks
+                if ((x == 78 && y == 146) || (x == 106 && y == 82) || (x == 124 && y == 165))
+                {
+                    return new Color(1.0f, 0.72f, 0.35f, 1f);
+                }
+
+                return baseChasm;
+            });
+
+            // 2. Chapter II Floating Containment Cargo Pod (64x64)
+            // Zero-gravity shipping container with corner reinforcement lugs, yellow hazard stripes, and status indicator
+            CreateSpriteAsset("Environment/Chapter02/ch2_floating_cargo_pod.png", 64, 64, (x, y) =>
+            {
+                // Perimeter border / bevel
+                if (x < 2 || x >= 62 || y < 2 || y >= 62) return Color.clear;
+                if (x == 2 || x == 61 || y == 2 || y == 61) return new Color(0.12f, 0.15f, 0.18f, 1f);
+
+                // Corner Reinforcement Brackets (14x14) with diagonal yellow/black hazard striping
+                bool isCorner = (x <= 14 && y <= 14) || (x >= 49 && y <= 14) || (x <= 14 && y >= 49) || (x >= 49 && y >= 49);
+                if (isCorner)
+                {
+                    if ((x + y) / 4 % 2 == 0) return new Color(0.85f, 0.68f, 0.12f, 1f); // Hazard yellow
+                    return new Color(0.10f, 0.11f, 0.13f, 1f); // Hazard black
+                }
+
+                // Corner Hoisting Eyelet / Crane Rigging Lugs (at top edge)
+                if ((x >= 8 && x <= 14 && y >= 58) || (x >= 49 && x <= 55 && y >= 58))
+                {
+                    return new Color(0.25f, 0.28f, 0.32f, 1f);
+                }
+
+                // Heavy armor plate seams and recessed channels
+                if (x == 15 || x == 48 || y == 15 || y == 48) return new Color(0.08f, 0.10f, 0.13f, 1f);
+                if (x == 31 || x == 32) return new Color(0.10f, 0.12f, 0.15f, 1f);
+
+                // Rivet perimeter along armor panels
+                bool isRivet = (y == 18 || y == 45) && (x % 6 == 0 && x > 15 && x < 48);
+                if (isRivet) return new Color(0.35f, 0.39f, 0.44f, 1f);
+
+                // Central Recessed Hatch (circle radius 11 at 32, 32)
+                float dx = x - 31.5f;
+                float dy = y - 31.5f;
+                float distSq = dx * dx + dy * dy;
+                if (distSq <= 121f)
+                {
+                    if (distSq >= 95f) return new Color(0.08f, 0.10f, 0.13f, 1f); // Lock ring channel
+                    if (distSq <= 16f) return new Color(0.15f, 0.85f, 1.0f, 1f); // Central cyan telemetry indicator
+                    if (distSq <= 25f) return new Color(0.08f, 0.45f, 0.55f, 1f);
+                    return new Color(0.16f, 0.19f, 0.23f, 1f); // Hatch inner face
+                }
+
+                // Warning Decal: Stenciled containment triangle (\nabla)
+                if (y >= 36 && y <= 42 && x >= 20 && x <= 26)
+                {
+                    int row = 42 - y;
+                    int halfW = row;
+                    if (Mathf.Abs(x - 23) <= halfW) return new Color(0.85f, 0.65f, 0.15f, 0.9f);
+                }
+
+                // Weathered dark steel surface with scratches and grime
+                float n = Mathf.Sin(x * 15.3f + y * 37.1f) * 43758.5453f;
+                float noise = n - Mathf.Floor(n);
+                float baseVal = 0.22f + noise * 0.05f;
+                return new Color(baseVal, baseVal * 1.08f, baseVal * 1.18f, 1f);
+            });
+
+            // 3. Chapter II Broken Bridge Girder (96x48)
+            // Sheared industrial catwalk section with diamond tread deck, I-beam girder, cross trusses, and jagged severed rebar with dangling wires
+            CreateSpriteAsset("Environment/Chapter02/ch2_broken_bridge_girder.png", 96, 48, (x, y) =>
+            {
+                // Jagged sheared break profile on right end (X >= 64)
+                float breakThresholdY = 48f;
+                if (x >= 64)
+                {
+                    // Downward sheared jagged fracture slope
+                    float fracT = (x - 64f) / 32f;
+                    breakThresholdY = 44f - fracT * 32f + Mathf.Sin(x * 0.8f) * 5f;
+                    if (y > breakThresholdY)
+                    {
+                        // Dangling copper wires and sparks protruding from break
+                        if ((x == 72 || x == 82 || x == 90) && y > breakThresholdY && y < breakThresholdY + 14f)
+                        {
+                            if (y == (int)(breakThresholdY + 12f)) return new Color(0.20f, 0.90f, 1.0f, 1f); // Severed spark
+                            return new Color(0.85f, 0.45f, 0.15f, 1f); // Exposed copper core
+                        }
+                        return Color.clear;
+                    }
+                }
+
+                if (y < 4 && x >= 70) return Color.clear; // Underside severed opening
+
+                // Catwalk top walking deck (Y: 38 to 47)
+                if (y >= 38)
+                {
+                    if (y == 47) return new Color(0.35f, 0.40f, 0.45f, 1f); // Top highlight edge
+                    if (y == 38) return new Color(0.12f, 0.14f, 0.17f, 1f); // Deck base seam
+                    if ((x + y) % 6 == 0) return new Color(0.28f, 0.32f, 0.38f, 1f); // Diamond tread highlight
+                    return new Color(0.20f, 0.24f, 0.29f, 1f); // Diamond tread base
+                }
+
+                // Yellow/Black Hazard Stripe strip under top deck lip (Y: 34 to 37)
+                if (y >= 34)
+                {
+                    if ((x + y) / 4 % 2 == 0) return new Color(0.88f, 0.70f, 0.12f, 1f);
+                    return new Color(0.10f, 0.11f, 0.13f, 1f);
+                }
+
+                // Heavy I-Beam Girder Web with Truss Bracing (Y: 6 to 33)
+                if (y <= 10) return new Color(0.22f, 0.25f, 0.30f, 1f); // Bottom girder flange
+                if (x % 16 == 0) return new Color(0.14f, 0.16f, 0.19f, 1f); // Vertical stiffener rib
+
+                // Diagonal truss members
+                int cellX = x % 16;
+                int normY = y - 10;
+                if (Mathf.Abs(cellX - normY * 16 / 24) <= 1 || Mathf.Abs(cellX - (16 - normY * 16 / 24)) <= 1)
+                {
+                    return new Color(0.26f, 0.30f, 0.36f, 1f);
+                }
+
+                // Web plate recessed shadow
+                return new Color(0.12f, 0.14f, 0.18f, 1f);
+            });
+
+            // 4. Chapter II Suspended Crane Crate (64x64)
+            // Heavy cargo crate hanging from overhead crane cables with under-mounted warm amber maintenance lantern
+            CreateSpriteAsset("Environment/Chapter02/ch2_suspended_crane_crate.png", 64, 64, (x, y) =>
+            {
+                // Overhead crane cables converging at (32, 63)
+                if (y >= 46)
+                {
+                    if (y >= 60 && Mathf.Abs(x - 32) <= 3) return new Color(0.35f, 0.38f, 0.42f, 1f); // Hoisting hook/shackle
+                    float cableT = (y - 46f) / 14f;
+                    float leftCableX = Mathf.Lerp(14f, 32f, cableT);
+                    float rightCableX = Mathf.Lerp(50f, 32f, cableT);
+                    if (Mathf.Abs(x - leftCableX) < 1.2f || Mathf.Abs(x - rightCableX) < 1.2f)
+                    {
+                        return new Color(0.40f, 0.44f, 0.48f, 1f);
+                    }
+                    return Color.clear;
+                }
+
+                // Under-mounted warm amber maintenance lantern (Y < 12)
+                if (y < 12)
+                {
+                    if (Mathf.Abs(x - 32) <= 6)
+                    {
+                        if (y >= 9) return new Color(0.20f, 0.22f, 0.25f, 1f); // Bracket
+                        if (y <= 2) return new Color(0.18f, 0.20f, 0.22f, 1f); // Bottom cage cap
+                        if (Mathf.Abs(x - 32) <= 3) return new Color(1.0f, 0.78f, 0.35f, 1f); // Glowing glass filament
+                        return new Color(0.85f, 0.55f, 0.18f, 1f); // Amber glass globe
+                    }
+                    return Color.clear;
+                }
+
+                // Crate Body (X: 10 to 54, Y: 12 to 46)
+                if (x < 10 || x > 54) return Color.clear;
+                if (x == 10 || x == 54 || y == 12 || y == 46) return new Color(0.10f, 0.12f, 0.14f, 1f);
+
+                // Outer steel cage frame
+                if (x <= 14 || x >= 50 || y <= 16 || y >= 42)
+                {
+                    if ((x + y) / 3 % 2 == 0) return new Color(0.85f, 0.70f, 0.12f, 1f); // Hazard trim
+                    return new Color(0.14f, 0.16f, 0.19f, 1f);
+                }
+
+                // Inner containment crate panel
+                if (x == 32 || y == 29) return new Color(0.08f, 0.10f, 0.12f, 1f); // Seam
+                float n = Mathf.Sin(x * 12f + y * 28f) * 43758.5f;
+                float noise = n - Mathf.Floor(n);
+                float val = 0.22f + noise * 0.05f;
+                return new Color(val * 0.9f, val, val * 1.15f, 1f);
+            });
+
+            // 5. Chapter II Inverted Ceiling Deck (128x64)
+            // Dual-orientation platform piece: top ceiling mounting brackets, middle riveted web girder with lightening holes,
+            // bottom walkable face with diamond tread, hazard stripe trim, and recessed cyan LED walk lights
+            CreateSpriteAsset("Environment/Chapter02/ch2_inverted_ceiling_deck.png", 128, 64, (x, y) =>
+            {
+                // Top Ceiling Anchor Flanges (Y: 54 to 63)
+                if (y >= 54)
+                {
+                    if (y == 63) return new Color(0.12f, 0.14f, 0.18f, 1f); // Rock anchor seam
+                    if ((x >= 12 && x <= 22) || (x >= 54 && x <= 64) || (x >= 96 && x <= 106))
+                    {
+                        if (y == 58 && (x == 17 || x == 59 || x == 101)) return new Color(0.55f, 0.58f, 0.62f, 1f); // Anchor bolt
+                        return new Color(0.24f, 0.28f, 0.33f, 1f); // Heavy ceiling bracket
+                    }
+                    if (y >= 58) return new Color(0.14f, 0.16f, 0.20f, 1f);
+                    return Color.clear;
+                }
+
+                // Middle Heavy Riveted Web Plate Girder (Y: 20 to 53)
+                if (y >= 20)
+                {
+                    // Vertical stiffeners at intervals
+                    if (x % 32 == 0 || x % 32 == 1) return new Color(0.12f, 0.14f, 0.18f, 1f);
+
+                    // Circular Lightening Holes (radius 9 at X centers: 16, 48, 80, 112, Y: 36)
+                    int cellCenter = (x / 32) * 32 + 16;
+                    float hdx = x - cellCenter;
+                    float hdy = y - 36f;
+                    float holeDistSq = hdx * hdx + hdy * hdy;
+                    if (holeDistSq <= 81f)
+                    {
+                        if (holeDistSq >= 64f) return new Color(0.10f, 0.12f, 0.15f, 1f); // Hole bevel rim
+                        return Color.clear; // Cutout hole through girder
+                    }
+
+                    // Rivet lines along top and bottom of web plate
+                    if ((y == 23 || y == 50) && (x % 8 == 4)) return new Color(0.40f, 0.44f, 0.49f, 1f);
+
+                    return new Color(0.18f, 0.21f, 0.26f, 1f); // Web plate steel
+                }
+
+                // Walkable Ceiling Surface Face (Y: 4 to 19) - THIS IS WALKED ON WHEN INVERTED!
+                // Safety Toe-Kick & Inverted Railing Sockets (Y: 0 to 4)
+                if (y < 4)
+                {
+                    if (x % 32 <= 3) return new Color(0.22f, 0.26f, 0.30f, 1f); // Railing base socket
+                    return Color.clear;
+                }
+
+                // Caution Yellow/Black Hazard Stripe Trim (Y: 4 to 8)
+                if (y <= 8)
+                {
+                    if ((x + y) / 4 % 2 == 0) return new Color(0.88f, 0.70f, 0.12f, 1f); // Safety yellow
+                    return new Color(0.10f, 0.11f, 0.13f, 1f); // Dark black
+                }
+
+                // Recessed Cyan LED Guide Lights along inverted walk path (Y: 13 to 15, at X: 16, 48, 80, 112)
+                int ledCellCenter = (x / 32) * 32 + 16;
+                if (Mathf.Abs(x - ledCellCenter) <= 3 && y >= 12 && y <= 16)
+                {
+                    if (Mathf.Abs(x - ledCellCenter) <= 1 && y >= 13 && y <= 15)
+                    {
+                        return new Color(0.20f, 0.92f, 1.0f, 1f); // Glowing cyan path marker
+                    }
+                    return new Color(0.06f, 0.35f, 0.45f, 1f); // LED fixture housing
+                }
+
+                // Walkable Diamond-Plate Tread Surface (Y: 9 to 19)
+                if ((x + y) % 6 == 0) return new Color(0.32f, 0.36f, 0.42f, 1f); // Diamond plate pattern
+                return new Color(0.22f, 0.26f, 0.32f, 1f); // Anti-slip tread base
+            });
+
+            // 6. Chapter II Catwalk Broken End (64x48)
+            // Downward-sheared platform terminus for X = -4.8, showing torn deck plate, sheared girder, severed pipes, and sparks
+            CreateSpriteAsset("Environment/Chapter02/ch2_catwalk_broken_end.png", 64, 48, (x, y) =>
+            {
+                // Sheared break curve on right (X >= 22)
+                float breakThresholdY = 48f;
+                if (x >= 22)
+                {
+                    float t = (x - 22f) / 42f;
+                    breakThresholdY = 44f - t * 38f + Mathf.Sin(x * 0.9f) * 3f;
+                    if (y > breakThresholdY)
+                    {
+                        // Severed conduit pipes protruding from break
+                        if ((x == 32 || x == 44) && y > breakThresholdY && y < breakThresholdY + 10f)
+                        {
+                            return new Color(0.35f, 0.38f, 0.42f, 1f); // Exposed pipe
+                        }
+                        return Color.clear;
+                    }
+                }
+
+                // Top Walk Deck (Y: 38 to 47 on left)
+                if (y >= 38)
+                {
+                    if (y == 47) return new Color(0.38f, 0.42f, 0.48f, 1f);
+                    if ((x + y) % 6 == 0) return new Color(0.30f, 0.34f, 0.40f, 1f);
+                    return new Color(0.22f, 0.25f, 0.30f, 1f);
+                }
+
+                // Hazard warning lip (Y: 34 to 37)
+                if (y >= 34)
+                {
+                    if ((x + y) / 4 % 2 == 0) return new Color(0.88f, 0.70f, 0.12f, 1f);
+                    return new Color(0.10f, 0.11f, 0.13f, 1f);
+                }
+
+                // Underside web girder
+                if (x == 20) return new Color(0.12f, 0.14f, 0.16f, 1f);
+                return new Color(0.16f, 0.19f, 0.23f, 1f);
+            });
+
+            // 7. Chapter II Gravity Debris Cluster (64x64)
+            // Jagged fragments of cracked concrete and sheared steel tumbling in anti-gravity
+            CreateSpriteAsset("Environment/Chapter02/ch2_gravity_debris_cluster.png", 64, 64, (x, y) =>
+            {
+                // Fragment 1: Large concrete chunk near (24, 38)
+                float d1x = Mathf.Abs(x - 24);
+                float d1y = Mathf.Abs(y - 38);
+                if (d1x + d1y < 16 && d1x < 12 && d1y < 10)
+                {
+                    if (d1x == 11 || d1y == 9) return new Color(0.12f, 0.14f, 0.16f, 1f);
+                    if (x == 26 && y >= 32 && y <= 44) return new Color(0.65f, 0.45f, 0.20f, 1f); // Exposed rusty rebar
+                    float n = Mathf.Sin(x * 14f + y * 31f) * 43758.5f;
+                    float val = 0.26f + (n - Mathf.Floor(n)) * 0.08f;
+                    return new Color(val, val * 1.05f, val * 1.15f, 1f);
+                }
+
+                // Fragment 2: Twisted steel plate near (46, 22)
+                float d2x = (x - 46f) * 0.8f + (y - 22f) * 0.6f;
+                float d2y = -(x - 46f) * 0.6f + (y - 22f) * 0.8f;
+                if (Mathf.Abs(d2x) < 10f && Mathf.Abs(d2y) < 4f)
+                {
+                    if (Mathf.Abs(d2x) > 8f || Mathf.Abs(d2y) > 3f) return new Color(0.10f, 0.12f, 0.15f, 1f);
+                    return new Color(0.32f, 0.36f, 0.42f, 1f);
+                }
+
+                // Fragment 3: Small floating chunk near (18, 14)
+                if (Mathf.Abs(x - 18) < 5 && Mathf.Abs(y - 14) < 4)
+                {
+                    return new Color(0.24f, 0.27f, 0.32f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 8. Chapter II Maintenance Lantern (24x32)
+            // Heavy cast-iron bulkhead lantern with glowing warm amber glass lens matching Reference 1
+            CreateSpriteAsset("Environment/Chapter02/ch2_maintenance_lantern.png", 24, 32, (x, y) =>
+            {
+                if (x < 3 || x > 20) return Color.clear;
+
+                // Wall mounting bracket and top cap (Y: 24 to 31)
+                if (y >= 24)
+                {
+                    if (y >= 29) return new Color(0.22f, 0.24f, 0.28f, 1f); // Top mount flange
+                    if (x >= 6 && x <= 17) return new Color(0.18f, 0.20f, 0.23f, 1f);
+                    return Color.clear;
+                }
+
+                // Bottom iron cap and hook (Y: 0 to 6)
+                if (y <= 6)
+                {
+                    if (y <= 2 && (x < 9 || x > 14)) return Color.clear;
+                    if (x >= 6 && x <= 17) return new Color(0.18f, 0.20f, 0.23f, 1f);
+                    return Color.clear;
+                }
+
+                // Glass Globe & Protective Cage Ribs (Y: 7 to 23)
+                if (x == 6 || x == 17 || x == 11 || x == 12)
+                {
+                    return new Color(0.16f, 0.18f, 0.20f, 1f); // Protective steel cage wire ribs
+                }
+
+                // Glowing Warm Amber Filament Globe
+                float cDist = Mathf.Abs(x - 11.5f);
+                float yDist = Mathf.Abs(y - 15f);
+                if (cDist <= 2f && yDist <= 4f)
+                {
+                    return new Color(1.0f, 0.88f, 0.55f, 1f); // White-amber filament core
+                }
+                return new Color(1.0f, 0.72f, 0.32f, 1f); // Warm amber glow
+            });
+
+            // 9. Chapter II Hazard Emitter Housing (32x32)
+            // Heavy industrial containment housing for the laser hazards: cooling fins, caution stencil, red/pink plasma nozzle
+            CreateSpriteAsset("Environment/Chapter02/ch2_hazard_emitter_housing.png", 32, 32, (x, y) =>
+            {
+                if (x < 2 || x > 29 || y < 2 || y > 29) return Color.clear;
+                if (x == 2 || x == 29 || y == 2 || y == 29) return new Color(0.10f, 0.12f, 0.14f, 1f);
+
+                // Horizontal cooling fins on sides
+                if ((y % 4 == 0) && (x < 8 || x > 23)) return new Color(0.08f, 0.10f, 0.12f, 1f);
+
+                // High voltage hazard triangle decal
+                if (y >= 18 && y <= 24 && Mathf.Abs(x - 16) <= (24 - y))
+                {
+                    return new Color(0.95f, 0.75f, 0.15f, 1f);
+                }
+
+                // Red/Pink Plasma Emitter Nozzle in center (Y: 6 to 14, X: 11 to 20)
+                if (x >= 11 && x <= 20 && y >= 6 && y <= 14)
+                {
+                    if (Mathf.Abs(x - 15.5f) <= 2f && Mathf.Abs(y - 10f) <= 2f)
+                    {
+                        return new Color(1.0f, 0.35f, 0.45f, 1f); // Intense plasma core
+                    }
+                    return new Color(0.85f, 0.12f, 0.22f, 1f); // Emitter ring
+                }
+
+                return new Color(0.20f, 0.23f, 0.27f, 1f); // Dark alloy casing
+            });
+
+            // 10. Chapter II Collapsing Floor Fracture Tile (64x64)
+            // Platform tile with glowing amber stress fracture veins providing the mandatory diegetic visual warning clue
+            CreateSpriteAsset("Environment/Chapter02/ch2_collapsing_floor_fracture.png", 64, 64, (x, y) =>
+            {
+                // Top edge bevel
+                if (y >= 60) return new Color(0.35f, 0.38f, 0.42f, 1f);
+                if (x % 16 == 0 || y % 16 == 0) return new Color(0.10f, 0.12f, 0.15f, 1f);
+
+                // Spiderweb network of glowing amber hairline cracks radiating from (32, 32)
+                float dx = x - 32f;
+                float dy = y - 32f;
+                float angle = Mathf.Atan2(dy, dx);
+                float radius = Mathf.Sqrt(dx * dx + dy * dy);
+
+                // 5 distinct jagged fracture branches
+                bool isCrack = false;
+                bool isCrackHalo = false;
+                for (int branch = 0; branch < 5; branch++)
+                {
+                    float branchAngle = branch * Mathf.PI * 2f / 5f;
+                    float angleDiff = Mathf.DeltaAngle(angle * Mathf.Rad2Deg, branchAngle * Mathf.Rad2Deg);
+                    float wobble = Mathf.Sin(radius * 0.4f + branch) * 12f;
+                    if (Mathf.Abs(angleDiff - wobble) < 3.5f && radius < 28f)
+                    {
+                        isCrack = true;
+                    }
+                    else if (Mathf.Abs(angleDiff - wobble) < 7f && radius < 28f)
+                    {
+                        isCrackHalo = true;
+                    }
+                }
+
+                if (isCrack) return new Color(1.0f, 0.65f, 0.15f, 1f); // Glowing amber stress fracture
+                if (isCrackHalo) return new Color(0.55f, 0.28f, 0.10f, 1f); // Fracture heat bloom
+
+                // Base steel plate
+                float n = Mathf.Sin(x * 12.3f + y * 28.7f) * 43758.5f;
+                float val = 0.18f + (n - Mathf.Floor(n)) * 0.04f;
+                return new Color(val, val * 1.05f, val * 1.15f, 1f);
+            });
+
+            // 11. Chapter II Left Containment Bunker Wall (128x128)
+            // Heavy industrial bunker wall with high-pressure conduits, hydraulic door frame, and warning placards
+            CreateSpriteAsset("Environment/Chapter02/ch2_left_containment_wall.png", 128, 128, (x, y) =>
+            {
+                if (x == 0 || x == 127 || y == 0 || y == 127) return new Color(0.08f, 0.10f, 0.12f, 1f);
+
+                // Vertical Conduit Cluster (X: 18 to 26 and X: 104 to 112)
+                if ((x >= 18 && x <= 26) || (x >= 104 && x <= 112))
+                {
+                    int pipeRel = (x < 50) ? (x - 18) : (x - 104);
+                    if (pipeRel == 0 || pipeRel == 8) return new Color(0.09f, 0.11f, 0.13f, 1f);
+                    if (y % 32 <= 2) return new Color(0.35f, 0.38f, 0.42f, 1f); // Mounting bracket
+                    return new Color(0.25f, 0.30f, 0.36f, 1f);
+                }
+
+                // Horizontal Panel Seams
+                if (y == 42 || y == 84) return new Color(0.08f, 0.10f, 0.12f, 1f);
+
+                // Rivets along seams
+                if ((y == 40 || y == 86) && (x % 16 == 8)) return new Color(0.42f, 0.46f, 0.50f, 1f);
+
+                // Surface texture
+                float n = Mathf.Sin(x * 15.3f + y * 41.7f) * 43758.5f;
+                float noise = n - Mathf.Floor(n);
+                float val = 0.20f + noise * 0.05f;
+                return new Color(val, val * 1.06f, val * 1.16f, 1f);
+            });
+
+            // 12. Chapter II Foreground Silhouettes (128x64)
+            // Dark framing silhouettes of industrial piping, crane rigging cables, and handrail silhouettes
+            CreateSpriteAsset("Environment/Chapter02/ch2_foreground_silhouettes.png", 128, 64, (x, y) =>
+            {
+                // Heavy horizontal pipe run along bottom (Y: 6 to 18)
+                if (y >= 6 && y <= 18)
+                {
+                    if (y == 18) return new Color(0.06f, 0.08f, 0.10f, 1f);
+                    if (y == 17) return new Color(0.12f, 0.15f, 0.18f, 1f); // Top rim highlight
+                    return new Color(0.04f, 0.05f, 0.07f, 1f);
+                }
+
+                // Vertical pipe risers and valves
+                if ((x >= 24 && x <= 30) || (x >= 92 && x <= 98))
+                {
+                    if (y <= 45) return new Color(0.04f, 0.05f, 0.07f, 1f);
+                }
+
+                // Diagonal cable runs
+                float cable1Y = x * 0.35f + 15f;
+                if (Mathf.Abs(y - cable1Y) < 1.5f && x > 40)
+                {
+                    return new Color(0.05f, 0.07f, 0.09f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 13. Chapter II Heavy Platform Deck (128x64)
+            // Walkable industrial platform deck for floor catwalks with diamond plate, yellow hazard stripe lip, and under-girder trusses
+            CreateSpriteAsset("Environment/Chapter02/ch2_heavy_platform_deck.png", 128, 64, (x, y) =>
+            {
+                // Top Walking Deck Surface (Y: 48 to 63)
+                if (y >= 48)
+                {
+                    if (y == 63) return new Color(0.42f, 0.46f, 0.52f, 1f); // Top highlight bevel
+                    if (y == 48) return new Color(0.12f, 0.14f, 0.17f, 1f); // Deck seam
+                    if ((x + y) % 6 == 0) return new Color(0.32f, 0.36f, 0.42f, 1f); // Diamond plate pattern
+                    return new Color(0.22f, 0.25f, 0.30f, 1f);
+                }
+
+                // Yellow/Black Caution Hazard Lip (Y: 42 to 47)
+                if (y >= 42)
+                {
+                    if ((x + y) / 4 % 2 == 0) return new Color(0.88f, 0.70f, 0.12f, 1f);
+                    return new Color(0.10f, 0.11f, 0.13f, 1f);
+                }
+
+                // Under-girder with circular lightening cutouts (Y: 10 to 41)
+                if (y >= 10)
+                {
+                    if (x % 32 <= 1) return new Color(0.12f, 0.14f, 0.17f, 1f); // Vertical rib
+
+                    int holeCenter = (x / 32) * 32 + 16;
+                    float hdx = x - holeCenter;
+                    float hdy = y - 26f;
+                    float distSq = hdx * hdx + hdy * hdy;
+                    if (distSq <= 64f)
+                    {
+                        if (distSq >= 49f) return new Color(0.10f, 0.12f, 0.14f, 1f);
+                        return Color.clear; // Cutout hole
+                    }
+
+                    if ((y == 14 || y == 38) && (x % 8 == 4)) return new Color(0.38f, 0.42f, 0.46f, 1f); // Rivet
+                    return new Color(0.18f, 0.21f, 0.25f, 1f);
+                }
+
+                // Bottom flange (Y: 6 to 9)
+                if (y >= 6) return new Color(0.24f, 0.28f, 0.33f, 1f);
+
+                return Color.clear;
+            });
+        }
+        #endregion
 
         private static void CreateSpriteAsset(string filename, int width, int height, System.Func<int, int, Color> pixelFunc)
         {
             string fullPath = Path.Combine(ArtPath, filename);
+            string dir = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
             Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Point;
             tex.wrapMode = TextureWrapMode.Clamp;
@@ -2692,41 +3349,342 @@ namespace GlitchVerse.Editor
         {
             var atmo = new ChapterAtmosphereConfig
             {
-                ambientColor = new Color(0.38f, 0.68f, 0.82f, 1f), // Cool desaturated slate-blue/teal
-                ambientIntensity = 0.72f,
-                spawnLampColor = new Color(0.40f, 0.85f, 1.0f, 1f),
-                spawnLampIntensity = 1.0f,
-                spawnLampFlicker = FlickeringLight2D.FlickerMode.MalfunctioningArc,
+                ambientColor = new Color(0.22f, 0.28f, 0.36f, 1f), // Moody slate-blue / steel cyan abyss
+                ambientIntensity = 0.75f,
+                spawnLampColor = new Color(1.0f, 0.72f, 0.35f, 1f), // Warm amber maintenance bulkhead lamp
+                spawnLampIntensity = 1.45f,
+                spawnLampFlicker = FlickeringLight2D.FlickerMode.SubtleFluorescent,
                 particleType = AtmosphericParticleEmitter.AtmosphereType.GravityAnomalies,
-                architectMonitorColor = new Color(0.25f, 0.85f, 1.0f, 0.95f)
+                architectMonitorColor = new Color(0.20f, 0.88f, 1.0f, 0.95f)
             };
 
             var refs = SetupBaseChamber("CONTAINMENT 02 // GRAVITY ECHO", 2, "Level03", false, atmo, collapsingFloorGapX: 1.0f);
 
+            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") 
+                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+
+            // Load Chapter II Modular Assets
+            Sprite ch2AbyssBgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_gravity_abyss_bg.png");
+            Sprite ch2CargoPodSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_floating_cargo_pod.png");
+            Sprite ch2BrokenGirderSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_broken_bridge_girder.png");
+            Sprite ch2CraneCrateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_suspended_crane_crate.png");
+            Sprite ch2InvertedCeilSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_inverted_ceiling_deck.png");
+            Sprite ch2BrokenEndSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_catwalk_broken_end.png");
+            Sprite ch2DebrisSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_gravity_debris_cluster.png");
+            Sprite ch2LanternSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_maintenance_lantern.png");
+            Sprite ch2EmitterHousingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_hazard_emitter_housing.png");
+            Sprite ch2FractureSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_collapsing_floor_fracture.png");
+            Sprite ch2LeftWallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_left_containment_wall.png");
+            Sprite ch2ForegroundSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_foreground_silhouettes.png");
+            Sprite ch2HeavyPlatSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter02/ch2_heavy_platform_deck.png");
+
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
-            Sprite trapFloorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/trap_floor.png");
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
             Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
             Sprite hazardSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
             Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
-            Sprite debrisSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_debris.png");
-            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
-
-            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") 
-                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+            Sprite railingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_catwalk_railing.png");
+            Sprite exitSignSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_exit_sign.png");
+            Sprite blastDoorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ch1_blast_door_cinematic.png");
 
             // Enable Gravity Inversion power on player
             refs.abilityCtrl.AllowGravity = true;
 
-            // =========================================================
-            // 1. COLLAPSING FLOOR BETRAYAL TRAP WITH VISUAL WARNING CLUE
-            // =========================================================
+            // =========================================================================
+            // 1. CLEANUP DEFAULT BACKGROUND & BUILD CHAPTER II VISUAL ENVIRONMENT
+            // =========================================================================
+            GameObject bgRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgRoot != null)
+            {
+                Transform bgGrid = bgRoot.transform.Find("BG_BackWallGrid");
+                if (bgGrid != null) Object.DestroyImmediate(bgGrid.gameObject);
+                Transform bgReactor = bgRoot.transform.Find("BG_ReactorCore");
+                if (bgReactor != null) Object.DestroyImmediate(bgReactor.gameObject);
+                for (int i = bgRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = bgRoot.transform.GetChild(i);
+                    if (child.name.StartsWith("BG_Pillar")) Object.DestroyImmediate(child.gameObject);
+                }
+            }
+            else
+            {
+                bgRoot = new GameObject("--- BACKGROUND ---");
+            }
+
+            // Remove right wall and ceiling visual renderers to reveal the towering gravity chasm
+            Transform chamberRightWall = refs.envRoot.transform.Find("Chamber_RightWall");
+            if (chamberRightWall != null)
+            {
+                for (int i = chamberRightWall.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(chamberRightWall.GetChild(i).gameObject);
+                }
+            }
+            Transform chamberCeiling = refs.envRoot.transform.Find("Chamber_Ceiling");
+            if (chamberCeiling != null)
+            {
+                for (int i = chamberCeiling.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(chamberCeiling.GetChild(i).gameObject);
+                }
+            }
+
+            // Remove generic monitor, overhead pipes, and old spotlight to unblock the soaring gravity abyss
+            Transform oldMonitor = refs.envRoot.transform.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor.gameObject);
+
+            for (int i = refs.envRoot.transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = refs.envRoot.transform.GetChild(i);
+                if (child.name.StartsWith("OverheadPipe")) Object.DestroyImmediate(child.gameObject);
+            }
+
+            GameObject archSpot = GameObject.Find("Architect_Spotlight");
+            if (archSpot != null) Object.DestroyImmediate(archSpot);
+
+            GameObject fgOldRoot = GameObject.Find("--- FOREGROUND ---");
+            if (fgOldRoot != null)
+            {
+                for (int i = fgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(fgOldRoot.transform.GetChild(i).gameObject);
+                }
+            }
+
+            GameObject ch02EnvRoot = new GameObject("CH02_VisualEnvironment");
+            ch02EnvRoot.transform.position = Vector3.zero;
+
+            // A. Deep Atmospheric Gravity Abyss Backdrop (Sorting Order: -25, Unlit Material)
+            GameObject abyssBackdrop = new GameObject("BG_GravityAbyssBackdrop");
+            abyssBackdrop.transform.SetParent(ch02EnvRoot.transform);
+            abyssBackdrop.transform.position = new Vector3(1.2f, 0.8f, 2.0f);
+            abyssBackdrop.transform.localScale = new Vector3(7.5f, 4.5f, 1f);
+            SpriteRenderer abyssRend = abyssBackdrop.AddComponent<SpriteRenderer>();
+            abyssRend.sprite = ch2AbyssBgSp;
+            abyssRend.sortingOrder = -25;
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            if (unlitShader != null) abyssRend.material = new Material(unlitShader);
+            abyssRend.color = Color.white;
+
+            // B. Distant Gravity Reactor Central Core Glow
+            GameObject coreGlowObj = new GameObject("Core_CyanLuminescence");
+            coreGlowObj.transform.SetParent(ch02EnvRoot.transform);
+            coreGlowObj.transform.position = new Vector3(2.5f, 1.2f, 0f);
+            Light2D coreGlow = coreGlowObj.AddComponent<Light2D>();
+            coreGlow.lightType = Light2D.LightType.Point;
+            coreGlow.pointLightOuterRadius = 9.5f;
+            coreGlow.pointLightInnerRadius = 0.8f;
+            coreGlow.color = new Color(0.15f, 0.85f, 1.0f, 1f);
+            coreGlow.intensity = 1.25f;
+
+            FlickeringLight2D coreFlicker = coreGlowObj.AddComponent<FlickeringLight2D>();
+            coreFlicker.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
+            coreFlicker.BaseIntensity = 1.25f;
+
+            // C. Zero-G Suspended & Skewed Cargo Containers (Sorting Order: -16)
+            // Cargo Pod 1 (Above left floor, tilted 22 degrees)
+            GameObject pod1 = new GameObject("Deco_ZeroG_CargoPod_1");
+            pod1.transform.SetParent(ch02EnvRoot.transform);
+            pod1.transform.position = new Vector3(-2.6f, 2.2f, 0f);
+            pod1.transform.rotation = Quaternion.Euler(0f, 0f, 22f);
+            pod1.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+            SpriteRenderer p1Rend = pod1.AddComponent<SpriteRenderer>();
+            p1Rend.sprite = ch2CargoPodSp;
+            p1Rend.sortingOrder = -16;
+
+            // Cargo Pod 2 (High center chasm, tilted -32 degrees)
+            GameObject pod2 = new GameObject("Deco_ZeroG_CargoPod_2");
+            pod2.transform.SetParent(ch02EnvRoot.transform);
+            pod2.transform.position = new Vector3(0.6f, 3.4f, 0f);
+            pod2.transform.rotation = Quaternion.Euler(0f, 0f, -32f);
+            pod2.transform.localScale = new Vector3(1.0f, 1.0f, 1f);
+            SpriteRenderer p2Rend = pod2.AddComponent<SpriteRenderer>();
+            p2Rend.sprite = ch2CargoPodSp;
+            p2Rend.sortingOrder = -16;
+
+            // Cargo Pod 3 (Right vertical shaft, tilted 16 degrees)
+            GameObject pod3 = new GameObject("Deco_ZeroG_CargoPod_3");
+            pod3.transform.SetParent(ch02EnvRoot.transform);
+            pod3.transform.position = new Vector3(3.8f, 1.8f, 0f);
+            pod3.transform.rotation = Quaternion.Euler(0f, 0f, 16f);
+            pod3.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+            SpriteRenderer p3Rend = pod3.AddComponent<SpriteRenderer>();
+            p3Rend.sprite = ch2CargoPodSp;
+            p3Rend.sortingOrder = -16;
+
+            // Cargo Pod 4 (Deep background, scale 0.75, misty alpha)
+            GameObject pod4 = new GameObject("Deco_ZeroG_CargoPod_4_Deep");
+            pod4.transform.SetParent(ch02EnvRoot.transform);
+            pod4.transform.position = new Vector3(-0.4f, 0.3f, 0f);
+            pod4.transform.rotation = Quaternion.Euler(0f, 0f, -14f);
+            pod4.transform.localScale = new Vector3(0.85f, 0.85f, 1f);
+            SpriteRenderer p4Rend = pod4.AddComponent<SpriteRenderer>();
+            p4Rend.sprite = ch2CargoPodSp;
+            p4Rend.sortingOrder = -18;
+            p4Rend.color = new Color(0.7f, 0.85f, 0.95f, 0.65f);
+
+            // D. Suspended Crane Crates Hanging from Vertical Rigging
+            // Crane Crate 1 (Right chasm at X: 5.2, Y: 3.2 with warm maintenance amber beacon)
+            GameObject craneCrate1 = new GameObject("Deco_CraneCrate_Right");
+            craneCrate1.transform.SetParent(ch02EnvRoot.transform);
+            craneCrate1.transform.position = new Vector3(5.2f, 3.2f, 0f);
+            SpriteRenderer cc1Rend = craneCrate1.AddComponent<SpriteRenderer>();
+            cc1Rend.sprite = ch2CraneCrateSp;
+            cc1Rend.sortingOrder = -15;
+
+            GameObject cc1LightObj = new GameObject("Crane1_AmberBeacon");
+            cc1LightObj.transform.SetParent(craneCrate1.transform);
+            cc1LightObj.transform.localPosition = new Vector3(0f, -0.6f, 0f);
+            Light2D cc1Light = cc1LightObj.AddComponent<Light2D>();
+            cc1Light.lightType = Light2D.LightType.Point;
+            cc1Light.pointLightOuterRadius = 3.2f;
+            cc1Light.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            cc1Light.intensity = 1.3f;
+
+            // Crane Crate 2 (Left chasm at X: -1.0, Y: 4.2 with warm maintenance amber beacon)
+            GameObject craneCrate2 = new GameObject("Deco_CraneCrate_Left");
+            craneCrate2.transform.SetParent(ch02EnvRoot.transform);
+            craneCrate2.transform.position = new Vector3(-1.0f, 4.2f, 0f);
+            SpriteRenderer cc2Rend = craneCrate2.AddComponent<SpriteRenderer>();
+            cc2Rend.sprite = ch2CraneCrateSp;
+            cc2Rend.sortingOrder = -15;
+
+            GameObject cc2LightObj = new GameObject("Crane2_AmberBeacon");
+            cc2LightObj.transform.SetParent(craneCrate2.transform);
+            cc2LightObj.transform.localPosition = new Vector3(0f, -0.6f, 0f);
+            Light2D cc2Light = cc2LightObj.AddComponent<Light2D>();
+            cc2Light.lightType = Light2D.LightType.Point;
+            cc2Light.pointLightOuterRadius = 2.8f;
+            cc2Light.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            cc2Light.intensity = 1.2f;
+
+            // E. Floating Sheared Bridge Girder (Midground at X: 1.8, Y: -0.2, rotated -12 deg)
+            GameObject floatGirder = new GameObject("Deco_Floating_BridgeGirder");
+            floatGirder.transform.SetParent(ch02EnvRoot.transform);
+            floatGirder.transform.position = new Vector3(1.8f, -0.2f, 0f);
+            floatGirder.transform.rotation = Quaternion.Euler(0f, 0f, -12f);
+            floatGirder.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            SpriteRenderer fgRend = floatGirder.AddComponent<SpriteRenderer>();
+            fgRend.sprite = ch2BrokenGirderSp;
+            fgRend.sortingOrder = -14;
+
+            // F. Zero-G Debris Clusters
+            float[,] debrisCoords = new float[,] {
+                { -4.2f, 0.8f, 1.1f },
+                { 2.6f, 0.4f, 0.9f },
+                { -0.2f, 2.4f, 1.0f },
+                { 6.4f, 2.6f, 0.8f }
+            };
+            for (int d = 0; d < 4; d++)
+            {
+                GameObject debObj = new GameObject($"Deco_DebrisCluster_{d}");
+                debObj.transform.SetParent(ch02EnvRoot.transform);
+                debObj.transform.position = new Vector3(debrisCoords[d, 0], debrisCoords[d, 1], 0f);
+                debObj.transform.localScale = Vector3.one * debrisCoords[d, 2];
+                SpriteRenderer debRend = debObj.AddComponent<SpriteRenderer>();
+                debRend.sprite = ch2DebrisSp;
+                debRend.sortingOrder = -14;
+            }
+
+            // G. Left Bunker Entrance Wall (X from -10.5 to -6.5, Y from -4.0 to 4.5)
+            GameObject leftBunkerWall = new GameObject("BG_LeftBunkerWall");
+            leftBunkerWall.transform.SetParent(ch02EnvRoot.transform);
+            leftBunkerWall.transform.position = Vector3.zero;
+            for (float wx = -10.0f; wx <= -6.5f; wx += 2.0f)
+            {
+                for (float wy = -3.0f; wy <= 4.0f; wy += 2.0f)
+                {
+                    GameObject bTile = new GameObject($"BunkerTile_{wx}_{wy}");
+                    bTile.transform.SetParent(leftBunkerWall.transform);
+                    bTile.transform.position = new Vector3(wx, wy, 0f);
+                    SpriteRenderer bRend = bTile.AddComponent<SpriteRenderer>();
+                    bRend.sprite = ch2LeftWallSp;
+                    bRend.sortingOrder = -22;
+                }
+            }
+
+            // Heavy Entrance Blast Door Frame at Player Spawn
+            GameObject spawnBlastDoor = new GameObject("Deco_SpawnBlastDoor");
+            spawnBlastDoor.transform.SetParent(ch02EnvRoot.transform);
+            spawnBlastDoor.transform.position = new Vector3(-8.8f, -2.4f, 0f);
+            spawnBlastDoor.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+            SpriteRenderer sbdRend = spawnBlastDoor.AddComponent<SpriteRenderer>();
+            sbdRend.sprite = blastDoorSp;
+            sbdRend.sortingOrder = -12;
+
+            // =========================================================================
+            // 2. FLOOR CATWALK DRESSING & BROKEN PLATFORM TERMINUS (X: -10.5 to -4.8)
+            // =========================================================================
+            // Clean up default floor visual tiles to replace with heavy industrial catwalk pieces
+            Transform chamberFloor = refs.envRoot.transform.Find("Chamber_Floor");
+            if (chamberFloor != null)
+            {
+                for (int i = chamberFloor.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = chamberFloor.GetChild(i);
+                    if (child.name.StartsWith("FloorTile_")) Object.DestroyImmediate(child.gameObject);
+                }
+            }
+
+            GameObject floorDressRoot = new GameObject("Floor_Catwalk_Dressed");
+            floorDressRoot.transform.SetParent(refs.envRoot.transform);
+            floorDressRoot.transform.position = Vector3.zero;
+
+            for (float fx = -10.5f; fx <= -5.5f; fx += 2.0f)
+            {
+                GameObject fSeg = new GameObject($"FloorSeg_{fx}");
+                fSeg.transform.SetParent(floorDressRoot.transform);
+                fSeg.transform.position = new Vector3(fx, -4.0f, 0f);
+                SpriteRenderer fsRend = fSeg.AddComponent<SpriteRenderer>();
+                fsRend.sprite = ch2HeavyPlatSp;
+                fsRend.sortingOrder = 0;
+            }
+
+            // Broken sheared catwalk terminus at X: -4.8 pointing into the plasma abyss
+            GameObject brokenFloorTerminus = new GameObject("Catwalk_BrokenTerminus_Left");
+            brokenFloorTerminus.transform.SetParent(floorDressRoot.transform);
+            brokenFloorTerminus.transform.position = new Vector3(-4.8f, -4.0f, 0f);
+            SpriteRenderer bftRend = brokenFloorTerminus.AddComponent<SpriteRenderer>();
+            bftRend.sprite = ch2BrokenEndSp;
+            bftRend.sortingOrder = 1;
+
+            // Warm maintenance lantern at broken edge
+            GameObject lanternFloorObj = new GameObject("Lantern_BrokenFloorEdge");
+            lanternFloorObj.transform.SetParent(floorDressRoot.transform);
+            lanternFloorObj.transform.position = new Vector3(-5.3f, -3.6f, 0f);
+            SpriteRenderer lfoRend = lanternFloorObj.AddComponent<SpriteRenderer>();
+            lfoRend.sprite = ch2LanternSp;
+            lfoRend.sortingOrder = 5;
+
+            GameObject lfoLightObj = new GameObject("LanternLight_BrokenFloor");
+            lfoLightObj.transform.SetParent(lanternFloorObj.transform);
+            lfoLightObj.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            Light2D lfoLight = lfoLightObj.AddComponent<Light2D>();
+            lfoLight.lightType = Light2D.LightType.Point;
+            lfoLight.pointLightOuterRadius = 2.8f;
+            lfoLight.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            lfoLight.intensity = 1.35f;
+
+            // Safety railings along left spawn catwalk
+            for (float rx = -10.0f; rx <= -6.0f; rx += 1.0f)
+            {
+                GameObject rail = new GameObject($"Rail_{rx}");
+                rail.transform.SetParent(floorDressRoot.transform);
+                rail.transform.position = new Vector3(rx, -3.75f, 0f);
+                SpriteRenderer rr = rail.AddComponent<SpriteRenderer>();
+                rr.sprite = railingSp;
+                rr.sortingOrder = 3;
+            }
+
+            // =========================================================================
+            // 3. COLLAPSING FLOOR BETRAYAL TRAP WITH VISUAL WARNING CLUE
+            // =========================================================================
             GameObject trapTileObj = new GameObject("CollapsingFloorTrap");
             trapTileObj.transform.SetParent(refs.puzzleRoot.transform);
             trapTileObj.transform.position = new Vector3(1.0f, -4.0f, 0f);
 
             SpriteRenderer trapRend = trapTileObj.AddComponent<SpriteRenderer>();
-            trapRend.sprite = trapFloorSp != null ? trapFloorSp : floorSp;
+            trapRend.sprite = ch2FractureSp != null ? ch2FractureSp : floorSp;
             trapRend.sortingOrder = 1;
 
             BoxCollider2D trapCol = trapTileObj.AddComponent<BoxCollider2D>();
@@ -2738,22 +3696,22 @@ namespace GlitchVerse.Editor
             trapLightObj.transform.localPosition = new Vector3(0f, 0.3f, 0f);
             Light2D trapLight = trapLightObj.AddComponent<Light2D>();
             trapLight.lightType = Light2D.LightType.Point;
-            trapLight.pointLightOuterRadius = 1.6f;
+            trapLight.pointLightOuterRadius = 1.8f;
             trapLight.color = new Color(1.0f, 0.55f, 0.12f, 1f);
-            trapLight.intensity = 0.75f;
+            trapLight.intensity = 0.85f;
 
             FlickeringLight2D trapFlicker = trapLightObj.AddComponent<FlickeringLight2D>();
             trapFlicker.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
-            trapFlicker.BaseIntensity = 0.75f;
+            trapFlicker.BaseIntensity = 0.85f;
 
             CollapsingFloor trapComp = trapTileObj.AddComponent<CollapsingFloor>();
             SetPrivateField(trapComp, "floorRenderer", trapRend);
             SetPrivateField(trapComp, "solidCollider", trapCol);
             SetPrivateField(trapComp, "cautionLight", trapLight);
 
-            // =========================================================
-            // 2. ZONE 1: FLOOR HAZARD (TEACHES "FLOOR IS DANGER, FLIP UP")
-            // =========================================================
+            // =========================================================================
+            // 4. ZONE 1: FLOOR HAZARD (TEACHES "FLOOR IS DANGER, FLIP UP")
+            // =========================================================================
             // Blocks walking forward along floor between X: -4.8 and -1.8
             GameObject floorHazardObj = new GameObject("FloorHazard_Zone1");
             floorHazardObj.transform.SetParent(refs.puzzleRoot.transform);
@@ -2775,9 +3733,10 @@ namespace GlitchVerse.Editor
             fhLightObj.transform.localPosition = Vector3.zero;
             Light2D fhLight = fhLightObj.AddComponent<Light2D>();
             fhLight.lightType = Light2D.LightType.Point;
-            fhLight.pointLightOuterRadius = 3.2f;
+            fhLight.pointLightInnerRadius = 0.3f;
+            fhLight.pointLightOuterRadius = 2.0f;
             fhLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
-            fhLight.intensity = 1.3f;
+            fhLight.intensity = 1.0f;
 
             MovingLaserHazard fhComp = floorHazardObj.AddComponent<MovingLaserHazard>();
             fhComp.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(-3.3f, -3.6f, 0f), new Vector3(-3.3f, -3.6f, 0f), 0f, 0f, startActive: true);
@@ -2786,33 +3745,53 @@ namespace GlitchVerse.Editor
             SetPrivateField(fhComp, "activeOnStart", true);
             fhComp.SetHazardActive(true);
 
-            // =========================================================
-            // 3. INVERTED CEILING CATWALK & ECHO SWITCH (X: -6.0 to -1.5, Y: 3.8)
-            // =========================================================
+            // Heavy containment laser projector housings at both ends of the floor pit
+            GameObject fEmitLeft = new GameObject("Emitter_FloorPit_Left");
+            fEmitLeft.transform.SetParent(floorHazardObj.transform);
+            fEmitLeft.transform.position = new Vector3(-4.9f, -3.6f, 0f);
+            SpriteRenderer felRend = fEmitLeft.AddComponent<SpriteRenderer>();
+            felRend.sprite = ch2EmitterHousingSp;
+            felRend.sortingOrder = 8;
+
+            GameObject fEmitRight = new GameObject("Emitter_FloorPit_Right");
+            fEmitRight.transform.SetParent(floorHazardObj.transform);
+            fEmitRight.transform.position = new Vector3(-1.7f, -3.6f, 0f);
+            fEmitRight.transform.localScale = new Vector3(-1f, 1f, 1f);
+            SpriteRenderer ferRend = fEmitRight.AddComponent<SpriteRenderer>();
+            ferRend.sprite = ch2EmitterHousingSp;
+            ferRend.sortingOrder = 8;
+
+            // =========================================================================
+            // 5. INVERTED CEILING CATWALK & ECHO SWITCH (X: -6.0 to -1.5, Y: 3.8)
+            // =========================================================================
             GameObject ceilingCatwalk = new GameObject("Ceiling_Catwalk");
             ceilingCatwalk.transform.SetParent(refs.envRoot.transform);
             ceilingCatwalk.transform.position = new Vector3(-3.75f, 3.8f, 0f);
             BoxCollider2D ceilCatCol = ceilingCatwalk.AddComponent<BoxCollider2D>();
             ceilCatCol.size = new Vector2(4.8f, 0.4f);
 
-            for (float px = -6.0f; px <= -1.5f; px += 1.0f)
+            // Dual-orientation ceiling deck pieces: top anchors bolted to ceiling, bottom diamond tread for upside-down walk
+            for (float px = -5.75f; px <= -1.75f; px += 2.0f)
             {
-                GameObject seg = new GameObject($"CeilSeg_{px}");
+                GameObject seg = new GameObject($"CeilDeck_{px}");
                 seg.transform.SetParent(ceilingCatwalk.transform);
                 seg.transform.position = new Vector3(px, 3.8f, 0f);
-                seg.transform.localScale = new Vector3(1.0f, -0.4f, 1f);
                 SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
+                rend.sprite = ch2InvertedCeilSp;
                 rend.sortingOrder = 1;
             }
 
-            GameObject ceilHazard = new GameObject("Deco_CeilCatwalk_Hazard");
-            ceilHazard.transform.SetParent(ceilingCatwalk.transform);
-            ceilHazard.transform.position = new Vector3(-3.75f, 3.98f, 0f);
-            ceilHazard.transform.localScale = new Vector3(4.5f, -0.2f, 1f);
-            SpriteRenderer chRend = ceilHazard.AddComponent<SpriteRenderer>();
-            chRend.sprite = hazardSp;
-            chRend.sortingOrder = 2;
+            // Inverted Safety Railings hanging below ceiling catwalk
+            for (float px = -5.5f; px <= -2.0f; px += 1.0f)
+            {
+                GameObject invRail = new GameObject($"InvRail_{px}");
+                invRail.transform.SetParent(ceilingCatwalk.transform);
+                invRail.transform.position = new Vector3(px, 3.65f, 0f);
+                invRail.transform.localScale = new Vector3(1.0f, -0.7f, 1f);
+                SpriteRenderer irRend = invRail.AddComponent<SpriteRenderer>();
+                irRend.sprite = railingSp;
+                irRend.sortingOrder = 3;
+            }
 
             // EchoSwitch mounted inverted on the ceiling catwalk at (-3.8, 3.5)
             GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
@@ -2822,7 +3801,7 @@ namespace GlitchVerse.Editor
 
             SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
             switchRend.sprite = echoSwitchSp;
-            switchRend.sortingOrder = 2;
+            switchRend.sortingOrder = 4;
 
             BoxCollider2D switchCol = echoSwitchObj.AddComponent<BoxCollider2D>();
             switchCol.isTrigger = true;
@@ -2833,9 +3812,10 @@ namespace GlitchVerse.Editor
             switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
             Light2D switchLight = switchLightObj.AddComponent<Light2D>();
             switchLight.lightType = Light2D.LightType.Point;
-            switchLight.pointLightOuterRadius = 3.0f;
+            switchLight.pointLightInnerRadius = 0.2f;
+            switchLight.pointLightOuterRadius = 1.8f;
             switchLight.color = new Color(0.85f, 0f, 1f, 1f);
-            switchLight.intensity = 0.7f;
+            switchLight.intensity = 0.85f;
 
             SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
@@ -2847,9 +3827,18 @@ namespace GlitchVerse.Editor
             SetPrivateField(echoSwitchComp, "latching", false);
             SetPrivateField(echoSwitchComp, "isPowered", true);
 
-            // =========================================================
-            // 4. ZONE 3: HANGING CEILING LASER HAZARD (TEACHES "UP IS DANGER, FLIP DOWN")
-            // =========================================================
+            // Heavy conduit run powering the ceiling switch from the ceiling
+            GameObject ceilConduits = new GameObject("Deco_CeilingSwitchConduits");
+            ceilConduits.transform.SetParent(ceilingCatwalk.transform);
+            ceilConduits.transform.position = new Vector3(-3.8f, 4.3f, 0f);
+            ceilConduits.transform.localScale = new Vector3(1.8f, -1.0f, 1f);
+            SpriteRenderer cscRend = ceilConduits.AddComponent<SpriteRenderer>();
+            cscRend.sprite = cableSp;
+            cscRend.sortingOrder = -5;
+
+            // =========================================================================
+            // 6. ZONE 3: HANGING CEILING LASER HAZARD (TEACHES "UP IS DANGER, FLIP DOWN")
+            // =========================================================================
             // Hangs down from ceiling at X: 1.3, covering Y: 2.3 to 5.2 (height 2.9m)
             GameObject ceilLaserObj = new GameObject("CeilingHazard_Zone3");
             ceilLaserObj.transform.SetParent(refs.puzzleRoot.transform);
@@ -2871,9 +3860,10 @@ namespace GlitchVerse.Editor
             clLightObj.transform.localPosition = Vector3.zero;
             Light2D clLight = clLightObj.AddComponent<Light2D>();
             clLight.lightType = Light2D.LightType.Point;
-            clLight.pointLightOuterRadius = 3.0f;
+            clLight.pointLightInnerRadius = 0.3f;
+            clLight.pointLightOuterRadius = 1.8f;
             clLight.color = new Color(1.0f, 0.12f, 0.22f, 1f);
-            clLight.intensity = 1.4f;
+            clLight.intensity = 1.0f;
 
             MovingLaserHazard clComp = ceilLaserObj.AddComponent<MovingLaserHazard>();
             clComp.ConfigurePath(MovingLaserHazard.MotionAxis.Vertical, new Vector3(1.3f, 3.6f, 0f), new Vector3(1.3f, 3.9f, 0f), 0.6f, 0f, startActive: true);
@@ -2882,49 +3872,69 @@ namespace GlitchVerse.Editor
             SetPrivateField(clComp, "activeOnStart", true);
             clComp.SetHazardActive(true);
 
-            // =========================================================
-            // 5. MID TRANSITION CATWALK (SAFE LANDING ZONE AT X: -0.8, Y: -1.4)
-            // =========================================================
+            // Overhead heavy emitter projector housing at Y: 5.2
+            GameObject ceilEmitHousing = new GameObject("Emitter_CeilingLaserHousing");
+            ceilEmitHousing.transform.SetParent(ceilLaserObj.transform);
+            ceilEmitHousing.transform.position = new Vector3(1.3f, 5.25f, 0f);
+            ceilEmitHousing.transform.localScale = new Vector3(1.2f, -1.2f, 1f);
+            SpriteRenderer cehRend = ceilEmitHousing.AddComponent<SpriteRenderer>();
+            cehRend.sprite = ch2EmitterHousingSp;
+            cehRend.sortingOrder = 8;
+
+            // =========================================================================
+            // 7. MID TRANSITION CATWALK (SAFE LANDING ZONE AT X: -0.8, Y: -1.4)
+            // =========================================================================
             GameObject midCatwalk = new GameObject("Mid_TransitionCatwalk");
             midCatwalk.transform.SetParent(refs.envRoot.transform);
             midCatwalk.transform.position = new Vector3(-0.8f, -1.4f, 0f);
             BoxCollider2D midCol = midCatwalk.AddComponent<BoxCollider2D>();
             midCol.size = new Vector2(1.8f, 0.35f);
 
-            for (float px = -1.6f; px <= 0.0f; px += 0.8f)
-            {
-                GameObject seg = new GameObject($"MidSeg_{px}");
-                seg.transform.SetParent(midCatwalk.transform);
-                seg.transform.position = new Vector3(px, -1.4f, 0f);
-                seg.transform.localScale = new Vector3(0.8f, 0.35f, 1f);
-                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
-                rend.sortingOrder = 1;
-            }
+            GameObject midDeck = new GameObject("Mid_CatwalkDeck");
+            midDeck.transform.SetParent(midCatwalk.transform);
+            midDeck.transform.position = new Vector3(-0.8f, -1.4f, 0f);
+            midDeck.transform.localScale = new Vector3(0.9f, 0.5f, 1f);
+            SpriteRenderer mdRend = midDeck.AddComponent<SpriteRenderer>();
+            mdRend.sprite = ch2HeavyPlatSp;
+            mdRend.sortingOrder = 1;
 
-            // =========================================================
-            // 6. STEP CATWALK (TRANSITION UP TO EXIT CATWALK AT X: 4.2, Y: -2.4)
-            // =========================================================
+            // Warm maintenance lantern on mid catwalk edge
+            GameObject midLantern = new GameObject("Lantern_MidCatwalk");
+            midLantern.transform.SetParent(midCatwalk.transform);
+            midLantern.transform.position = new Vector3(-0.1f, -1.1f, 0f);
+            SpriteRenderer mlRend = midLantern.AddComponent<SpriteRenderer>();
+            mlRend.sprite = ch2LanternSp;
+            mlRend.sortingOrder = 5;
+
+            GameObject mlLightObj = new GameObject("MidLantern_Light");
+            mlLightObj.transform.SetParent(midLantern.transform);
+            mlLightObj.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            Light2D mlLight = mlLightObj.AddComponent<Light2D>();
+            mlLight.lightType = Light2D.LightType.Point;
+            mlLight.pointLightOuterRadius = 2.4f;
+            mlLight.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            mlLight.intensity = 1.25f;
+
+            // =========================================================================
+            // 8. STEP CATWALK (TRANSITION UP TO EXIT CATWALK AT X: 4.2, Y: -2.4)
+            // =========================================================================
             GameObject stepCatwalk = new GameObject("Step_Catwalk");
             stepCatwalk.transform.SetParent(refs.envRoot.transform);
             stepCatwalk.transform.position = new Vector3(4.2f, -2.4f, 0f);
             BoxCollider2D stepCol = stepCatwalk.AddComponent<BoxCollider2D>();
             stepCol.size = new Vector2(1.4f, 0.35f);
 
-            for (float px = 3.6f; px <= 4.8f; px += 0.6f)
-            {
-                GameObject seg = new GameObject($"StepSeg_{px}");
-                seg.transform.SetParent(stepCatwalk.transform);
-                seg.transform.position = new Vector3(px, -2.4f, 0f);
-                seg.transform.localScale = new Vector3(0.6f, 0.35f, 1f);
-                SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
-                rend.sortingOrder = 1;
-            }
+            GameObject stepDeck = new GameObject("Step_CatwalkDeck");
+            stepDeck.transform.SetParent(stepCatwalk.transform);
+            stepDeck.transform.position = new Vector3(4.2f, -2.4f, 0f);
+            stepDeck.transform.localScale = new Vector3(0.7f, 0.5f, 1f);
+            SpriteRenderer sdRend = stepDeck.AddComponent<SpriteRenderer>();
+            sdRend.sprite = ch2HeavyPlatSp;
+            sdRend.sortingOrder = 1;
 
-            // =========================================================
-            // 7. EXIT CATWALK, SECURITY BARRIER, & ELEVATED EXIT DOOR
-            // =========================================================
+            // =========================================================================
+            // 9. EXIT CATWALK, SECURITY BARRIER, & ELEVATED EXIT DOOR
+            // =========================================================================
             refs.exitDoor.transform.position = new Vector3(8.5f, 0.5f, 0f);
 
             GameObject exitCatwalk = new GameObject("Exit_Catwalk");
@@ -2933,18 +3943,29 @@ namespace GlitchVerse.Editor
             BoxCollider2D catCol = exitCatwalk.AddComponent<BoxCollider2D>();
             catCol.size = new Vector2(5.5f, 0.4f);
 
-            for (float px = 5.5f; px <= 10.5f; px += 1.0f)
+            for (float px = 5.5f; px <= 10.5f; px += 2.0f)
             {
-                GameObject seg = new GameObject($"CatwalkSeg_{px}");
+                GameObject seg = new GameObject($"ExitDeckSeg_{px}");
                 seg.transform.SetParent(exitCatwalk.transform);
                 seg.transform.position = new Vector3(px, -0.8f, 0f);
-                seg.transform.localScale = new Vector3(1.0f, 0.4f, 1f);
                 SpriteRenderer rend = seg.AddComponent<SpriteRenderer>();
-                rend.sprite = floorSp;
+                rend.sprite = ch2HeavyPlatSp;
                 rend.sortingOrder = 1;
             }
 
-            // Security Barrier in front of the exit door on the catwalk at X: 6.2, Y: 0.3
+            // Yellow safety railings along exit catwalk
+            for (float rx = 5.5f; rx <= 10.5f; rx += 1.0f)
+            {
+                if (Mathf.Abs(rx - 6.2f) < 0.4f || Mathf.Abs(rx - 8.5f) < 0.6f) continue; // Leave gaps for barrier and door
+                GameObject rail = new GameObject($"ExitRail_{rx}");
+                rail.transform.SetParent(exitCatwalk.transform);
+                rail.transform.position = new Vector3(rx, -0.55f, 0f);
+                SpriteRenderer er = rail.AddComponent<SpriteRenderer>();
+                er.sprite = railingSp;
+                er.sortingOrder = 3;
+            }
+
+            // Security Barrier in front of the exit door on the catwalk at X: 6.2, Y: 0.35
             GameObject barrierObj = new GameObject("SecurityBarrier_Exit");
             barrierObj.transform.SetParent(refs.puzzleRoot.transform);
             barrierObj.transform.position = new Vector3(6.2f, 0.35f, 0f);
@@ -2964,9 +3985,10 @@ namespace GlitchVerse.Editor
             barLightObj.transform.localPosition = Vector3.zero;
             Light2D barLight = barLightObj.AddComponent<Light2D>();
             barLight.lightType = Light2D.LightType.Point;
-            barLight.pointLightOuterRadius = 2.4f;
+            barLight.pointLightInnerRadius = 0.2f;
+            barLight.pointLightOuterRadius = 1.6f;
             barLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
-            barLight.intensity = 1.3f;
+            barLight.intensity = 0.95f;
 
             // Barrier status sign
             GameObject signCanvasObj = new GameObject("BarrierSignCanvas");
@@ -3003,54 +4025,71 @@ namespace GlitchVerse.Editor
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
 
-            // =========================================================
-            // 8. ENVIRONMENTAL DRESSING & LIGHTING
-            // =========================================================
-            GameObject floatDebris1 = new GameObject("Deco_FloatingMachinery_1");
-            floatDebris1.transform.SetParent(refs.envRoot.transform);
-            floatDebris1.transform.position = new Vector3(-1.5f, 1.8f, 0f);
-            floatDebris1.transform.localScale = new Vector3(1.2f, -1.2f, 1f);
-            SpriteRenderer fdRend1 = floatDebris1.AddComponent<SpriteRenderer>();
-            fdRend1.sprite = pillarSp;
-            fdRend1.sortingOrder = -15;
-            fdRend1.color = new Color(0.6f, 0.75f, 0.85f, 0.35f);
+            // Exit Blast Door Framing & Warm Conical Bulkhead Spotlight
+            GameObject exitSignObj = new GameObject("Deco_ExitSign");
+            exitSignObj.transform.SetParent(refs.exitDoor.transform);
+            exitSignObj.transform.localPosition = new Vector3(0f, 1.35f, 0f);
+            SpriteRenderer esRend = exitSignObj.AddComponent<SpriteRenderer>();
+            esRend.sprite = exitSignSp;
+            esRend.sortingOrder = 5;
 
-            GameObject floatDebris2 = new GameObject("Deco_FloatingMachinery_2");
-            floatDebris2.transform.SetParent(refs.envRoot.transform);
-            floatDebris2.transform.position = new Vector3(2.5f, 2.4f, 0f);
-            floatDebris2.transform.localScale = new Vector3(0.8f, -0.8f, 1f);
-            SpriteRenderer fdRend2 = floatDebris2.AddComponent<SpriteRenderer>();
-            fdRend2.sprite = debrisSp;
-            fdRend2.sortingOrder = -15;
-            fdRend2.color = new Color(0.7f, 0.85f, 0.95f, 0.45f);
+            GameObject exitDoorSpotObj = new GameObject("ExitDoor_Spotlight");
+            exitDoorSpotObj.transform.SetParent(refs.exitDoor.transform);
+            exitDoorSpotObj.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            Light2D exitDoorSpot = exitDoorSpotObj.AddComponent<Light2D>();
+            exitDoorSpot.lightType = Light2D.LightType.Point;
+            exitDoorSpot.pointLightOuterRadius = 3.8f;
+            exitDoorSpot.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            exitDoorSpot.intensity = 1.45f;
 
-            GameObject ceilCables = new GameObject("Deco_CeilingCables_Inverted");
-            ceilCables.transform.SetParent(refs.envRoot.transform);
-            ceilCables.transform.position = new Vector3(-4.0f, 4.3f, 0f);
-            ceilCables.transform.localScale = new Vector3(1.6f, -1.0f, 1f);
-            SpriteRenderer ccRend = ceilCables.AddComponent<SpriteRenderer>();
-            ccRend.sprite = cableSp;
-            ccRend.sortingOrder = -5;
+            // Warm maintenance lantern on exit platform corner
+            GameObject exitLantern = new GameObject("Lantern_ExitPlatformCorner");
+            exitLantern.transform.SetParent(exitCatwalk.transform);
+            exitLantern.transform.position = new Vector3(10.2f, -0.45f, 0f);
+            SpriteRenderer elRend = exitLantern.AddComponent<SpriteRenderer>();
+            elRend.sprite = ch2LanternSp;
+            elRend.sortingOrder = 5;
 
-            GameObject malfLightObj = new GameObject("Malf_CeilingLamp");
-            malfLightObj.transform.SetParent(refs.envRoot.transform);
-            malfLightObj.transform.position = new Vector3(-4.0f, 2.8f, 0f);
-            Light2D malfLight = malfLightObj.AddComponent<Light2D>();
-            malfLight.lightType = Light2D.LightType.Point;
-            malfLight.pointLightOuterRadius = 3.5f;
-            malfLight.color = new Color(0.3f, 0.8f, 1.0f, 1f);
-            malfLight.intensity = 0.5f;
+            GameObject elLightObj = new GameObject("ExitLantern_Light");
+            elLightObj.transform.SetParent(exitLantern.transform);
+            elLightObj.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            Light2D elLight = elLightObj.AddComponent<Light2D>();
+            elLight.lightType = Light2D.LightType.Point;
+            elLight.pointLightOuterRadius = 2.6f;
+            elLight.color = new Color(1.0f, 0.72f, 0.35f, 1f);
+            elLight.intensity = 1.3f;
 
-            FlickeringLight2D malfFlicker = malfLightObj.AddComponent<FlickeringLight2D>();
-            malfFlicker.Mode = FlickeringLight2D.FlickerMode.MalfunctioningArc;
-            malfFlicker.BaseIntensity = 0.5f;
+            // =========================================================================
+            // 10. CINEMATIC FOREGROUND SILHOUETTES (Sorting Order: 12)
+            // =========================================================================
+            GameObject fgObjLeft = new GameObject("FG_Silhouette_Left");
+            fgObjLeft.transform.SetParent(ch02EnvRoot.transform);
+            fgObjLeft.transform.position = new Vector3(-8.0f, -4.8f, 0f);
+            fgObjLeft.transform.localScale = new Vector3(2.5f, 1.8f, 1f);
+            SpriteRenderer fglRend = fgObjLeft.AddComponent<SpriteRenderer>();
+            fglRend.sprite = ch2ForegroundSp;
+            fglRend.sortingOrder = 12;
 
-            // =========================================================
-            // 9. CHECKPOINT 4: FAKE EMERGENCY COUNTDOWN PRANK (LEVEL 02)
-            // =========================================================
+            GameObject fgObjRight = new GameObject("FG_Silhouette_Right");
+            fgObjRight.transform.SetParent(ch02EnvRoot.transform);
+            fgObjRight.transform.position = new Vector3(7.5f, -4.8f, 0f);
+            fgObjRight.transform.localScale = new Vector3(-2.5f, 1.8f, 1f);
+            SpriteRenderer fgrRend = fgObjRight.AddComponent<SpriteRenderer>();
+            fgrRend.sprite = ch2ForegroundSp;
+            fgrRend.sortingOrder = 12;
+
+            // =========================================================================
+            // 11. CHECKPOINT 4: FAKE EMERGENCY COUNTDOWN PRANK (LEVEL 02)
+            // =========================================================================
             GameObject emergencyPrankObj = new GameObject("FakeEmergencyPrankController");
             emergencyPrankObj.transform.SetParent(refs.puzzleRoot.transform);
             emergencyPrankObj.AddComponent<FakeEmergencyPrank>();
+
+            // In edit mode, disable fullscreen overlays so scene and camera views are pristine
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+            var subBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subBanner != null) subBanner.SetActive(false);
 
             SaveChamberScene("Level02.unity");
         }

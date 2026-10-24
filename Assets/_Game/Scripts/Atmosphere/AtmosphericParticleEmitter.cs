@@ -68,11 +68,19 @@ namespace GlitchVerse.Atmosphere
             var sizeOverLife = ps.sizeOverLifetime;
             sizeOverLife.enabled = true;
 
-            // Ensure ParticleSystemRenderer is on background sorting layer
+            // Ensure ParticleSystemRenderer is on background sorting layer with valid URP unlit material
             var psRend = GetComponent<ParticleSystemRenderer>();
             if (psRend != null)
             {
                 psRend.sortingOrder = -5; // Deep in background, never obscuring gameplay objects (order 0-5)
+                if (psRend.sharedMaterial == null)
+                {
+                    var particleShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Universal Render Pipeline/Particles/Unlit");
+                    if (particleShader != null)
+                    {
+                        psRend.material = new Material(particleShader);
+                    }
+                }
             }
 
             // Chapter specific tuning
