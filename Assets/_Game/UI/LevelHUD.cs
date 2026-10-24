@@ -156,14 +156,14 @@ namespace GlitchVerse.UI
             {
                 abilities += abilityController.IsGravityInverted
                     ? "<color=#00F0FF>[G] GRAV: INVERTED</color>   "
-                    : "<color=#888888>[G] GRAV: NORMAL</color>   ";
+                    : "<color=#B0BCCB>[G] GRAV: NORMAL</color>   ";
             }
 
             if (abilityController.AllowTimeFreeze)
             {
                 abilities += abilityController.IsTimeFrozen
-                    ? "<color=#33D6FF>[F] TIME: FROZEN</color>   "
-                    : "<color=#888888>[F] TIME: ACTIVE</color>   ";
+                    ? "<color=#00F0FF>[F] TIME: FROZEN</color>   "
+                    : "<color=#B0BCCB>[F] TIME: ACTIVE</color>   ";
             }
 
             if (abilityController.AllowDimensionSwap)

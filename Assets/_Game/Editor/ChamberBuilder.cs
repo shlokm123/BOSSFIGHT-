@@ -5325,20 +5325,46 @@ namespace GlitchVerse.Editor
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(40f, -95f), new Vector2(300f, 30f), 
                 new Color(0.8f, 0.9f, 1f, 0.8f));
 
-            Text instTxt = CreateUIText(uiRoot.transform, "InstructionsText", 
-                "[A/D] Move   [SPACE] Jump   [R] Restart", defaultFont, 18, TextAnchor.LowerLeft,
-                new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 40f), new Vector2(600f, 35f), 
-                new Color(0.85f, 0.88f, 0.92f, 1f));
+            // 7.4 Bottom-Left Ability & Controls Backing Panel (Enhanced Readability)
+            GameObject controlsBackingObj = new GameObject("HUD_ControlsBackingPanel");
+            controlsBackingObj.transform.SetParent(uiRoot.transform, false);
+            RectTransform cbRt = controlsBackingObj.AddComponent<RectTransform>();
+            cbRt.anchorMin = new Vector2(0f, 0f);
+            cbRt.anchorMax = new Vector2(0f, 0f);
+            cbRt.pivot = new Vector2(0f, 0f);
+            cbRt.anchoredPosition = new Vector2(24f, 20f);
+            cbRt.sizeDelta = new Vector2(430f, 104f);
+            Image cbImg = controlsBackingObj.AddComponent<Image>();
+            cbImg.color = new Color(0.03f, 0.05f, 0.09f, 0.88f);
+            cbImg.raycastTarget = false;
 
-            Text abilityTxt = CreateUIText(uiRoot.transform, "AbilityStatusText", 
-                "", defaultFont, 16, TextAnchor.LowerLeft,
-                new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 75f), new Vector2(800f, 35f), 
+            // Accent border on backing panel
+            GameObject cbBorder = new GameObject("BorderTop");
+            cbBorder.transform.SetParent(controlsBackingObj.transform, false);
+            RectTransform borderRt = cbBorder.AddComponent<RectTransform>();
+            borderRt.anchorMin = new Vector2(0f, 1f);
+            borderRt.anchorMax = new Vector2(1f, 1f);
+            borderRt.pivot = new Vector2(0.5f, 1f);
+            borderRt.anchoredPosition = Vector2.zero;
+            borderRt.sizeDelta = new Vector2(0f, 2f);
+            Image borderImg = cbBorder.AddComponent<Image>();
+            borderImg.color = new Color(0f, 0.94f, 1f, 0.45f);
+            borderImg.raycastTarget = false;
+
+            Text echoTxt = CreateUIText(controlsBackingObj.transform, "EchoStatusText", 
+                "[H] Replay Echo   [C] Clear", defaultFont, 14, TextAnchor.MiddleLeft,
+                new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(14f, 80f), new Vector2(-14f, 22f), 
+                new Color(0.85f, 0f, 1f, 1f));
+
+            Text abilityTxt = CreateUIText(controlsBackingObj.transform, "AbilityStatusText", 
+                "", defaultFont, 14, TextAnchor.MiddleLeft,
+                new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(14f, 52f), new Vector2(-14f, 22f), 
                 new Color(0f, 0.94f, 1f, 1f));
 
-            Text echoTxt = CreateUIText(uiRoot.transform, "EchoStatusText", 
-                "ECHO: READY [SPACE RECORD / C PLAY / H CLEAR]", defaultFont, 16, TextAnchor.LowerLeft,
-                new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 110f), new Vector2(800f, 35f), 
-                new Color(0.85f, 0f, 1f, 1f));
+            Text instTxt = CreateUIText(controlsBackingObj.transform, "InstructionsText", 
+                "[A/D] Move   [SPACE] Jump   [R] Restart", defaultFont, 14, TextAnchor.MiddleLeft,
+                new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(14f, 22f), new Vector2(-14f, 22f), 
+                new Color(0.88f, 0.90f, 0.94f, 1f));
 
             // 7.5 Emergency Fullscreen Flash Overlay (Phase 07)
             GameObject flashObj = new GameObject("EmergencyFlashOverlay");
@@ -5352,26 +5378,40 @@ namespace GlitchVerse.Editor
             flashImg.color = new Color(1f, 0f, 0.15f, 0f);
             flashImg.raycastTarget = false;
 
-            // Architect Subtitle Banner (Phase 07)
+            // Architect Subtitle Banner (Phase 07 / Compact Non-Obscuring Top Dock)
             GameObject subBannerObj = new GameObject("ArchitectSubtitleBanner");
             subBannerObj.transform.SetParent(uiRoot.transform, false);
             RectTransform bannerRt = subBannerObj.AddComponent<RectTransform>();
-            bannerRt.anchorMin = new Vector2(0.15f, 0.78f);
-            bannerRt.anchorMax = new Vector2(0.85f, 0.90f);
-            bannerRt.offsetMin = Vector2.zero;
-            bannerRt.offsetMax = Vector2.zero;
+            bannerRt.anchorMin = new Vector2(0.5f, 1f);
+            bannerRt.anchorMax = new Vector2(0.5f, 1f);
+            bannerRt.pivot = new Vector2(0.5f, 1f);
+            bannerRt.anchoredPosition = new Vector2(0f, -20f);
+            bannerRt.sizeDelta = new Vector2(680f, 58f);
 
             Image bannerBg = subBannerObj.AddComponent<Image>();
-            bannerBg.color = new Color(0.02f, 0.04f, 0.08f, 0.92f);
+            bannerBg.color = new Color(0.03f, 0.05f, 0.09f, 0.92f);
+
+            // Subtle red emergency accent border at bottom of banner
+            GameObject bannerBorder = new GameObject("BannerBorderBottom");
+            bannerBorder.transform.SetParent(subBannerObj.transform, false);
+            RectTransform bBorderRt = bannerBorder.AddComponent<RectTransform>();
+            bBorderRt.anchorMin = Vector2.zero;
+            bBorderRt.anchorMax = new Vector2(1f, 0f);
+            bBorderRt.pivot = new Vector2(0.5f, 0f);
+            bBorderRt.anchoredPosition = Vector2.zero;
+            bBorderRt.sizeDelta = new Vector2(0f, 2f);
+            Image bBorderImg = bannerBorder.AddComponent<Image>();
+            bBorderImg.color = new Color(1f, 0.12f, 0.25f, 0.5f);
+            bBorderImg.raycastTarget = false;
 
             Text subSpeakerTxt = CreateUIText(subBannerObj.transform, "SpeakerNameText",
-                "// THE ARCHITECT //", defaultFont, 14, TextAnchor.UpperLeft,
-                new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(16f, -6f), new Vector2(300f, 20f),
+                "// THE ARCHITECT //", defaultFont, 11, TextAnchor.UpperLeft,
+                new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(16f, -4f), new Vector2(-16f, 16f),
                 new Color(0f, 0.94f, 1f, 1f));
 
             Text subContentTxt = CreateUIText(subBannerObj.transform, "SubtitleContentText",
-                "", defaultFont, 20, TextAnchor.MiddleLeft,
-                new Vector2(0f, 0f), new Vector2(1f, 0.75f), new Vector2(20f, 0f), new Vector2(-40f, 0f),
+                "", defaultFont, 15, TextAnchor.MiddleLeft,
+                new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(16f, 4f), new Vector2(-16f, -20f),
                 Color.white);
             subContentTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
 
@@ -6075,23 +6115,10 @@ namespace GlitchVerse.Editor
             barLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
             barLight.intensity = 1.4f;
 
-            GameObject barCanvasObj = new GameObject("Barrier_SignUI");
-            barCanvasObj.transform.SetParent(barrierObj.transform);
-            barCanvasObj.transform.localPosition = new Vector3(0f, 1.6f, 0f);
-            Canvas barCanvas = barCanvasObj.AddComponent<Canvas>();
-            barCanvas.renderMode = RenderMode.WorldSpace;
-            RectTransform barRt = barCanvasObj.GetComponent<RectTransform>();
-            barRt.sizeDelta = new Vector2(300f, 80f);
-            barRt.localScale = new Vector3(0.007f, 0.007f, 1f);
-            Text barText = CreateUIText(barCanvasObj.transform, "SignText", 
-                "<color=#FF1E40>[SECURITY INTERLOCK: ACTIVE]</color>", defaultFont, 14, TextAnchor.MiddleCenter,
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Color.white);
-
             SecurityBarrier barrierComp = barrierObj.AddComponent<SecurityBarrier>();
             SetPrivateField(barrierComp, "barrierCollider", barCol);
             SetPrivateField(barrierComp, "barrierRenderer", barRend);
             SetPrivateField(barrierComp, "barrierLight", barLight);
-            SetPrivateField(barrierComp, "signText", barText);
             SetPrivateField(barrierComp, "isLocked", true);
             barrierObj.SetActive(false);
 
@@ -6519,14 +6546,14 @@ namespace GlitchVerse.Editor
             coreGlowObj.transform.position = new Vector3(2.5f, 1.2f, 0f);
             Light2D coreGlow = coreGlowObj.AddComponent<Light2D>();
             coreGlow.lightType = Light2D.LightType.Point;
-            coreGlow.pointLightOuterRadius = 9.5f;
-            coreGlow.pointLightInnerRadius = 0.8f;
+            coreGlow.pointLightOuterRadius = 3.6f;
+            coreGlow.pointLightInnerRadius = 0.5f;
             coreGlow.color = new Color(0.15f, 0.85f, 1.0f, 1f);
-            coreGlow.intensity = 1.25f;
+            coreGlow.intensity = 0.75f;
 
             FlickeringLight2D coreFlicker = coreGlowObj.AddComponent<FlickeringLight2D>();
             coreFlicker.Mode = FlickeringLight2D.FlickerMode.SlowBreathing;
-            coreFlicker.BaseIntensity = 1.25f;
+            coreFlicker.BaseIntensity = 0.75f;
 
             // C. Zero-G Suspended & Skewed Cargo Containers (Sorting Order: -16)
             // Cargo Pod 1 (Above left floor, tilted 22 degrees)
@@ -7037,32 +7064,10 @@ namespace GlitchVerse.Editor
             barLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
             barLight.intensity = 0.95f;
 
-            // Barrier status sign
-            GameObject signCanvasObj = new GameObject("BarrierSignCanvas");
-            signCanvasObj.transform.SetParent(barrierObj.transform);
-            signCanvasObj.transform.localPosition = new Vector3(0f, 1.35f, 0f);
-            Canvas signCanvas = signCanvasObj.AddComponent<Canvas>();
-            signCanvas.renderMode = RenderMode.WorldSpace;
-            RectTransform signRect = signCanvasObj.GetComponent<RectTransform>();
-            signRect.sizeDelta = new Vector2(250f, 60f);
-            signCanvasObj.transform.localScale = new Vector3(0.01f, 0.01f, 1f);
-
-            GameObject signTextObj = new GameObject("SignText");
-            signTextObj.transform.SetParent(signCanvasObj.transform);
-            signTextObj.transform.localPosition = Vector3.zero;
-            Text signText = signTextObj.AddComponent<Text>();
-            signText.font = defaultFont;
-            signText.fontSize = 14;
-            signText.alignment = TextAnchor.MiddleCenter;
-            signText.text = "<color=#FF1E40>[GRAVITY INTERLOCK: ACTIVE]</color>\n<size=12><color=#D600FF>TEMPORAL ECHO OVERRIDE REQUIRED</color></size>";
-            RectTransform textRect = signTextObj.GetComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(250f, 60f);
-
             SecurityBarrier barrierComp = barrierObj.AddComponent<SecurityBarrier>();
             SetPrivateField(barrierComp, "barrierCollider", barCol);
             SetPrivateField(barrierComp, "barrierRenderer", barRend);
             SetPrivateField(barrierComp, "barrierLight", barLight);
-            SetPrivateField(barrierComp, "signText", signText);
 
             // Connect ceiling switch to security barrier
             SetPrivateField(echoSwitchComp, "targetBarrier", barrierComp);

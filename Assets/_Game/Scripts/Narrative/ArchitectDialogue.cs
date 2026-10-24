@@ -230,33 +230,14 @@ namespace GlitchVerse.Narrative
                 monitorTextMesh.text = $"[ARCHITECT]\n{entry.monitorNote.ToUpper()}";
             }
 
-            // 1. Subtle digital glitch entrance animation
-            string rawPrefix = "<color=#FF1E40>[ARCHITECT]</color> ";
+            // Clear, legible display without destructive character scrambling
             string targetMessage = entry.text;
-            float elapsed = 0f;
+            subtitleText.text = targetMessage;
 
-            while (elapsed < glitchEntranceDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                char[] scrambled = targetMessage.ToCharArray();
-                for (int i = 0; i < scrambled.Length; i++)
-                {
-                    if (scrambled[i] != ' ' && UnityEngine.Random.value > 0.45f)
-                    {
-                        scrambled[i] = GlitchChars[UnityEngine.Random.Range(0, GlitchChars.Length)];
-                    }
-                }
-                subtitleText.text = rawPrefix + "<color=#00F0FF>" + new string(scrambled) + "</color>";
-                yield return new WaitForSecondsRealtime(0.03f);
-            }
-
-            // 2. Clear legible display
-            subtitleText.text = rawPrefix + "<color=#FFFFFF>" + targetMessage + "</color>";
-
-            // 3. Readable hold duration
+            // Readable hold duration
             yield return new WaitForSecondsRealtime(entry.duration);
 
-            // 4. Subtle exit
+            // Subtle exit
             subtitleText.text = "";
             subtitleText.gameObject.SetActive(false);
 
