@@ -1192,6 +1192,9 @@ namespace GlitchVerse.Editor
             // Chapter V: PARANOIA Modular Environmental Art
             GenerateChapter05Sprites();
 
+            // Chapter VI: TRUTH Modular Environmental Art
+            GenerateChapter06Sprites();
+
             AssetDatabase.Refresh();
         }
 
@@ -3987,6 +3990,461 @@ namespace GlitchVerse.Editor
                 }
 
                 return Color.clear;
+            });
+        }
+        #endregion
+
+        #region Chapter VI: Truth Procedural Sprites
+        private static void GenerateChapter06Sprites()
+        {
+            // 1. Chapter VI Monumental Containment Reactor Vault Backdrop (256x144)
+            // Colossal cylindrical reactor core in background, stacked metal rings, vertical red energy beam,
+            // flanking observation gantries, steam plumes, sterile white floodlight beams, dark charcoal steel
+            CreateSpriteAsset("Environment/Chapter06/ch6_containment_reactor_vault_bg.png", 256, 144, (x, y) =>
+            {
+                float nx = x / 255.0f;
+                float ny = y / 143.0f;
+
+                // Deep ominous background: charcoal iron-gray shadow at top, deep crimson radiation fog at bottom
+                Color bg = Color.Lerp(
+                    new Color(0.18f, 0.04f, 0.06f, 1f), // Deep red radiation haze at bottom
+                    new Color(0.05f, 0.05f, 0.06f, 1f), // Dark charcoal ceiling
+                    ny
+                );
+
+                // --- CENTRAL CONTAINMENT REACTOR CORE (X: 96..160) ---
+                if (x >= 96 && x <= 160)
+                {
+                    int rcx = x - 128;
+                    float rDist = Mathf.Abs(rcx) / 32.0f; // 0 at center, 1 at edge
+
+                    // Cylindrical shading
+                    float curveShade = Mathf.Cos(rDist * Mathf.PI * 0.5f);
+                    Color coreBase = Color.Lerp(
+                        new Color(0.12f, 0.08f, 0.10f, 1f), // Shadowed edge
+                        new Color(0.24f, 0.14f, 0.16f, 1f), // Highlighted center
+                        curveShade
+                    );
+
+                    // Stacked heavy metal rings every 24px (Y: 24, 48, 72, 96, 120)
+                    if (y % 24 <= 3)
+                    {
+                        if (y % 24 == 0 || y % 24 == 3) coreBase = new Color(0.08f, 0.06f, 0.07f, 1f); // Seam
+                        else coreBase = new Color(0.35f, 0.22f, 0.25f, 1f); // Raised collar
+                        if (x % 8 == 0) coreBase = new Color(0.45f, 0.30f, 0.32f, 1f); // Heavy bolts
+                    }
+
+                    // Vertical high-voltage containment rails (X: 104, 116, 140, 152)
+                    if (x == 104 || x == 116 || x == 140 || x == 152)
+                    {
+                        coreBase = new Color(0.10f, 0.07f, 0.08f, 1f);
+                    }
+
+                    // CENTRAL VERTICAL RED ENERGY AXIS (X: 126..130)
+                    if (x >= 126 && x <= 130)
+                    {
+                        if (x == 128) return new Color(1.0f, 0.85f, 0.90f, 1f); // Hot white core beam
+                        return new Color(1.0f, 0.15f, 0.25f, 1f); // Blazing crimson containment beam
+                    }
+
+                    // Internal reactor glow emission window (Y: 42..66 and Y: 90..114, X: 118..138)
+                    if (((y >= 42 && y <= 66) || (y >= 90 && y <= 114)) && x >= 118 && x <= 138)
+                    {
+                        float winDist = Mathf.Abs(rcx) / 10.0f;
+                        float glow = (1.0f - winDist) * (1.0f - winDist);
+                        coreBase += new Color(0.85f * glow, 0.10f * glow, 0.15f * glow, 0f);
+                    }
+
+                    bg = coreBase;
+                }
+
+                // --- FLANKING REACTOR COLUMNS (X: 72..88 and X: 168..184) ---
+                if ((x >= 72 && x <= 88) || (x >= 168 && x <= 184))
+                {
+                    int colMin = (x >= 72 && x <= 88) ? 72 : 168;
+                    int cx = x - colMin;
+                    Color colC = new Color(0.14f, 0.11f, 0.12f, 1f);
+                    if (cx <= 2 || cx >= 14) colC = new Color(0.08f, 0.06f, 0.07f, 1f); // Flanges
+                    if (y % 20 <= 1) colC = new Color(0.25f, 0.18f, 0.20f, 1f); // Tie plates
+                    bg = colC;
+                }
+
+                // --- HORIZONTAL OBSERVATION CATWALKS (Y: 62..66 and Y: 104..108) ---
+                if ((y >= 62 && y <= 66) || (y >= 104 && y <= 108))
+                {
+                    Color catC = new Color(0.12f, 0.10f, 0.11f, 1f);
+                    if (y == 62 || y == 66 || y == 104 || y == 108) catC = new Color(0.24f, 0.18f, 0.20f, 1f);
+                    if (x % 16 == 0) catC = new Color(0.20f, 0.15f, 0.16f, 1f);
+                    bg = Color.Lerp(bg, catC, 0.85f);
+                }
+
+                // --- STERILE WHITE DOWNWARD FLOODLIGHT SHAFTS ---
+                // Left Floodlight from (48, 138) angled down-right
+                float ldx = x - (48 + (138 - y) * 0.30f);
+                float lspread = (138 - y) * 0.28f + 2.0f;
+                if (y < 138 && y > 20 && Mathf.Abs(ldx) < lspread)
+                {
+                    float factor = (1.0f - Mathf.Abs(ldx) / lspread) * (1.0f - (138 - y) / 120.0f);
+                    bg += new Color(0.14f * factor, 0.16f * factor, 0.20f * factor, 0f);
+                }
+
+                // Right Floodlight from (208, 138) angled down-left
+                float rdx = x - (208 - (138 - y) * 0.30f);
+                float rspread = (138 - y) * 0.28f + 2.0f;
+                if (y < 138 && y > 20 && Mathf.Abs(rdx) < rspread)
+                {
+                    float factor = (1.0f - Mathf.Abs(rdx) / rspread) * (1.0f - (138 - y) / 120.0f);
+                    bg += new Color(0.14f * factor, 0.16f * factor, 0.20f * factor, 0f);
+                }
+
+                // --- STEAM & VOLUMETRIC CONDENSATION PLUMES AT BASE (Y < 42) ---
+                if (y < 42)
+                {
+                    float steam = (Mathf.Sin(x * 0.12f + y * 0.08f) + Mathf.Cos(x * 0.06f - y * 0.14f)) * 0.5f;
+                    float baseWeight = (1.0f - y / 42.0f) * 0.35f;
+                    bg += new Color(0.25f * baseWeight, 0.05f * baseWeight, 0.08f * baseWeight, 0f) * (0.8f + 0.4f * steam);
+                }
+
+                // Red indicator warning lamps on gantry junctions
+                if ((Mathf.Abs(x - 72) <= 1 && Mathf.Abs(y - 66) <= 1) ||
+                    (Mathf.Abs(x - 184) <= 1 && Mathf.Abs(y - 66) <= 1) ||
+                    (Mathf.Abs(x - 72) <= 1 && Mathf.Abs(y - 108) <= 1) ||
+                    (Mathf.Abs(x - 184) <= 1 && Mathf.Abs(y - 108) <= 1) ||
+                    (Mathf.Abs(x - 128) <= 1 && Mathf.Abs(y - 138) <= 1))
+                {
+                    return new Color(1.0f, 0.15f, 0.2f, 1f);
+                }
+
+                return bg;
+            });
+
+            // 2. Colossal Reinforced Blast Vault Door (64x128)
+            // Heavy outer steel framing, diagonal hazard chevrons, stenciled biohazard insignia, hydraulic clamps
+            CreateSpriteAsset("Environment/Chapter06/ch6_massive_blast_vault_door.png", 64, 128, (x, y) =>
+            {
+                // Outer Structural Steel Frame (X: 0..7 and X: 56..63, Y: 0..127)
+                if (x <= 7 || x >= 56 || y <= 5 || y >= 122)
+                {
+                    if (x <= 1 || x >= 62 || y <= 1 || y >= 126) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    if (y % 16 <= 1) return new Color(0.24f, 0.18f, 0.20f, 1f); // Heavy bolts
+                    return new Color(0.14f, 0.12f, 0.13f, 1f);
+                }
+
+                // Hydraulic Locking Clamps on sides (X: 6..11 and X: 52..57, Y: 32..44, 84..96)
+                if (((x >= 6 && x <= 11) || (x >= 52 && x <= 57)) && ((y >= 32 && y <= 44) || (y >= 84 && y <= 96)))
+                {
+                    if (y % 4 == 0) return new Color(0.55f, 0.55f, 0.60f, 1f); // Chrome piston rod
+                    return new Color(0.20f, 0.16f, 0.18f, 1f);
+                }
+
+                // --- MAIN DOOR SURFACE (X: 8..55, Y: 6..121) ---
+                Color doorBase = new Color(0.18f, 0.15f, 0.16f, 1f);
+
+                // Diagonal red and white hazard warning chevrons (Y: 10..26 and Y: 102..118)
+                if ((y >= 10 && y <= 26) || (y >= 102 && y <= 118))
+                {
+                    bool stripe = ((x + y) / 6) % 2 == 0;
+                    return stripe ? new Color(0.85f, 0.15f, 0.20f, 1f) : new Color(0.88f, 0.88f, 0.90f, 1f);
+                }
+
+                // Central Stenciled Biohazard / Containment Triangle Emblem (X: 20..44, Y: 52..76)
+                int bcx = x - 32;
+                int bcy = y - 64;
+                float distFromCenter = Mathf.Sqrt(bcx * bcx + bcy * bcy);
+
+                // Outer warning ring
+                if (distFromCenter >= 9.0f && distFromCenter <= 11.5f)
+                {
+                    return new Color(0.95f, 0.15f, 0.22f, 1f); // Emergency red emblem
+                }
+                // Center containment inverted triangle
+                if (bcy <= 5 && bcy >= -5 && Mathf.Abs(bcx) <= (5 - bcy))
+                {
+                    return new Color(0.95f, 0.15f, 0.22f, 1f);
+                }
+
+                // Door Seam down center (X: 31..32)
+                if (x == 31 || x == 32) return new Color(0.08f, 0.06f, 0.07f, 1f);
+
+                // Locking lug points (X: 14, 50, Y: 38, 90)
+                if ((x == 14 || x == 50) && (y == 38 || y == 90)) return new Color(1.0f, 0.2f, 0.25f, 1f);
+
+                // Surface texture
+                float noise = (Mathf.Sin(x * 0.3f) + Mathf.Cos(y * 0.2f)) * 0.5f;
+                return doorBase + new Color(noise * 0.015f, noise * 0.01f, noise * 0.01f, 0f);
+            });
+
+            // 3. Heavy Reactor Pillar (48x128)
+            // Brutalist reinforced column with red/white hazard stencils, high-voltage conduits, riveted flanges
+            CreateSpriteAsset("Environment/Chapter06/ch6_heavy_reactor_pillar.png", 48, 128, (x, y) =>
+            {
+                // Edge Flanges (X: 0..5 and X: 42..47)
+                if (x <= 5 || x >= 42)
+                {
+                    if (x == 0 || x == 47 || x == 5 || x == 42) return new Color(0.07f, 0.06f, 0.07f, 1f);
+                    if (y % 16 <= 1) return new Color(0.28f, 0.22f, 0.24f, 1f); // Rivets
+                    return new Color(0.14f, 0.12f, 0.13f, 1f);
+                }
+
+                // Red and white hazard warning decal band (Y: 96..106)
+                if (y >= 96 && y <= 106)
+                {
+                    bool stripe = ((x + y) / 5) % 2 == 0;
+                    return stripe ? new Color(0.85f, 0.15f, 0.20f, 1f) : new Color(0.88f, 0.88f, 0.90f, 1f);
+                }
+
+                // Horizontal structural gusset collars every 32px
+                if (y % 32 <= 2)
+                {
+                    return new Color(0.22f, 0.18f, 0.20f, 1f);
+                }
+
+                // Dual Heavy Power Conduits: Red high-energy line (X: 10..13), Cyan signal line (X: 34..37)
+                if (x >= 10 && x <= 13)
+                {
+                    if (x == 10 || x == 13) return new Color(0.10f, 0.06f, 0.07f, 1f);
+                    if (y % 20 <= 1) return new Color(0.25f, 0.20f, 0.22f, 1f); // Pipe bracket
+                    return new Color(0.95f, 0.20f, 0.22f, 1f); // Red power conduit!
+                }
+
+                if (x >= 34 && x <= 37)
+                {
+                    if (x == 34 || x == 37) return new Color(0.08f, 0.12f, 0.14f, 1f);
+                    if (y % 20 <= 1) return new Color(0.25f, 0.20f, 0.22f, 1f);
+                    return new Color(0.10f, 0.85f, 0.95f, 1f); // Cyan telemetry conduit!
+                }
+
+                // Stenciled Biohazard Symbol in center (X: 18..30, Y: 56..68)
+                int cx = x - 24;
+                int cy = y - 62;
+                if (Mathf.Abs(cx) <= 5 && Mathf.Abs(cy) <= 5 && (cx * cx + cy * cy) <= 25)
+                {
+                    return new Color(0.85f, 0.18f, 0.22f, 1f);
+                }
+
+                float grain = (Mathf.Sin(x * 0.4f) + Mathf.Cos(y * 0.25f)) * 0.5f;
+                return new Color(0.12f + grain * 0.015f, 0.10f + grain * 0.01f, 0.11f + grain * 0.01f, 1f);
+            });
+
+            // 4. Quarantine Blast Gate (32x96)
+            // Heavy vertical steel tracks, interlocking barrier bars, hydraulic clamp cylinders, red/cyan indicator lamps
+            CreateSpriteAsset("Environment/Chapter06/ch6_quarantine_seal_gate.png", 32, 96, (x, y) =>
+            {
+                // Outer Guide Tracks (X: 0..4 and X: 27..31)
+                if (x <= 4 || x >= 27)
+                {
+                    if (x == 0 || x == 31 || x == 4 || x == 27) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    if (y % 16 == 0) return new Color(0.30f, 0.24f, 0.26f, 1f);
+                    return new Color(0.16f, 0.13f, 0.15f, 1f);
+                }
+
+                // Horizontal Interlocking Barrier Bars every 8px
+                if (y % 8 <= 3)
+                {
+                    // Hazard stripe on bars
+                    bool stripe = ((x + y) / 4) % 2 == 0;
+                    return stripe ? new Color(0.85f, 0.15f, 0.20f, 1f) : new Color(0.88f, 0.88f, 0.90f, 1f);
+                }
+
+                // Hydraulic Cylinder in center (X: 13..18)
+                if (x >= 13 && x <= 18)
+                {
+                    if (x == 13 || x == 18) return new Color(0.12f, 0.10f, 0.11f, 1f);
+                    return new Color(0.60f, 0.60f, 0.65f, 1f); // Chrome rod
+                }
+
+                // Status Indicator Lamps at top and bottom (X: 14..17, Y: 88..92, 4..8)
+                if (x >= 14 && x <= 17 && ((y >= 88 && y <= 92) || (y >= 4 && y <= 8)))
+                {
+                    return new Color(1.0f, 0.15f, 0.20f, 1f); // Red locked lamp
+                }
+
+                return Color.clear;
+            });
+
+            // 5. Secure Vault Lore Console (48x48)
+            // Heavy angled metal terminal housing, green/cyan telemetry text CRT, flashing status LEDs
+            CreateSpriteAsset("Environment/Chapter06/ch6_vault_lore_console.png", 48, 48, (x, y) =>
+            {
+                // Outer Steel Housing Frame (X: 2..45, Y: 2..45)
+                if (x <= 2 || x >= 45 || y <= 2 || y >= 45) return Color.clear;
+                if (x == 3 || x == 44 || y == 3 || y == 44) return new Color(0.08f, 0.06f, 0.07f, 1f);
+
+                // Angled Console Desk Structure
+                if (y <= 14)
+                {
+                    // Keyboard / Keypad Deck
+                    if (y >= 6 && y <= 12 && x >= 8 && x <= 40)
+                    {
+                        bool key = (x % 3 == 0) && (y % 3 == 0);
+                        return key ? new Color(0.45f, 0.40f, 0.42f, 1f) : new Color(0.18f, 0.15f, 0.16f, 1f);
+                    }
+                    return new Color(0.14f, 0.12f, 0.13f, 1f);
+                }
+
+                // CRT Monitor Display Screen (X: 8..40, Y: 18..40)
+                if (x >= 8 && x <= 40 && y >= 18 && y <= 40)
+                {
+                    // Monitor Bezel
+                    if (x <= 10 || x >= 38 || y <= 20 || y >= 38) return new Color(0.12f, 0.10f, 0.11f, 1f);
+
+                    // Screen interior: Green/Cyan telemetry text scanlines
+                    float scan = (y % 2 == 0) ? 0.85f : 1.0f;
+                    Color screenBase = new Color(0.04f * scan, 0.18f * scan, 0.15f * scan, 1f);
+
+                    // Text line 1: "QUARANTINE" (Y: 34..35, X: 14..34)
+                    if (y >= 34 && y <= 35 && (x % 2 == 0) && x >= 14 && x <= 34) return new Color(0.15f, 0.95f, 0.75f, 1f);
+                    // Text line 2: "STATUS: ACTIVE" (Y: 28..29, X: 14..32)
+                    if (y >= 28 && y <= 29 && (x % 2 == 0) && x >= 14 && x <= 32) return new Color(0.15f, 0.95f, 0.75f, 1f);
+                    // Text line 3: Warning blocks (Y: 23..24, X: 14..28)
+                    if (y >= 23 && y <= 24 && x >= 14 && x <= 28) return new Color(0.95f, 0.25f, 0.30f, 1f); // Red alert
+
+                    return screenBase;
+                }
+
+                // Status LED dots on right bezel (X: 41..42, Y: 22, 28, 34)
+                if (x >= 41 && x <= 42)
+                {
+                    if (y == 34) return new Color(1.0f, 0.2f, 0.25f, 1f); // Red
+                    if (y == 28) return new Color(0.95f, 0.75f, 0.15f, 1f); // Amber
+                    if (y == 22) return new Color(0.15f, 0.95f, 0.75f, 1f); // Cyan
+                }
+
+                return new Color(0.16f, 0.14f, 0.15f, 1f);
+            });
+
+            // 6. Vault Catwalk Deck (128x64)
+            // Reinforced steel plate, red-white industrial hazard trim, heavy concrete support underside
+            CreateSpriteAsset("Environment/Chapter06/ch6_vault_catwalk_deck.png", 128, 64, (x, y) =>
+            {
+                // Top Deck (Y: 48..63)
+                if (y >= 48)
+                {
+                    // Hazard stripe top rim (Y: 60..63)
+                    if (y >= 60)
+                    {
+                        bool stripe = ((x + y) / 6) % 2 == 0;
+                        return stripe ? new Color(0.85f, 0.15f, 0.20f, 1f) : new Color(0.88f, 0.88f, 0.90f, 1f);
+                    }
+                    if (y == 48 || y == 59) return new Color(0.08f, 0.06f, 0.07f, 1f);
+                    bool tread = ((x % 8 == y % 8) || (x % 8 == (7 - (y % 8))));
+                    return tread ? new Color(0.26f, 0.22f, 0.24f, 1f) : new Color(0.16f, 0.14f, 0.15f, 1f);
+                }
+
+                // Bottom Structural Flanges & Girder Blocks (Y: 0..47)
+                if (y <= 4) return new Color(0.14f, 0.11f, 0.12f, 1f);
+
+                // Heavy vertical pillars every 32px
+                if (x % 32 <= 4) return new Color(0.20f, 0.16f, 0.17f, 1f);
+
+                // Diagonal cross braces
+                int bayX = x % 32;
+                float targetY1 = bayX * (44.0f / 32.0f) + 4.0f;
+                float targetY2 = (31 - bayX) * (44.0f / 32.0f) + 4.0f;
+                if (Mathf.Abs(y - targetY1) <= 1.8f || Mathf.Abs(y - targetY2) <= 1.8f)
+                {
+                    return new Color(0.16f, 0.13f, 0.14f, 1f);
+                }
+
+                // High-voltage red conduit running along underside (Y: 42..45)
+                if (y >= 42 && y <= 45) return new Color(0.85f, 0.18f, 0.22f, 1f);
+
+                return Color.clear;
+            });
+
+            // 7. Sterile Floodlight Cone (64x128)
+            // Crisp sterile downward white floodlight beam with soft dusty edges
+            CreateSpriteAsset("Environment/Chapter06/ch6_sterile_floodlight_cone.png", 64, 128, (x, y) =>
+            {
+                float ny = y / 127.0f;
+                if (y > 122)
+                {
+                    if (Mathf.Abs(x - 32) <= 3) return new Color(0.95f, 0.98f, 1.0f, 0.70f);
+                    return Color.clear;
+                }
+
+                float apexY = 124.0f;
+                float distFromApex = apexY - y;
+                float halfWidth = Mathf.Lerp(3.5f, 29.0f, distFromApex / 124.0f);
+                float distFromCenter = Mathf.Abs(x - 32);
+
+                if (distFromCenter <= halfWidth)
+                {
+                    float centerFactor = 1.0f - (distFromCenter / halfWidth);
+                    float edgeSoftness = Mathf.SmoothStep(0f, 1f, centerFactor);
+                    float lengthFalloff = Mathf.Lerp(0.60f, 0.10f, (124.0f - y) / 124.0f);
+                    float alpha = edgeSoftness * lengthFalloff;
+
+                    return new Color(0.92f, 0.96f, 1.0f, alpha); // Sterile crisp white
+                }
+
+                return Color.clear;
+            });
+
+            // 8. Heavy Cable Bundle (128x64)
+            // Massive industrial high-voltage power conduits bound with heavy metal clamps
+            CreateSpriteAsset("Environment/Chapter06/ch6_heavy_cable_bundle.png", 128, 64, (x, y) =>
+            {
+                float nx = x / 127.0f;
+                float c1Y = 54.0f - Mathf.Sin(nx * Mathf.PI) * 40.0f;
+                float c2Y = 58.0f - Mathf.Sin(nx * Mathf.PI) * 30.0f;
+                float c3Y = 62.0f - Mathf.Sin(nx * Mathf.PI) * 16.0f;
+
+                if (Mathf.Abs(y - c1Y) <= 1.4f)
+                {
+                    if (x % 20 <= 2) return new Color(0.35f, 0.28f, 0.30f, 1f); // Steel clamp
+                    return new Color(0.08f, 0.06f, 0.07f, 1f);
+                }
+                if (Mathf.Abs(y - c2Y) <= 1.1f)
+                {
+                    if (x % 20 == 10) return new Color(0.35f, 0.28f, 0.30f, 1f);
+                    return new Color(0.75f, 0.18f, 0.20f, 1f); // Red high-voltage cable!
+                }
+                if (Mathf.Abs(y - c3Y) <= 0.9f)
+                {
+                    return new Color(0.12f, 0.09f, 0.10f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 9. Biohazard Containment Decal (48x48)
+            // Weathered stenciled biohazard / quarantine containment emblem on rust-stained steel placard
+            CreateSpriteAsset("Environment/Chapter06/ch6_biohazard_decal.png", 48, 48, (x, y) =>
+            {
+                if (x <= 1 || x >= 46 || y <= 1 || y >= 46) return Color.clear;
+                if (x == 2 || x == 45 || y == 2 || y == 45) return new Color(0.08f, 0.06f, 0.07f, 1f);
+
+                // Diagonal red and white hazard rim
+                bool isRim = (x <= 5 || x >= 42 || y <= 5 || y >= 42);
+                if (isRim)
+                {
+                    bool stripe = ((x + y) / 4) % 2 == 0;
+                    return stripe ? new Color(0.85f, 0.15f, 0.20f, 1f) : new Color(0.88f, 0.88f, 0.90f, 1f);
+                }
+
+                // Inner panel
+                Color panelBg = new Color(0.16f, 0.13f, 0.14f, 1f);
+
+                // Biohazard triple ring emblem (center at 24, 24)
+                int dx = x - 24;
+                int dy = y - 24;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                // Center inverted triangle
+                if (dy <= 3 && dy >= -3 && Mathf.Abs(dx) <= (3 - dy)) return new Color(0.95f, 0.18f, 0.22f, 1f);
+
+                // 3 rings at 120 deg angles
+                float d1 = Mathf.Sqrt((dx) * (dx) + (dy - 5) * (dy - 5));
+                float d2 = Mathf.Sqrt((dx - 4) * (dx - 4) + (dy + 3) * (dy + 3));
+                float d3 = Mathf.Sqrt((dx + 4) * (dx + 4) + (dy + 3) * (dy + 3));
+
+                if ((d1 >= 4.5f && d1 <= 6.5f) || (d2 >= 4.5f && d2 <= 6.5f) || (d3 >= 4.5f && d3 <= 6.5f))
+                {
+                    return new Color(0.95f, 0.18f, 0.22f, 1f);
+                }
+
+                return panelBg;
             });
         }
         #endregion
@@ -7929,7 +8387,7 @@ namespace GlitchVerse.Editor
             var atmo = new ChapterAtmosphereConfig
             {
                 ambientColor = new Color(0.20f, 0.04f, 0.06f, 1f), // Deep quarantine emergency crimson
-                ambientIntensity = 0.78f,
+                ambientIntensity = 0.82f,
                 spawnLampColor = new Color(1.0f, 0.15f, 0.18f, 1f),
                 spawnLampIntensity = 1.25f,
                 spawnLampFlicker = FlickeringLight2D.FlickerMode.QuarantineAlarm,
@@ -7938,6 +8396,17 @@ namespace GlitchVerse.Editor
             };
 
             var refs = SetupBaseChamber("CONTAINMENT 06 // TRUTH", 6, "Level07", false, atmo);
+
+            // Load Chapter VI dedicated modular art kit
+            Sprite ch6ReactorBgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_containment_reactor_vault_bg.png");
+            Sprite ch6BlastDoorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_massive_blast_vault_door.png");
+            Sprite ch6PillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_heavy_reactor_pillar.png");
+            Sprite ch6GateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_quarantine_seal_gate.png");
+            Sprite ch6ConsoleSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_vault_lore_console.png");
+            Sprite ch6DeckSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_vault_catwalk_deck.png");
+            Sprite ch6FloodlightSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_sterile_floodlight_cone.png");
+            Sprite ch6CablesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_heavy_cable_bundle.png");
+            Sprite ch6DecalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter06/ch6_biohazard_decal.png");
 
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
             Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
@@ -7948,88 +8417,211 @@ namespace GlitchVerse.Editor
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
             Sprite plateSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pressure_plate.png");
             Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
-            Sprite quarantineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png");
-            Sprite reactorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_reactor.png");
-            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
 
             // ALL 3 powers enabled for grand finale
             refs.abilityCtrl.AllowGravity = true;
             refs.abilityCtrl.AllowTimeFreeze = true;
             refs.abilityCtrl.AllowDimensionSwap = true;
 
-            // Environmental Dressing: Ominous Dormant Containment Reactor
-            GameObject reactorObj = new GameObject("Deco_QuarantineCoreReactor");
-            reactorObj.transform.SetParent(refs.envRoot.transform);
-            reactorObj.transform.position = new Vector3(0.5f, 1.2f, 0f);
-            reactorObj.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
-            SpriteRenderer reactorRend = reactorObj.AddComponent<SpriteRenderer>();
-            reactorRend.sprite = reactorSp;
-            reactorRend.sortingOrder = -20;
-            reactorRend.color = new Color(0.8f, 0.15f, 0.2f, 0.7f);
+            // Clean up old prototype monitor / background shapes
+            GameObject oldMonitor = GameObject.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor);
 
-            // Cold White Sterile Core Floodlights contrasting the deep blood red
-            GameObject whiteCoreLightObj = new GameObject("Core_SterileFloodlight");
-            whiteCoreLightObj.transform.position = new Vector3(0.5f, 2.5f, 0f);
-            Light2D whiteLight = whiteCoreLightObj.AddComponent<Light2D>();
-            whiteLight.lightType = Light2D.LightType.Point;
-            whiteLight.pointLightOuterRadius = 6.5f;
-            whiteLight.color = new Color(0.9f, 0.95f, 1.0f, 1f); // Cold sterile white
-            whiteLight.intensity = 0.65f;
+            GameObject oldLight = GameObject.Find("Chamber_Spotlight");
+            if (oldLight != null) Object.DestroyImmediate(oldLight);
 
-            // Massive Brutalist Reinforced Bulkhead Pilasters
-            float[] pilasterXs = new float[] { -8.5f, -2.5f, 4.0f };
-            foreach (var px in pilasterXs)
+            GameObject bgOldRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgOldRoot != null)
             {
-                GameObject pCol = new GameObject($"Deco_ReinforcedPilaster_{px}");
-                pCol.transform.SetParent(refs.envRoot.transform);
-                pCol.transform.position = new Vector3(px, 0.5f, 0f);
-                pCol.transform.localScale = new Vector3(1.6f, 2.4f, 1f);
-                SpriteRenderer pRend = pCol.AddComponent<SpriteRenderer>();
-                pRend.sprite = pillarSp;
-                pRend.sortingOrder = -15;
-                pRend.color = new Color(0.20f, 0.08f, 0.10f, 0.9f);
+                for (int i = bgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(bgOldRoot.transform.GetChild(i).gameObject);
+                }
             }
 
-            // Quarantine Decals
-            GameObject qDecal1 = new GameObject("Deco_QuarantineSign_1");
-            qDecal1.transform.SetParent(refs.envRoot.transform);
-            qDecal1.transform.position = new Vector3(-6.0f, -1.0f, 0f);
-            SpriteRenderer qdR1 = qDecal1.AddComponent<SpriteRenderer>();
-            qdR1.sprite = quarantineSp;
-            qdR1.sortingOrder = -5;
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            Material unlitMat = (unlitShader != null) ? new Material(unlitShader) : null;
 
-            // In-world Lore Consoles showing escalating external threat
-            GameObject console1 = new GameObject("Deco_LoreConsole_1");
-            console1.transform.SetParent(refs.envRoot.transform);
-            console1.transform.position = new Vector3(-6.8f, -0.6f, 0f);
-            SpriteRenderer c1R = console1.AddComponent<SpriteRenderer>();
-            c1R.sprite = beaconSp;
-            c1R.sortingOrder = 2;
-            c1R.color = new Color(0f, 0.85f, 1f, 1f);
+            // =========================================================================
+            // 1. VISUAL ENVIRONMENT ROOT (CH06_VisualEnvironment)
+            // =========================================================================
+            GameObject ch06EnvRoot = new GameObject("CH06_VisualEnvironment");
+            ch06EnvRoot.transform.position = Vector3.zero;
 
-            GameObject console2 = new GameObject("Deco_LoreConsole_2");
-            console2.transform.SetParent(refs.envRoot.transform);
-            console2.transform.position = new Vector3(2.8f, -3.2f, 0f);
-            SpriteRenderer c2R = console2.AddComponent<SpriteRenderer>();
-            c2R.sprite = beaconSp;
-            c2R.sortingOrder = 2;
-            c2R.color = new Color(1.0f, 0.75f, 0.1f, 1f);
+            // A. Monumental Containment Reactor Backdrop (Sorting Order: -25, Unlit Material)
+            GameObject reactorBackdrop = new GameObject("BG_QuarantineReactorBackdrop");
+            reactorBackdrop.transform.SetParent(ch06EnvRoot.transform);
+            reactorBackdrop.transform.position = new Vector3(0.5f, 1.2f, 2.0f);
+            reactorBackdrop.transform.localScale = new Vector3(7.5f, 4.5f, 1f);
+            SpriteRenderer rbRend = reactorBackdrop.AddComponent<SpriteRenderer>();
+            rbRend.sprite = ch6ReactorBgSp;
+            rbRend.sortingOrder = -25;
+            if (unlitMat != null) rbRend.material = new Material(unlitMat);
+            rbRend.color = Color.white;
 
-            GameObject console3 = new GameObject("Deco_LoreConsole_3");
-            console3.transform.SetParent(refs.envRoot.transform);
-            console3.transform.position = new Vector3(7.2f, 3.6f, 0f);
-            SpriteRenderer c3R = console3.AddComponent<SpriteRenderer>();
-            c3R.sprite = beaconSp;
-            c3R.sortingOrder = 2;
-            c3R.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            // B. Reactor Core Pulsing Point Light (Dominant Central Red Glow)
+            GameObject reactorCoreLightObj = new GameObject("ReactorCore_InternalGlowLight");
+            reactorCoreLightObj.transform.SetParent(ch06EnvRoot.transform);
+            reactorCoreLightObj.transform.position = new Vector3(0.5f, 1.2f, 0f);
+            Light2D rCoreLight = reactorCoreLightObj.AddComponent<Light2D>();
+            rCoreLight.lightType = Light2D.LightType.Point;
+            rCoreLight.pointLightOuterRadius = 8.5f;
+            rCoreLight.color = new Color(1.0f, 0.12f, 0.18f, 1f);
+            rCoreLight.intensity = 1.4f;
 
-            // Add Narrative Progression Trigger Controller
+            // Secondary broad crimson illumination
+            GameObject broadRedObj = new GameObject("Reactor_BroadRadiationGaze");
+            broadRedObj.transform.SetParent(ch06EnvRoot.transform);
+            broadRedObj.transform.position = new Vector3(0.5f, -0.5f, 0f);
+            Light2D rGazeLight = broadRedObj.AddComponent<Light2D>();
+            rGazeLight.lightType = Light2D.LightType.Point;
+            rGazeLight.pointLightOuterRadius = 12.0f;
+            rGazeLight.color = new Color(0.9f, 0.08f, 0.12f, 1f);
+            rGazeLight.intensity = 0.85f;
+
+            // C. Brutalist Reinforced Reactor Pilasters (Sorting Order: -20 to -16)
+            float[] pilasterXs = new float[] { -8.5f, -2.5f, 4.5f };
+            for (int i = 0; i < pilasterXs.Length; i++)
+            {
+                float px = pilasterXs[i];
+                GameObject pCol = new GameObject($"Deco_ReinforcedPilaster_{i}");
+                pCol.transform.SetParent(ch06EnvRoot.transform);
+                pCol.transform.position = new Vector3(px, 1.0f, 0.5f);
+                pCol.transform.localScale = new Vector3(1.5f, 2.8f, 1f);
+                SpriteRenderer pRend = pCol.AddComponent<SpriteRenderer>();
+                pRend.sprite = ch6PillarSp;
+                pRend.sortingOrder = -18;
+                pRend.color = new Color(0.9f, 0.85f, 0.88f, 0.95f);
+            }
+
+            // D. Colossal Reinforced Blast Vault Doors (Spawn Bulkhead and Exit Frame)
+            GameObject spawnVaultDoor = new GameObject("Deco_SpawnVaultBlastDoor");
+            spawnVaultDoor.transform.SetParent(ch06EnvRoot.transform);
+            spawnVaultDoor.transform.position = new Vector3(-8.2f, -2.4f, 0f);
+            spawnVaultDoor.transform.localScale = new Vector3(1.35f, 1.35f, 1f);
+            SpriteRenderer svdRend = spawnVaultDoor.AddComponent<SpriteRenderer>();
+            svdRend.sprite = ch6BlastDoorSp;
+            svdRend.sortingOrder = -8;
+
+            GameObject exitVaultDoor = new GameObject("Deco_ExitVaultBlastDoor");
+            exitVaultDoor.transform.SetParent(ch06EnvRoot.transform);
+            exitVaultDoor.transform.position = new Vector3(8.5f, -0.8f, 0f);
+            exitVaultDoor.transform.localScale = new Vector3(1.35f, 1.35f, 1f);
+            SpriteRenderer evdRend = exitVaultDoor.AddComponent<SpriteRenderer>();
+            evdRend.sprite = ch6BlastDoorSp;
+            evdRend.sortingOrder = -8;
+
+            // E. Sterile Cool White Overhead Floodlight Cones (Contrasting the Deep Blood Red)
+            Vector3[] floodlightPos = new Vector3[]
+            {
+                new Vector3(-5.8f, 3.8f, 0f),
+                new Vector3(2.5f, 3.8f, 0f)
+            };
+
+            Light2D[] sterileLights = new Light2D[floodlightPos.Length];
+            for (int i = 0; i < floodlightPos.Length; i++)
+            {
+                GameObject flRig = new GameObject($"SterileFloodlight_Rig_{i}");
+                flRig.transform.SetParent(ch06EnvRoot.transform);
+                flRig.transform.position = floodlightPos[i];
+
+                // Visual downward cone sprite
+                GameObject coneObj = new GameObject("FloodlightBeamCone");
+                coneObj.transform.SetParent(flRig.transform);
+                coneObj.transform.localPosition = new Vector3(0f, -2.2f, 0f);
+                coneObj.transform.localScale = new Vector3(1.5f, 2.5f, 1f);
+                SpriteRenderer flConeR = coneObj.AddComponent<SpriteRenderer>();
+                flConeR.sprite = ch6FloodlightSp;
+                flConeR.sortingOrder = -12;
+                if (unlitMat != null) flConeR.material = new Material(unlitMat);
+                flConeR.color = new Color(0.95f, 0.98f, 1.0f, 0.75f);
+
+                // Point Light for ground illumination
+                GameObject lightObj = new GameObject("FloodLight2D");
+                lightObj.transform.SetParent(flRig.transform);
+                lightObj.transform.localPosition = new Vector3(0f, -1.0f, 0f);
+                Light2D flLight = lightObj.AddComponent<Light2D>();
+                flLight.lightType = Light2D.LightType.Point;
+                flLight.pointLightOuterRadius = 6.2f;
+                flLight.color = new Color(0.92f, 0.96f, 1.0f, 1f); // Sterile cool white
+                flLight.intensity = 0.90f;
+                sterileLights[i] = flLight;
+            }
+
+            // F. Overhead Heavy Cable Bundles (Sorting Order: -10)
+            float[] cableXs = new float[] { -4.5f, 1.0f, 6.5f };
+            for (int i = 0; i < cableXs.Length; i++)
+            {
+                GameObject cableBundle = new GameObject($"Deco_CableBundle_{i}");
+                cableBundle.transform.SetParent(ch06EnvRoot.transform);
+                cableBundle.transform.position = new Vector3(cableXs[i], 4.2f, 0f);
+                cableBundle.transform.localScale = new Vector3(1.7f, 1.2f, 1f);
+                SpriteRenderer cbRend = cableBundle.AddComponent<SpriteRenderer>();
+                cbRend.sprite = ch6CablesSp;
+                cbRend.sortingOrder = -10;
+                cbRend.color = new Color(0.9f, 0.80f, 0.85f, 0.9f);
+            }
+
+            // G. Stenciled Biohazard / Quarantine Decals
+            GameObject decal1 = new GameObject("Deco_BiohazardDecal_1");
+            decal1.transform.SetParent(ch06EnvRoot.transform);
+            decal1.transform.position = new Vector3(-5.0f, 0.6f, 0f);
+            SpriteRenderer d1R = decal1.AddComponent<SpriteRenderer>();
+            d1R.sprite = ch6DecalSp;
+            d1R.sortingOrder = -5;
+
+            GameObject decal2 = new GameObject("Deco_BiohazardDecal_2");
+            decal2.transform.SetParent(ch06EnvRoot.transform);
+            decal2.transform.position = new Vector3(3.8f, 0.6f, 0f);
+            SpriteRenderer d2R = decal2.AddComponent<SpriteRenderer>();
+            d2R.sprite = ch6DecalSp;
+            d2R.sortingOrder = -5;
+
+            // H. In-world Lore Consoles (Detailed Terminals showing Escalating Threat)
+            Vector3[] consolePos = new Vector3[]
+            {
+                new Vector3(-6.8f, -0.6f, 0f),
+                new Vector3(2.8f, -3.2f, 0f),
+                new Vector3(7.2f, 3.6f, 0f)
+            };
+
+            SpriteRenderer[] consoleRenderers = new SpriteRenderer[consolePos.Length];
+            Light2D[] consoleLights = new Light2D[consolePos.Length];
+
+            for (int i = 0; i < consolePos.Length; i++)
+            {
+                GameObject consoleObj = new GameObject($"Deco_LoreConsole_{i + 1}");
+                consoleObj.transform.SetParent(ch06EnvRoot.transform);
+                consoleObj.transform.position = consolePos[i];
+                consoleObj.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
+
+                SpriteRenderer cRend = consoleObj.AddComponent<SpriteRenderer>();
+                cRend.sprite = ch6ConsoleSp;
+                cRend.sortingOrder = 2;
+                consoleRenderers[i] = cRend;
+
+                GameObject cLightObj = new GameObject("ConsoleGlowLight");
+                cLightObj.transform.SetParent(consoleObj.transform);
+                cLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+                Light2D cLight = cLightObj.AddComponent<Light2D>();
+                cLight.lightType = Light2D.LightType.Point;
+                cLight.pointLightOuterRadius = 2.4f;
+                cLight.color = new Color(0.1f, 0.95f, 0.75f, 1f); // Cyan telemetry glow
+                cLight.intensity = 0.85f;
+                consoleLights[i] = cLight;
+            }
+
+            // Narrative Progression Trigger Controller
             GameObject truthTriggersObj = new GameObject("TruthChamberNarrativeTriggers");
             truthTriggersObj.transform.SetParent(refs.puzzleRoot.transform);
             TruthChamberTriggers truthTriggers = truthTriggersObj.AddComponent<TruthChamberTriggers>();
             SetPrivateField(truthTriggers, "stage1TriggerX", -2.0f);
             SetPrivateField(truthTriggers, "stage2TriggerX", 2.5f);
             SetPrivateField(truthTriggers, "stage3TriggerX", 7.6f);
+
+            // =========================================================================
+            // 2. PUZZLE PLATFORMS & GAMEPLAY ENTITIES (100% PRESERVED)
+            // =========================================================================
 
             // --- STAGE 1: Blast Gate & Elevated Echo-Only Switch ---
             // Elevated Platform at X: -5.5, Y: -1.2
@@ -8265,12 +8857,33 @@ namespace GlitchVerse.Editor
             refs.exitDoor.transform.position = new Vector3(8.5f, -1.1f, 0f);
             refs.exitDoor.SetUnlocked(true); // Exit door ready; physical passage guarded by SecurityBarrier_FinalVault
 
+            // =========================================================================
+            // 3. CHAPTER VI VISUAL DIRECTOR
+            // =========================================================================
+            GameObject dirObj = new GameObject("Chapter06_VisualDirector");
+            dirObj.transform.SetParent(ch06EnvRoot.transform);
+            Chapter06VisualDirector ch06Director = dirObj.AddComponent<Chapter06VisualDirector>();
+            ch06Director.ReactorCoreLight = rCoreLight;
+            ch06Director.ReactorGazeLight = rGazeLight;
+            ch06Director.SterileFloodlights = sterileLights;
+            ch06Director.LoreConsoleRenderers = consoleRenderers;
+            ch06Director.ConsoleLights = consoleLights;
+            ch06Director.Stage1Gate = seal1BarrierComp;
+            ch06Director.Stage3Barrier = finalBarrierComp;
+
             // Wire Director and HUD
             SetPrivateField(refs.hud, "pressurePlate", vaultPlate);
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "pressurePlate", vaultPlate);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
+
+            // Clean UI canvas overlays for clean GameView capture
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+
+            var subtitleBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subtitleBanner != null) subtitleBanner.SetActive(false);
 
             SaveChamberScene("Level06.unity");
         }
