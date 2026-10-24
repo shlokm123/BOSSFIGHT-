@@ -1189,6 +1189,9 @@ namespace GlitchVerse.Editor
             // Chapter IV: REVELATION Modular Environmental Art
             GenerateChapter04Sprites();
 
+            // Chapter V: PARANOIA Modular Environmental Art
+            GenerateChapter05Sprites();
+
             AssetDatabase.Refresh();
         }
 
@@ -3423,6 +3426,567 @@ namespace GlitchVerse.Editor
 
                 float grain = (Mathf.Sin(x * 0.2f + y * 0.15f) + Mathf.Cos(x * 0.1f - y * 0.25f)) * 0.5f;
                 return new Color(0.14f + grain * 0.015f, 0.15f + grain * 0.015f, 0.17f + grain * 0.02f, 1f);
+            });
+        }
+        #endregion
+
+        #region Chapter V: Paranoia Procedural Sprites
+        private static void GenerateChapter05Sprites()
+        {
+            // 1. Chapter V Surveillance Labyrinth Backdrop (256x144)
+            // Bruised violet chasm, surveillance towers, suspended CRT screens, dark steel framing, purple mist, downward search cones
+            CreateSpriteAsset("Environment/Chapter05/ch5_surveillance_labyrinth_bg.png", 256, 144, (x, y) =>
+            {
+                float nx = x / 255.0f;
+                float ny = y / 143.0f;
+
+                // Deep atmospheric gradient: Bottom = deep bruised purple mist, Top = dark charcoal shadow
+                Color bgGrad = Color.Lerp(
+                    new Color(0.14f, 0.05f, 0.20f, 1f), // Deep bruised violet mist at bottom
+                    new Color(0.04f, 0.02f, 0.06f, 1f), // Shadowed ceiling at top
+                    ny
+                );
+
+                // Add subtle purple haze swirls near the floor (y < 45)
+                if (y < 45)
+                {
+                    float fogNoise = (Mathf.Sin(x * 0.08f) + Mathf.Cos(y * 0.12f + x * 0.04f)) * 0.5f;
+                    float fogWeight = (1.0f - y / 45.0f) * 0.25f;
+                    bgGrad += new Color(0.18f * fogWeight, 0.06f * fogWeight, 0.24f * fogWeight, 0f) * (0.8f + 0.4f * fogNoise);
+                }
+
+                // Vertical surveillance shafts & elevator columns in background (X: 30..44, 112..128, 200..216)
+                bool isCol1 = (x >= 30 && x <= 44);
+                bool isCol2 = (x >= 112 && x <= 128);
+                bool isCol3 = (x >= 200 && x <= 216);
+
+                if (isCol1 || isCol2 || isCol3)
+                {
+                    int colMinX = isCol1 ? 30 : (isCol2 ? 112 : 200);
+                    int colMaxX = isCol1 ? 44 : (isCol2 ? 128 : 216);
+                    int cx = x - colMinX;
+                    int colW = colMaxX - colMinX;
+
+                    Color colColor = new Color(0.06f, 0.04f, 0.08f, 1f);
+                    if (cx == 0 || cx == colW) colColor = new Color(0.12f, 0.08f, 0.15f, 1f);
+                    else if ((y % 16 == (cx % 16)) || (y % 16 == (15 - (cx % 16))))
+                        colColor = new Color(0.09f, 0.06f, 0.11f, 1f);
+                    else if (cx == colW / 2)
+                        colColor = new Color(0.07f, 0.16f, 0.20f, 1f);
+
+                    bgGrad = Color.Lerp(bgGrad, colColor, 0.85f);
+                }
+
+                // Horizontal suspended gantry bridges in background (Y: 52..56, 102..107)
+                if ((y >= 52 && y <= 56) || (y >= 102 && y <= 107))
+                {
+                    Color gantryColor = new Color(0.08f, 0.05f, 0.10f, 1f);
+                    if (y == 52 || y == 56 || y == 102 || y == 107) gantryColor = new Color(0.16f, 0.10f, 0.20f, 1f);
+                    if (x % 12 == 0) gantryColor = new Color(0.14f, 0.09f, 0.18f, 1f);
+                    bgGrad = Color.Lerp(bgGrad, gantryColor, 0.8f);
+                }
+
+                // Distant suspended CRT surveillance screens glowing in background
+                if (x >= 62 && x <= 78 && y >= 84 && y <= 98)
+                {
+                    if (x == 62 || x == 78 || y == 84 || y == 98)
+                        bgGrad = new Color(0.18f, 0.12f, 0.22f, 1f);
+                    else
+                    {
+                        float scan = (y % 2 == 0) ? 0.85f : 1.0f;
+                        bgGrad = new Color(0.42f * scan, 0.18f * scan, 0.58f * scan, 1f);
+                        if (x >= 68 && x <= 72 && y >= 89 && y <= 93) bgGrad = new Color(0.6f, 0.3f, 0.8f, 1f);
+                    }
+                }
+
+                if (x >= 154 && x <= 172 && y >= 92 && y <= 108)
+                {
+                    if (x == 154 || x == 172 || y == 92 || y == 108)
+                        bgGrad = new Color(0.18f, 0.12f, 0.22f, 1f);
+                    else
+                    {
+                        float scan = (y % 2 == 0) ? 0.8f : 1.0f;
+                        float noise = ((x + y * 7) % 5 == 0) ? 0.3f : 0.0f;
+                        bgGrad = new Color((0.35f + noise) * scan, (0.15f + noise) * scan, (0.50f + noise) * scan, 1f);
+                    }
+                }
+
+                // Downward surveillance tracking light cones in background
+                float dx1 = (x - (37 + (130 - y) * 0.35f));
+                float spread1 = (130 - y) * 0.28f + 2.0f;
+                if (y < 130 && y > 30 && Mathf.Abs(dx1) < spread1)
+                {
+                    float factor = (1.0f - Mathf.Abs(dx1) / spread1) * (1.0f - (130 - y) / 100.0f);
+                    bgGrad += new Color(0.12f * factor, 0.10f * factor, 0.22f * factor, 0f);
+                }
+
+                float dx2 = (x - (120 - (135 - y) * 0.25f));
+                float spread2 = (135 - y) * 0.26f + 2.0f;
+                if (y < 135 && y > 20 && Mathf.Abs(dx2) < spread2)
+                {
+                    float factor = (1.0f - Mathf.Abs(dx2) / spread2) * (1.0f - (135 - y) / 115.0f);
+                    bgGrad += new Color(0.10f * factor, 0.08f * factor, 0.20f * factor, 0f);
+                }
+
+                float dx3 = (x - (208 - (128 - y) * 0.4f));
+                float spread3 = (128 - y) * 0.30f + 2.0f;
+                if (y < 128 && y > 25 && Mathf.Abs(dx3) < spread3)
+                {
+                    float factor = (1.0f - Mathf.Abs(dx3) / spread3) * (1.0f - (128 - y) / 103.0f);
+                    bgGrad += new Color(0.14f * factor, 0.09f * factor, 0.24f * factor, 0f);
+                }
+
+                // Red surveillance sensor LED pinpoints on camera mounts
+                if ((Mathf.Abs(x - 37) <= 1 && Mathf.Abs(y - 130) <= 1) ||
+                    (Mathf.Abs(x - 120) <= 1 && Mathf.Abs(y - 135) <= 1) ||
+                    (Mathf.Abs(x - 208) <= 1 && Mathf.Abs(y - 128) <= 1) ||
+                    (Mathf.Abs(x - 78) <= 1 && Mathf.Abs(y - 98) <= 1) ||
+                    (Mathf.Abs(x - 154) <= 1 && Mathf.Abs(y - 108) <= 1))
+                {
+                    return new Color(1.0f, 0.15f, 0.2f, 1f);
+                }
+
+                // Draped cable silhouettes in ceiling
+                if (y > 110)
+                {
+                    float sag1 = Mathf.Sin(x * 0.04f) * 6.0f;
+                    float sag2 = Mathf.Cos(x * 0.05f) * 5.0f;
+                    if (Mathf.Abs(y - (132 - sag1)) < 0.9f || Mathf.Abs(y - (124 - sag2)) < 0.9f)
+                        return new Color(0.03f, 0.02f, 0.04f, 1f);
+                }
+
+                return bgGrad;
+            });
+
+            // 2. Suspended Monitor Bank - Alpha Dimension (96x64)
+            // Heavy articulating mount holding 3 angled CRT surveillance displays with corridor tracking feeds
+            CreateSpriteAsset("Environment/Chapter05/ch5_suspended_monitor_bank_alpha.png", 96, 64, (x, y) =>
+            {
+                // Top articulating mount bracket (Y: 54..63)
+                if (y >= 54)
+                {
+                    if (x >= 32 && x <= 64)
+                    {
+                        if (y == 63 || y == 54 || x == 32 || x == 64) return new Color(0.12f, 0.10f, 0.14f, 1f);
+                        if (x == 40 || x == 56) return new Color(0.24f, 0.20f, 0.28f, 1f); // Bolts
+                        return new Color(0.18f, 0.15f, 0.20f, 1f);
+                    }
+                    if ((x >= 28 && x <= 32 && y == 56) || (x >= 64 && x <= 68 && y == 56)) return new Color(0.15f, 0.12f, 0.16f, 1f);
+                }
+
+                // Power cables running down back
+                if ((x == 38 || x == 58) && y >= 35) return new Color(0.05f, 0.04f, 0.06f, 1f);
+
+                // --- MONITOR 1: LEFT SCREEN (X: 4..30, Y: 8..48) ---
+                if (x >= 4 && x <= 30 && y >= 8 && y <= 48)
+                {
+                    // Bezel
+                    if (x <= 6 || x >= 28 || y <= 10 || y >= 46) return new Color(0.15f, 0.13f, 0.18f, 1f);
+                    // Inner Screen
+                    float scan = (y % 2 == 0) ? 0.85f : 1.0f;
+                    Color screenBase = new Color(0.25f * scan, 0.12f * scan, 0.38f * scan, 1f);
+                    // Surveillance crosshairs (center at 17, 28)
+                    if (x == 17 || y == 28) screenBase = new Color(0.55f, 0.28f, 0.75f, 1f);
+                    // Cam 01 label
+                    if (y == 42 && x >= 9 && x <= 22) screenBase = new Color(0.65f, 0.35f, 0.85f, 1f);
+                    return screenBase;
+                }
+
+                // --- MONITOR 2: CENTER SCREEN (X: 34..62, Y: 12..52) ---
+                if (x >= 34 && x <= 62 && y >= 12 && y <= 52)
+                {
+                    // Bezel
+                    if (x <= 36 || x >= 60 || y <= 14 || y >= 50) return new Color(0.18f, 0.15f, 0.22f, 1f);
+                    // Inner Screen: Static white/violet noise
+                    float scan = (y % 2 == 0) ? 0.85f : 1.0f;
+                    float noise = ((x * 13 + y * 19) % 7 == 0) ? 0.35f : 0.05f;
+                    return new Color((0.30f + noise) * scan, (0.16f + noise) * scan, (0.45f + noise) * scan, 1f);
+                }
+
+                // --- MONITOR 3: RIGHT SCREEN (X: 66..92, Y: 6..46) ---
+                if (x >= 66 && x <= 92 && y >= 6 && y <= 46)
+                {
+                    // Bezel
+                    if (x <= 68 || x >= 90 || y <= 8 || y >= 44) return new Color(0.15f, 0.13f, 0.18f, 1f);
+                    // Inner Screen: Downward catwalk view with red tracking box
+                    float scan = (y % 2 == 0) ? 0.85f : 1.0f;
+                    Color screenBase = new Color(0.22f * scan, 0.10f * scan, 0.32f * scan, 1f);
+                    // Red tracking box at (76..84, 18..26)
+                    if ((x == 76 || x == 84) && (y >= 18 && y <= 26)) screenBase = new Color(1.0f, 0.2f, 0.3f, 1f);
+                    if ((y == 18 || y == 26) && (x >= 76 && x <= 84)) screenBase = new Color(1.0f, 0.2f, 0.3f, 1f);
+                    // Target indicator
+                    if (x == 80 && y == 22) screenBase = new Color(1.0f, 0.2f, 0.3f, 1f);
+                    return screenBase;
+                }
+
+                // Small red sensor LEDs on bezel corners
+                if ((x == 6 && y == 46) || (x == 36 && y == 50) || (x == 90 && y == 44))
+                    return new Color(1.0f, 0.15f, 0.2f, 1f);
+
+                return Color.clear;
+            });
+
+            // 3. Suspended Monitor Bank - Beta Dimension (96x64)
+            // Glitched reality feeds: chromatic aberration, magenta/cyan distortion, corrupted Architect eye
+            CreateSpriteAsset("Environment/Chapter05/ch5_suspended_monitor_bank_beta.png", 96, 64, (x, y) =>
+            {
+                if (y >= 54)
+                {
+                    if (x >= 32 && x <= 64)
+                    {
+                        if (y == 63 || y == 54 || x == 32 || x == 64) return new Color(0.12f, 0.10f, 0.14f, 1f);
+                        if (x == 40 || x == 56) return new Color(0.24f, 0.20f, 0.28f, 1f);
+                        return new Color(0.18f, 0.15f, 0.20f, 1f);
+                    }
+                }
+
+                // Power cables
+                if ((x == 38 || x == 58) && y >= 35) return new Color(0.05f, 0.04f, 0.06f, 1f);
+
+                // --- MONITOR 1 (LEFT) ---
+                if (x >= 4 && x <= 30 && y >= 8 && y <= 48)
+                {
+                    if (x <= 6 || x >= 28 || y <= 10 || y >= 46) return new Color(0.15f, 0.13f, 0.18f, 1f);
+                    // Horizontal digital tear
+                    int shift = ((y / 4) % 2 == 0) ? 2 : -2;
+                    int sx = Mathf.Clamp(x + shift, 7, 27);
+                    float scan = (y % 2 == 0) ? 0.7f : 1.1f;
+                    return new Color(0.6f * scan, 0.1f * scan, 0.5f * scan, 1f); // Glitched magenta
+                }
+
+                // --- MONITOR 2 (CENTER) ---
+                if (x >= 34 && x <= 62 && y >= 12 && y <= 52)
+                {
+                    if (x <= 36 || x >= 60 || y <= 14 || y >= 50) return new Color(0.18f, 0.15f, 0.22f, 1f);
+                    // Corrupted inverted triangle Architect glyph
+                    int cx = x - 48;
+                    int cy = y - 32;
+                    bool inTri = (cy <= 8 && cy >= -8 && Mathf.Abs(cx) <= (8 - cy));
+                    if (inTri) return new Color(0f, 0.95f, 1.0f, 1f); // Cyan digital eye
+                    float noise = ((x * 11 + y * 23) % 4 == 0) ? 0.4f : 0.1f;
+                    return new Color(0.35f + noise, 0.12f + noise * 0.5f, 0.45f + noise, 1f);
+                }
+
+                // --- MONITOR 3 (RIGHT) ---
+                if (x >= 66 && x <= 92 && y >= 6 && y <= 46)
+                {
+                    if (x <= 68 || x >= 90 || y <= 8 || y >= 44) return new Color(0.15f, 0.13f, 0.18f, 1f);
+                    // "LOST FEED" blocky signal bars
+                    if (y >= 20 && y <= 32 && (x % 6 <= 3)) return new Color(0.85f, 0.15f, 0.25f, 1f);
+                    return new Color(0.15f, 0.08f, 0.22f, 1f);
+                }
+
+                if ((x == 6 && y == 46) || (x == 36 && y == 50) || (x == 90 && y == 44))
+                    return new Color(0f, 0.95f, 1.0f, 1f); // Swapped to cyan in beta
+
+                return Color.clear;
+            });
+
+            // 4. CCTV Industrial Security Camera (32x32)
+            // Heavy wall mount, swivel elbow, cylindrical housing, cooling fins, optical lens, red sensor LED
+            CreateSpriteAsset("Environment/Chapter05/ch5_cctv_security_camera.png", 32, 32, (x, y) =>
+            {
+                // Wall mount plate on left (X: 2..6, Y: 18..28)
+                if (x >= 2 && x <= 6 && y >= 18 && y <= 28)
+                {
+                    if (x == 2 || x == 6 || y == 18 || y == 28) return new Color(0.10f, 0.08f, 0.12f, 1f);
+                    if (y == 20 || y == 26) return new Color(0.24f, 0.20f, 0.28f, 1f); // Bolt
+                    return new Color(0.16f, 0.14f, 0.18f, 1f);
+                }
+
+                // Swivel arm (X: 6..12, Y: 21..25)
+                if (x >= 6 && x <= 12 && y >= 21 && y <= 25)
+                {
+                    return new Color(0.20f, 0.18f, 0.22f, 1f);
+                }
+
+                // Camera cylindrical body angled downward (X: 10..26, Y: 8..20)
+                int bodyDx = x - 18;
+                int bodyDy = y - 14;
+                // Rotated ellipse approx (tilted ~ -25 deg)
+                float rotX = bodyDx * 0.9f + bodyDy * 0.42f;
+                float rotY = -bodyDx * 0.42f + bodyDy * 0.9f;
+
+                if (Mathf.Abs(rotX) <= 7 && Mathf.Abs(rotY) <= 4.5f)
+                {
+                    // Outer housing border
+                    if (Mathf.Abs(rotX) >= 6 || Mathf.Abs(rotY) >= 3.8f) return new Color(0.12f, 0.10f, 0.14f, 1f);
+                    // Cooling fins
+                    if (Mathf.Abs(rotX) <= 4 && (int)(rotX + 10) % 2 == 0) return new Color(0.25f, 0.22f, 0.28f, 1f);
+                    return new Color(0.18f, 0.16f, 0.20f, 1f);
+                }
+
+                // Front lens barrel (X: 23..27, Y: 8..14)
+                if (x >= 23 && x <= 27 && y >= 8 && y <= 14)
+                {
+                    if (x == 27) return new Color(0.25f, 0.22f, 0.28f, 1f); // Rim
+                    if (x == 26 && y >= 10 && y <= 12) return new Color(1.0f, 0.15f, 0.20f, 1f); // Red sensor LED!
+                    return new Color(0.08f, 0.07f, 0.10f, 1f); // Deep lens glass
+                }
+
+                // Power wire curving out from back of camera to wall mount
+                if (x >= 6 && x <= 12 && y >= 15 && y <= 18)
+                {
+                    if (Mathf.Abs(y - (15 + (x - 6) * 0.5f)) < 0.8f) return new Color(0.05f, 0.04f, 0.06f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 5. Tracking Spotlight Cone (64x128)
+            // Additive translucent cool surveillance white / lavender light beam with soft dusty edges
+            CreateSpriteAsset("Environment/Chapter05/ch5_tracking_spotlight_cone.png", 64, 128, (x, y) =>
+            {
+                float ny = y / 127.0f; // 0 at bottom, 1 at top
+                if (y > 122)
+                {
+                    // Narrow apex near lamp
+                    if (Mathf.Abs(x - 32) <= 3) return new Color(0.9f, 0.92f, 1.0f, 0.65f);
+                    return Color.clear;
+                }
+
+                float apexY = 124.0f;
+                float distFromApex = apexY - y;
+                float halfWidth = Mathf.Lerp(3.0f, 28.0f, distFromApex / 124.0f);
+                float distFromCenter = Mathf.Abs(x - 32);
+
+                if (distFromCenter <= halfWidth)
+                {
+                    float centerFactor = 1.0f - (distFromCenter / halfWidth);
+                    float edgeSoftness = Mathf.SmoothStep(0f, 1f, centerFactor);
+                    float lengthFalloff = Mathf.Lerp(0.55f, 0.12f, (124.0f - y) / 124.0f);
+
+                    float alpha = edgeSoftness * lengthFalloff;
+                    // Dust motes
+                    float dust = ((x * 17 + y * 29) % 31 == 0) ? 0.08f : 0f;
+
+                    // Cool white fading to lavender
+                    Color beamColor = Color.Lerp(
+                        new Color(0.65f, 0.45f, 0.85f, 1f), // Lavender at bottom
+                        new Color(0.85f, 0.90f, 1.0f, 1f), // Cool white at top
+                        ny
+                    );
+
+                    return new Color(beamColor.r, beamColor.g, beamColor.b, Mathf.Clamp01(alpha + dust));
+                }
+
+                return Color.clear;
+            });
+
+            // 6. Inspection Gantry Column (48x128)
+            // Heavy vertical structural steel pillar with ladder rungs, riveted flanges, conduit pipes
+            CreateSpriteAsset("Environment/Chapter05/ch5_inspection_gantry_column.png", 48, 128, (x, y) =>
+            {
+                // Edge flanges (X: 0..4 and X: 43..47)
+                if (x <= 4 || x >= 43)
+                {
+                    if (x == 0 || x == 47 || x == 4 || x == 43) return new Color(0.08f, 0.06f, 0.10f, 1f);
+                    if (y % 16 == 0) return new Color(0.24f, 0.20f, 0.26f, 1f); // Rivets
+                    return new Color(0.14f, 0.12f, 0.16f, 1f);
+                }
+
+                // Horizontal structural gusset plates every 32px
+                if (y % 32 <= 2)
+                {
+                    if (y % 32 == 1 && (x == 8 || x == 24 || x == 40)) return new Color(0.28f, 0.24f, 0.30f, 1f);
+                    return new Color(0.18f, 0.15f, 0.20f, 1f);
+                }
+
+                // Central inspection ladder (X: 18..30)
+                if (x >= 18 && x <= 30)
+                {
+                    if (x == 18 || x == 30) return new Color(0.22f, 0.18f, 0.25f, 1f); // Ladder rails
+                    if (y % 12 <= 1) return new Color(0.26f, 0.22f, 0.28f, 1f); // Ladder rungs
+                }
+
+                // Conduit runs: Cyan neon signal pipe on left (X: 8..11), Copper power line on right (X: 36..39)
+                if (x >= 8 && x <= 11)
+                {
+                    if (x == 8 || x == 11) return new Color(0.08f, 0.12f, 0.15f, 1f);
+                    if (y % 24 <= 1) return new Color(0.20f, 0.22f, 0.25f, 1f); // Pipe clamp
+                    return new Color(0.15f, 0.65f, 0.85f, 1f); // Cyan neon conduit!
+                }
+
+                if (x >= 36 && x <= 39)
+                {
+                    if (x == 36 || x == 39) return new Color(0.12f, 0.08f, 0.06f, 1f);
+                    if (y % 24 <= 1) return new Color(0.20f, 0.22f, 0.25f, 1f);
+                    return new Color(0.55f, 0.32f, 0.15f, 1f); // Copper power conduit
+                }
+
+                // Steel panel body with surface weathering
+                float noise = (Mathf.Sin(x * 0.4f) + Mathf.Cos(y * 0.25f)) * 0.5f;
+                return new Color(0.10f + noise * 0.015f, 0.08f + noise * 0.015f, 0.12f + noise * 0.02f, 1f);
+            });
+
+            // 7. Surveillance Catwalk Deck (128x64)
+            // Top deck with diamond tread plate and yellow-black hazard trim, bottom diagonal truss framing
+            CreateSpriteAsset("Environment/Chapter05/ch5_surveillance_catwalk_deck.png", 128, 64, (x, y) =>
+            {
+                // Top Deck (Y: 48..63)
+                if (y >= 48)
+                {
+                    // Hazard stripe top rim (Y: 60..63)
+                    if (y >= 60)
+                    {
+                        bool isStripe = ((x + y) / 6) % 2 == 0;
+                        return isStripe ? new Color(0.85f, 0.68f, 0.12f, 1f) : new Color(0.12f, 0.10f, 0.12f, 1f);
+                    }
+                    // Deck plate with diamond tread (Y: 48..59)
+                    if (y == 48 || y == 59) return new Color(0.08f, 0.07f, 0.10f, 1f);
+                    bool tread = ((x % 8 == y % 8) || (x % 8 == (7 - (y % 8))));
+                    return tread ? new Color(0.24f, 0.20f, 0.26f, 1f) : new Color(0.16f, 0.14f, 0.18f, 1f);
+                }
+
+                // Bottom Structural Open Truss (Y: 0..47)
+                // Bottom horizontal flange (Y: 0..3)
+                if (y <= 3) return new Color(0.14f, 0.12f, 0.16f, 1f);
+
+                // Vertical posts every 32px (X: 0..3, 31..34, 63..66, 95..98, 124..127)
+                if (x % 32 <= 3) return new Color(0.18f, 0.15f, 0.20f, 1f);
+
+                // Diagonal cross braces (X mod 32 mapped to Y)
+                int bayX = x % 32;
+                float targetY1 = bayX * (44.0f / 32.0f) + 3.0f;
+                float targetY2 = (31 - bayX) * (44.0f / 32.0f) + 3.0f;
+                if (Mathf.Abs(y - targetY1) <= 1.5f || Mathf.Abs(y - targetY2) <= 1.5f)
+                {
+                    return new Color(0.15f, 0.13f, 0.18f, 1f);
+                }
+
+                // Hanging cable bunches draped below deck (Y: 40..46)
+                if (y >= 40 && y <= 46)
+                {
+                    float sag = Mathf.Sin(x * 0.1f) * 2.5f;
+                    if (Mathf.Abs(y - (43 - sag)) < 0.8f) return new Color(0.06f, 0.05f, 0.08f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 8. Hanging Cable Web (128x64)
+            // Multi-strand heavy industrial power cables draped in catenary curves with cable ties
+            CreateSpriteAsset("Environment/Chapter05/ch5_hanging_cable_web.png", 128, 64, (x, y) =>
+            {
+                float nx = x / 127.0f;
+
+                // Cable 1: Deep sagging main feeder
+                float c1Y = 56.0f - Mathf.Sin(nx * Mathf.PI) * 44.0f;
+                // Cable 2: Medium sagging conduit harness
+                float c2Y = 60.0f - Mathf.Sin(nx * Mathf.PI) * 32.0f;
+                // Cable 3: Shallow auxiliary line
+                float c3Y = 62.0f - Mathf.Sin(nx * Mathf.PI) * 18.0f;
+                // Cable 4: Asymmetric looping line
+                float c4Y = 54.0f - Mathf.Sin(Mathf.Pow(nx, 1.2f) * Mathf.PI) * 38.0f;
+
+                if (Mathf.Abs(y - c1Y) <= 1.2f)
+                {
+                    // Cable ties
+                    if (x % 24 <= 1) return new Color(0.28f, 0.24f, 0.32f, 1f);
+                    return new Color(0.08f, 0.06f, 0.10f, 1f);
+                }
+
+                if (Mathf.Abs(y - c2Y) <= 0.9f)
+                {
+                    if (x % 24 == 12) return new Color(0.25f, 0.22f, 0.28f, 1f);
+                    return new Color(0.12f, 0.09f, 0.14f, 1f);
+                }
+
+                if (Mathf.Abs(y - c3Y) <= 0.8f)
+                {
+                    return new Color(0.07f, 0.05f, 0.09f, 1f);
+                }
+
+                if (Mathf.Abs(y - c4Y) <= 0.8f)
+                {
+                    return new Color(0.10f, 0.07f, 0.12f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 9. Misleading Security Sign (48x32)
+            // Weathered industrial placard with yellow/black hazard trim, conflicting arrows (red down, cyan up)
+            CreateSpriteAsset("Environment/Chapter05/ch5_misleading_security_sign.png", 48, 32, (x, y) =>
+            {
+                // Border frame
+                if (x <= 1 || x >= 46 || y <= 1 || y >= 30) return new Color(0.08f, 0.06f, 0.10f, 1f);
+
+                // Diagonal hazard chevron rim (x: 2..5, 42..45, y: 2..4, 27..29)
+                bool isRim = (x <= 5 || x >= 42 || y <= 4 || y >= 27);
+                if (isRim)
+                {
+                    bool stripe = ((x + y) / 4) % 2 == 0;
+                    return stripe ? new Color(0.85f, 0.65f, 0.15f, 1f) : new Color(0.12f, 0.10f, 0.14f, 1f);
+                }
+
+                // Inner panel background
+                Color signBg = new Color(0.15f, 0.12f, 0.18f, 1f);
+
+                // Left Arrow: Red arrow pointing DOWN into trap floor (X: 12..20, Y: 8..22)
+                if (x >= 12 && x <= 20 && y >= 8 && y <= 22)
+                {
+                    // Arrow shaft (x: 15..17, y: 14..22)
+                    if (x >= 15 && x <= 17 && y >= 14) return new Color(1.0f, 0.15f, 0.20f, 1f);
+                    // Arrow head (pointing down at y: 8..14)
+                    int headY = y - 8;
+                    if (headY <= 6 && Mathf.Abs(x - 16) <= headY) return new Color(1.0f, 0.15f, 0.20f, 1f);
+                }
+
+                // Right Arrow: Cyan arrow pointing UP toward ceiling walkway (X: 28..36, Y: 8..22)
+                if (x >= 28 && x <= 36 && y >= 8 && y <= 22)
+                {
+                    // Arrow shaft (x: 31..33, y: 8..16)
+                    if (x >= 31 && x <= 33 && y <= 16) return new Color(0.10f, 0.85f, 1.0f, 1f);
+                    // Arrow head (pointing up at y: 16..22)
+                    int headY = 22 - y;
+                    if (headY <= 6 && Mathf.Abs(x - 32) <= headY) return new Color(0.10f, 0.85f, 1.0f, 1f);
+                }
+
+                // Question mark / Warning dot in center (X: 23..25)
+                if (x == 24 && y >= 12 && y <= 18) return new Color(0.85f, 0.75f, 0.2f, 1f);
+
+                return signBg;
+            });
+
+            // 10. Surveillance Bulkhead Arch (64x128)
+            // Heavy reinforced doorway frame with overhead surveillance camera mounts and security scanner bar
+            CreateSpriteAsset("Environment/Chapter05/ch5_surveillance_bulkhead_arch.png", 64, 128, (x, y) =>
+            {
+                // Side Pilasters (X: 0..14 and X: 49..63)
+                if (x <= 14 || x >= 49)
+                {
+                    if (x == 0 || x == 63 || x == 14 || x == 49) return new Color(0.08f, 0.06f, 0.10f, 1f);
+                    if (y % 20 <= 1) return new Color(0.24f, 0.20f, 0.28f, 1f); // Flange seam
+                    if ((x == 3 || x == 60) && y % 10 == 0) return new Color(0.30f, 0.25f, 0.35f, 1f); // Rivets
+                    return new Color(0.16f, 0.14f, 0.18f, 1f);
+                }
+
+                // Overhead Lintel Beam (Y: 104..127)
+                if (y >= 104)
+                {
+                    if (y == 104 || y == 127) return new Color(0.08f, 0.06f, 0.10f, 1f);
+                    // Hazard stripe rim on lower edge (Y: 105..108)
+                    if (y <= 108)
+                    {
+                        bool stripe = ((x + y) / 4) % 2 == 0;
+                        return stripe ? new Color(0.85f, 0.65f, 0.15f, 1f) : new Color(0.12f, 0.10f, 0.14f, 1f);
+                    }
+                    // Stenciled facility triangle logo in center (X: 26..38, Y: 112..122)
+                    int cx = x - 32;
+                    int cy = y - 117;
+                    if (cy >= -4 && cy <= 4 && Mathf.Abs(cx) <= (4 - cy)) return new Color(0.75f, 0.25f, 0.95f, 1f); // Violet insignia
+                    return new Color(0.18f, 0.15f, 0.22f, 1f);
+                }
+
+                // Scanner beam bar (Y: 100..103)
+                if (y >= 100 && y <= 103)
+                {
+                    if (x % 8 <= 2) return new Color(1.0f, 0.2f, 0.25f, 1f); // Red sensor LEDs
+                    return new Color(0.10f, 0.85f, 1.0f, 1f); // Cyan scanner line
+                }
+
+                return Color.clear;
             });
         }
         #endregion
@@ -6820,19 +7384,30 @@ namespace GlitchVerse.Editor
         {
             var atmo = new ChapterAtmosphereConfig
             {
-                ambientColor = new Color(0.12f, 0.05f, 0.18f, 1f), // Cold deep surveillance violet
-                ambientIntensity = 0.74f,
-                spawnLampColor = new Color(0.75f, 0.25f, 1.0f, 1f),
-                spawnLampIntensity = 1.1f,
+                ambientColor = new Color(0.14f, 0.05f, 0.22f, 1f), // Deep cold surveillance violet
+                ambientIntensity = 0.78f,
+                spawnLampColor = new Color(0.78f, 0.28f, 1.0f, 1f),
+                spawnLampIntensity = 1.15f,
                 spawnLampFlicker = FlickeringLight2D.FlickerMode.SurveillanceGlow,
                 particleType = AtmosphericParticleEmitter.AtmosphereType.SurveillanceMotes,
-                architectMonitorColor = new Color(0.78f, 0.22f, 1.0f, 0.95f)
+                architectMonitorColor = new Color(0.82f, 0.25f, 1.0f, 0.95f)
             };
 
             var refs = SetupBaseChamber("CONTAINMENT 05 // PARANOIA", 5, "Level06", false, atmo);
 
+            // Load Chapter V dedicated modular art kit
+            Sprite ch5LabyrinthBgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_surveillance_labyrinth_bg.png");
+            Sprite ch5MonAlphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_suspended_monitor_bank_alpha.png");
+            Sprite ch5MonBetaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_suspended_monitor_bank_beta.png");
+            Sprite ch5CamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_cctv_security_camera.png");
+            Sprite ch5SpotlightConeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_tracking_spotlight_cone.png");
+            Sprite ch5ColSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_inspection_gantry_column.png");
+            Sprite ch5DeckSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_surveillance_catwalk_deck.png");
+            Sprite ch5CablesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_hanging_cable_web.png");
+            Sprite ch5SignSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_misleading_security_sign.png");
+            Sprite ch5ArchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter05/ch5_surveillance_bulkhead_arch.png");
+
             Sprite floorSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/floor_tile.png");
-            Sprite wallSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/wall_panel.png");
             Sprite beamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/ceiling_beam.png");
             Sprite pipeSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/pipe_conduit.png");
             Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
@@ -6841,9 +7416,6 @@ namespace GlitchVerse.Editor
             Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
             Sprite stripesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_stripes.png");
             Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
-            Sprite terminalSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/lab_terminal.png");
-            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
-
             Sprite hazardLaserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
 
             // Powers: Gravity (G), Dimension Swap (Q), Echo (H/C)
@@ -6851,48 +7423,223 @@ namespace GlitchVerse.Editor
             refs.abilityCtrl.AllowDimensionSwap = true;
             refs.abilityCtrl.AllowTimeFreeze = false;
 
-            // Environmental Dressing: Surveillance Monitors & Cold Violet Lighting
-            float[] colXs = new float[] { -7.0f, -1.0f, 5.0f };
-            foreach (var cx in colXs)
+            // Clean up old prototype monitor / background shapes
+            GameObject oldMonitor = GameObject.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor);
+
+            GameObject oldLight = GameObject.Find("Chamber_Spotlight");
+            if (oldLight != null) Object.DestroyImmediate(oldLight);
+
+            GameObject bgOldRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgOldRoot != null)
             {
-                GameObject col = new GameObject($"Deco_SurveillanceCol_{cx}");
-                col.transform.SetParent(refs.envRoot.transform);
-                col.transform.position = new Vector3(cx, 0.5f, 0f);
-                col.transform.localScale = new Vector3(1.5f, 2.0f, 1f);
-                SpriteRenderer colR = col.AddComponent<SpriteRenderer>();
-                colR.sprite = pillarSp;
-                colR.sortingOrder = -15;
-                colR.color = new Color(0.12f, 0.08f, 0.16f, 0.9f);
+                for (int i = bgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(bgOldRoot.transform.GetChild(i).gameObject);
+                }
             }
 
-            // Violet Surveillance Terminal
-            GameObject termObj = new GameObject("Deco_SurveillanceTerminal");
-            termObj.transform.SetParent(refs.envRoot.transform);
-            termObj.transform.position = new Vector3(-6.5f, -2.5f, 0f);
-            SpriteRenderer termR = termObj.AddComponent<SpriteRenderer>();
-            termR.sprite = terminalSp;
-            termR.sortingOrder = -5;
-            termR.color = new Color(0.8f, 0.4f, 1.0f, 1f);
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            Material unlitMat = (unlitShader != null) ? new Material(unlitShader) : null;
 
-            // True Route Visual Clue: Intact Neon Conduits leading UP from spawn bulkhead
+            // =========================================================================
+            // 1. VISUAL ENVIRONMENT ROOT (CH05_VisualEnvironment)
+            // =========================================================================
+            GameObject ch05EnvRoot = new GameObject("CH05_VisualEnvironment");
+            ch05EnvRoot.transform.position = Vector3.zero;
+
+            // A. Deep Surveillance Labyrinth Backdrop (Sorting Order: -25, Unlit Material)
+            GameObject labyrinthBackdrop = new GameObject("BG_SurveillanceLabyrinthBackdrop");
+            labyrinthBackdrop.transform.SetParent(ch05EnvRoot.transform);
+            labyrinthBackdrop.transform.position = new Vector3(0.5f, 1.2f, 2.0f);
+            labyrinthBackdrop.transform.localScale = new Vector3(7.5f, 4.5f, 1f);
+            SpriteRenderer lbRend = labyrinthBackdrop.AddComponent<SpriteRenderer>();
+            lbRend.sprite = ch5LabyrinthBgSp;
+            lbRend.sortingOrder = -25;
+            if (unlitMat != null) lbRend.material = new Material(unlitMat);
+            lbRend.color = Color.white;
+
+            // B. Parallax Structural Inspection Gantry Columns (Sorting Order: -22 to -18)
+            float[] colXs = new float[] { -8.2f, -3.6f, 1.6f, 6.4f };
+            for (int i = 0; i < colXs.Length; i++)
+            {
+                float cx = colXs[i];
+                GameObject gantryCol = new GameObject($"Deco_InspectionColumn_{i}");
+                gantryCol.transform.SetParent(ch05EnvRoot.transform);
+                gantryCol.transform.position = new Vector3(cx, 1.2f, 0.5f);
+                gantryCol.transform.localScale = new Vector3(1.35f, 2.8f, 1f);
+                SpriteRenderer colR = gantryCol.AddComponent<SpriteRenderer>();
+                colR.sprite = ch5ColSp;
+                colR.sortingOrder = -20;
+                colR.color = new Color(0.85f, 0.80f, 0.90f, 0.95f);
+            }
+
+            // C. Overhead Suspended Monitor Banks (Sorting Order: -14)
+            Vector3[] monitorPositions = new Vector3[]
+            {
+                new Vector3(-5.0f, 3.2f, 0f),
+                new Vector3(-0.5f, 3.8f, 0f),
+                new Vector3(3.6f, 3.6f, 0f),
+                new Vector3(7.4f, 3.6f, 0f)
+            };
+            float[] monitorRotations = new float[] { -8f, 4f, -6f, 8f };
+
+            SpriteRenderer[] monitorRenderers = new SpriteRenderer[monitorPositions.Length];
+            for (int i = 0; i < monitorPositions.Length; i++)
+            {
+                GameObject monBank = new GameObject($"Deco_MonitorBank_{i}");
+                monBank.transform.SetParent(ch05EnvRoot.transform);
+                monBank.transform.position = monitorPositions[i];
+                monBank.transform.rotation = Quaternion.Euler(0f, 0f, monitorRotations[i]);
+                monBank.transform.localScale = new Vector3(1.15f, 1.15f, 1f);
+
+                SpriteRenderer mbRend = monBank.AddComponent<SpriteRenderer>();
+                mbRend.sprite = ch5MonAlphaSp;
+                mbRend.sortingOrder = -14;
+                monitorRenderers[i] = mbRend;
+
+                // Subtle monitor screen glow light
+                GameObject monGlowObj = new GameObject($"MonLight_{i}");
+                monGlowObj.transform.SetParent(monBank.transform);
+                monGlowObj.transform.localPosition = new Vector3(0f, -0.2f, 0f);
+                Light2D monLight = monGlowObj.AddComponent<Light2D>();
+                monLight.lightType = Light2D.LightType.Point;
+                monLight.pointLightOuterRadius = 3.2f;
+                monLight.color = new Color(0.75f, 0.25f, 0.95f, 1f);
+                monLight.intensity = 0.65f;
+            }
+
+            // D. CCTV Security Cameras with Cool White Tracking Light Cones
+            Vector3[] camPositions = new Vector3[]
+            {
+                new Vector3(-7.8f, 2.5f, 0f),
+                new Vector3(-1.8f, 4.3f, 0f),
+                new Vector3(2.2f, 3.6f, 0f),
+                new Vector3(6.6f, 3.9f, 0f)
+            };
+            float[] camAngles = new float[] { -30f, 15f, -25f, -40f };
+
+            Transform[] cameraHeads = new Transform[camPositions.Length];
+            Light2D[] trackingLights = new Light2D[camPositions.Length];
+            Light2D[] redSensorLights = new Light2D[camPositions.Length];
+
+            for (int i = 0; i < camPositions.Length; i++)
+            {
+                GameObject camRig = new GameObject($"CCTV_Rig_{i}");
+                camRig.transform.SetParent(ch05EnvRoot.transform);
+                camRig.transform.position = camPositions[i];
+
+                GameObject camHead = new GameObject("CameraHead");
+                camHead.transform.SetParent(camRig.transform);
+                camHead.transform.localPosition = Vector3.zero;
+                camHead.transform.rotation = Quaternion.Euler(0f, 0f, camAngles[i]);
+                cameraHeads[i] = camHead.transform;
+
+                SpriteRenderer camRend = camHead.AddComponent<SpriteRenderer>();
+                camRend.sprite = ch5CamSp;
+                camRend.sortingOrder = 5;
+
+                // Red Sensor LED light
+                GameObject ledObj = new GameObject("SensorLED");
+                ledObj.transform.SetParent(camHead.transform);
+                ledObj.transform.localPosition = new Vector3(0.2f, -0.1f, 0f);
+                Light2D ledLight = ledObj.AddComponent<Light2D>();
+                ledLight.lightType = Light2D.LightType.Point;
+                ledLight.pointLightOuterRadius = 1.6f;
+                ledLight.color = new Color(1.0f, 0.15f, 0.20f, 1f);
+                ledLight.intensity = 0.95f;
+                redSensorLights[i] = ledLight;
+
+                // Surveillance tracking spotlight cone (visual beam sprite)
+                GameObject coneObj = new GameObject("TrackingBeamCone");
+                coneObj.transform.SetParent(camHead.transform);
+                coneObj.transform.localPosition = new Vector3(0.8f, -1.8f, 0f);
+                coneObj.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                coneObj.transform.localScale = new Vector3(1.2f, 2.2f, 1f);
+                SpriteRenderer coneRend = coneObj.AddComponent<SpriteRenderer>();
+                coneRend.sprite = ch5SpotlightConeSp;
+                coneRend.sortingOrder = -12;
+                if (unlitMat != null) coneRend.material = new Material(unlitMat);
+                coneRend.color = new Color(0.9f, 0.85f, 1.0f, 0.8f);
+
+                // Point light for ground illumination
+                GameObject spotPointObj = new GameObject("TrackingSpotLight");
+                spotPointObj.transform.SetParent(camHead.transform);
+                spotPointObj.transform.localPosition = new Vector3(1.2f, -1.0f, 0f);
+                Light2D trackLight = spotPointObj.AddComponent<Light2D>();
+                trackLight.lightType = Light2D.LightType.Point;
+                trackLight.pointLightOuterRadius = 4.8f;
+                trackLight.color = new Color(0.85f, 0.88f, 1.0f, 1f); // Cool white surveillance tracking light
+                trackLight.intensity = 0.85f;
+                trackingLights[i] = trackLight;
+            }
+
+            // E. Drooping Overhead High-Voltage Cable Webs (Sorting Order: -10)
+            float[] cableXs = new float[] { -5.2f, 0.2f, 5.6f };
+            for (int i = 0; i < cableXs.Length; i++)
+            {
+                GameObject cableWeb = new GameObject($"Deco_CableWeb_{i}");
+                cableWeb.transform.SetParent(ch05EnvRoot.transform);
+                cableWeb.transform.position = new Vector3(cableXs[i], 4.3f, 0f);
+                cableWeb.transform.localScale = new Vector3(1.8f, 1.2f, 1f);
+                SpriteRenderer cwR = cableWeb.AddComponent<SpriteRenderer>();
+                cwR.sprite = ch5CablesSp;
+                cwR.sortingOrder = -10;
+                cwR.color = new Color(0.85f, 0.75f, 0.95f, 0.85f);
+            }
+
+            // F. Spawn Bulkhead Frame
+            GameObject spawnBulkhead = new GameObject("Deco_SpawnBulkhead");
+            spawnBulkhead.transform.SetParent(ch05EnvRoot.transform);
+            spawnBulkhead.transform.position = new Vector3(-8.2f, -2.4f, 0f);
+            spawnBulkhead.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+            SpriteRenderer sbRend = spawnBulkhead.AddComponent<SpriteRenderer>();
+            sbRend.sprite = ch5ArchSp;
+            sbRend.sortingOrder = -8;
+
+            // G. Misleading Security Signs (Environmental Deception Clues)
+            GameObject trapSign = new GameObject("Deco_MisleadingSign_TrapRoute");
+            trapSign.transform.SetParent(ch05EnvRoot.transform);
+            trapSign.transform.position = new Vector3(1.2f, -2.4f, 0f);
+            SpriteRenderer tsRend = trapSign.AddComponent<SpriteRenderer>();
+            tsRend.sprite = ch5SignSp;
+            tsRend.sortingOrder = -4;
+
+            GameObject trapSignLightObj = new GameObject("TrapSign_Light");
+            trapSignLightObj.transform.SetParent(trapSign.transform);
+            trapSignLightObj.transform.localPosition = Vector3.zero;
+            Light2D tslLight = trapSignLightObj.AddComponent<Light2D>();
+            tslLight.lightType = Light2D.LightType.Point;
+            tslLight.pointLightOuterRadius = 2.4f;
+            tslLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            tslLight.intensity = 0.8f;
+
+            // =========================================================================
+            // 2. TRUE ROUTE ENVIRONMENTAL CLUES (Cyan Glow vs Frayed Red Traps)
+            // =========================================================================
+            // Vertical true conduit leading UP from spawn bulkhead
             GameObject verticalConduit = new GameObject("Deco_TruePath_Conduit");
-            verticalConduit.transform.SetParent(refs.envRoot.transform);
+            verticalConduit.transform.SetParent(ch05EnvRoot.transform);
             verticalConduit.transform.position = new Vector3(-7.5f, 0.5f, 0f);
             verticalConduit.transform.rotation = Quaternion.Euler(0, 0, 90f);
             verticalConduit.transform.localScale = new Vector3(7.5f, 1.2f, 1f);
             SpriteRenderer vcRend = verticalConduit.AddComponent<SpriteRenderer>();
             vcRend.sprite = pipeSp;
             vcRend.sortingOrder = -6;
-            vcRend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+            vcRend.color = new Color(0.2f, 0.88f, 1.0f, 0.95f);
 
             GameObject vLightObj = new GameObject("TruePath_Conduit_Light");
             vLightObj.transform.SetParent(verticalConduit.transform);
             vLightObj.transform.localPosition = Vector3.zero;
             Light2D vLight = vLightObj.AddComponent<Light2D>();
             vLight.lightType = Light2D.LightType.Point;
-            vLight.pointLightOuterRadius = 3.5f;
-            vLight.color = new Color(0.1f, 0.85f, 1.0f, 1f);
-            vLight.intensity = 0.8f;
+            vLight.pointLightOuterRadius = 3.6f;
+            vLight.color = new Color(0.1f, 0.88f, 1.0f, 1f);
+            vLight.intensity = 0.85f;
+
+            // =========================================================================
+            // 3. GAMEPLAY GEOMETRY & PUZZLE ENTITIES (100% PRESERVED)
+            // =========================================================================
 
             // Ceiling Walkway 1 (Y = 3.8)
             GameObject ceilPlat1 = new GameObject("Ceiling_Walkway_1");
@@ -6906,21 +7653,30 @@ namespace GlitchVerse.Editor
             BoxCollider2D cpCol1 = ceilPlat1.AddComponent<BoxCollider2D>();
             cpCol1.size = new Vector2(6f, 0.6f);
 
-            // Intact Cyan Conduit along ceiling walkway
+            // Dressing for Ceiling Walkway with Catwalk Deck & Cyan Conduit
             GameObject ceilConduit = new GameObject("Deco_Ceiling_Conduit");
-            ceilConduit.transform.SetParent(refs.envRoot.transform);
+            ceilConduit.transform.SetParent(ch05EnvRoot.transform);
             ceilConduit.transform.position = new Vector3(-2.5f, 4.15f, 0f);
             ceilConduit.transform.localScale = new Vector3(6.0f, 1.0f, 1f);
             SpriteRenderer ccRend = ceilConduit.AddComponent<SpriteRenderer>();
             ccRend.sprite = pipeSp;
             ccRend.sortingOrder = -6;
-            ccRend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+            ccRend.color = new Color(0.2f, 0.88f, 1.0f, 0.95f);
+
+            GameObject ceilLightObj = new GameObject("CeilConduit_Light");
+            ceilLightObj.transform.SetParent(ceilConduit.transform);
+            ceilLightObj.transform.localPosition = Vector3.zero;
+            Light2D ceilLight = ceilLightObj.AddComponent<Light2D>();
+            ceilLight.lightType = Light2D.LightType.Point;
+            ceilLight.pointLightOuterRadius = 3.2f;
+            ceilLight.color = new Color(0.1f, 0.88f, 1.0f, 1f);
+            ceilLight.intensity = 0.75f;
 
             // Echo-only Security Switch inverted on the ceiling walkway at (X: -2.0, Y: 3.4)
             GameObject echoSwitchObj = new GameObject("EchoSwitch_Ceiling");
             echoSwitchObj.transform.SetParent(ceilPlat1.transform);
             echoSwitchObj.transform.localPosition = new Vector3(0.5f, -0.35f, 0f);
-            echoSwitchObj.transform.localRotation = Quaternion.Euler(0, 0, 180f); // Inverted on ceiling
+            echoSwitchObj.transform.localRotation = Quaternion.Euler(0, 0, 180f);
 
             SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
             switchRend.sprite = echoSwitchSp;
@@ -6935,7 +7691,7 @@ namespace GlitchVerse.Editor
             switchLightObj.transform.localPosition = Vector3.zero;
             Light2D switchLight = switchLightObj.AddComponent<Light2D>();
             switchLight.lightType = Light2D.LightType.Point;
-            switchLight.pointLightOuterRadius = 2.2f;
+            switchLight.pointLightOuterRadius = 2.4f;
             switchLight.color = new Color(0.85f, 0f, 1f, 1f);
             switchLight.intensity = 1.0f;
 
@@ -6954,21 +7710,20 @@ namespace GlitchVerse.Editor
                 new Vector3(1.2f, 3.0f, 0f), new Vector2(2.5f, 0.4f), betaSp, DimensionType.Beta);
 
             GameObject midConduit = new GameObject("Deco_MidConduit_Beta");
-            midConduit.transform.SetParent(refs.envRoot.transform);
+            midConduit.transform.SetParent(ch05EnvRoot.transform);
             midConduit.transform.position = new Vector3(1.2f, 3.3f, 0f);
             midConduit.transform.localScale = new Vector3(2.5f, 0.8f, 1f);
             SpriteRenderer mcRend = midConduit.AddComponent<SpriteRenderer>();
             mcRend.sprite = pipeSp;
             mcRend.sortingOrder = -6;
-            mcRend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+            mcRend.color = new Color(0.2f, 0.88f, 1.0f, 0.95f);
 
-            // SECTION 2: Final Test of the Discovered Rule (Conflicting choices)
             // Choice A: Dimension Alpha Platform (Deceptive route: severed cables & sweeping laser)
             CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_TrapPlatform",
                 new Vector3(4.5f, 1.4f, 0f), new Vector2(3.0f, 0.4f), alphaSp, DimensionType.Alpha);
 
             GameObject frayedAlpha = new GameObject("Deco_FrayedCables_Alpha");
-            frayedAlpha.transform.SetParent(refs.envRoot.transform);
+            frayedAlpha.transform.SetParent(ch05EnvRoot.transform);
             frayedAlpha.transform.position = new Vector3(4.5f, 1.0f, 0f);
             SpriteRenderer faRend = frayedAlpha.AddComponent<SpriteRenderer>();
             faRend.sprite = cableSp;
@@ -6999,21 +7754,21 @@ namespace GlitchVerse.Editor
                 new Vector3(4.8f, 3.2f, 0f), new Vector2(3.5f, 0.4f), betaSp, DimensionType.Beta);
 
             GameObject betaConduit = new GameObject("Deco_TrueConduit_Beta");
-            betaConduit.transform.SetParent(refs.envRoot.transform);
+            betaConduit.transform.SetParent(ch05EnvRoot.transform);
             betaConduit.transform.position = new Vector3(4.8f, 3.5f, 0f);
             betaConduit.transform.localScale = new Vector3(3.5f, 0.8f, 1f);
             SpriteRenderer bc2Rend = betaConduit.AddComponent<SpriteRenderer>();
             bc2Rend.sprite = pipeSp;
             bc2Rend.sortingOrder = -6;
-            bc2Rend.color = new Color(0.2f, 0.85f, 1.0f, 0.95f);
+            bc2Rend.color = new Color(0.2f, 0.88f, 1.0f, 0.95f);
 
             GameObject betaLightObj = new GameObject("TrueBeta_Light");
             betaLightObj.transform.SetParent(betaConduit.transform);
             betaLightObj.transform.localPosition = Vector3.zero;
             Light2D betaLight = betaLightObj.AddComponent<Light2D>();
             betaLight.lightType = Light2D.LightType.Point;
-            betaLight.pointLightOuterRadius = 3.0f;
-            betaLight.color = new Color(0.1f, 0.85f, 1.0f, 1f);
+            betaLight.pointLightOuterRadius = 3.2f;
+            betaLight.color = new Color(0.1f, 0.88f, 1.0f, 1f);
             betaLight.intensity = 0.85f;
 
             // Exit Landing Platform (X: 8.5, Y: 1.8)
@@ -7027,6 +7782,15 @@ namespace GlitchVerse.Editor
             epRend.sortingOrder = 2;
             BoxCollider2D epCol = exitPlat.AddComponent<BoxCollider2D>();
             epCol.size = new Vector2(4f, 0.6f);
+
+            // Bulkhead Archway framing the Exit
+            GameObject exitArch = new GameObject("Deco_ExitBulkheadArch");
+            exitArch.transform.SetParent(ch05EnvRoot.transform);
+            exitArch.transform.position = new Vector3(8.5f, 3.4f, 0f);
+            exitArch.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+            SpriteRenderer eaRend = exitArch.AddComponent<SpriteRenderer>();
+            eaRend.sprite = ch5ArchSp;
+            eaRend.sortingOrder = -8;
 
             // Security Barrier Exit at X: 7.0, Y: 2.7 (Guarding ExitDoor, unlocked by EchoSwitch_Ceiling)
             GameObject exitBarrierObj = new GameObject("SecurityBarrier_Exit");
@@ -7065,7 +7829,7 @@ namespace GlitchVerse.Editor
 
             // Trap Route (Lower Floor): Visual deception & ParanoiaTrapPrank
             GameObject trapBeacon = new GameObject("Deco_TrapWarningBeacon");
-            trapBeacon.transform.SetParent(refs.envRoot.transform);
+            trapBeacon.transform.SetParent(ch05EnvRoot.transform);
             trapBeacon.transform.position = new Vector3(1.5f, -2.8f, 0f);
             SpriteRenderer tbRend = trapBeacon.AddComponent<SpriteRenderer>();
             tbRend.sprite = beaconSp;
@@ -7083,7 +7847,7 @@ namespace GlitchVerse.Editor
             tbFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
 
             GameObject brokenCables = new GameObject("Deco_BrokenCables_Trap");
-            brokenCables.transform.SetParent(refs.envRoot.transform);
+            brokenCables.transform.SetParent(ch05EnvRoot.transform);
             brokenCables.transform.position = new Vector3(1.0f, -3.7f, 0f);
             SpriteRenderer bcRend = brokenCables.AddComponent<SpriteRenderer>();
             bcRend.sprite = cableSp;
@@ -7091,7 +7855,7 @@ namespace GlitchVerse.Editor
             bcRend.color = new Color(0.8f, 0.2f, 0.2f, 0.8f);
 
             GameObject hazardStripes = new GameObject("Deco_HazardStripes_Trap");
-            hazardStripes.transform.SetParent(refs.envRoot.transform);
+            hazardStripes.transform.SetParent(ch05EnvRoot.transform);
             hazardStripes.transform.position = new Vector3(2.5f, -3.7f, 0f);
             hazardStripes.transform.localScale = new Vector3(3.0f, 0.4f, 1f);
             SpriteRenderer hsRend = hazardStripes.AddComponent<SpriteRenderer>();
@@ -7125,10 +7889,37 @@ namespace GlitchVerse.Editor
             SetPrivateField(paranoiaPrank, "maxY", -2.5f);
             SetPrivateField(paranoiaPrank, "warningSignRenderer", hsRend);
 
+            // =========================================================================
+            // 4. CHAPTER V VISUAL DIRECTOR
+            // =========================================================================
+            GameObject dirObj = new GameObject("Chapter05_VisualDirector");
+            dirObj.transform.SetParent(ch05EnvRoot.transform);
+            Chapter05VisualDirector ch05Director = dirObj.AddComponent<Chapter05VisualDirector>();
+            ch05Director.MonitorRenderers = monitorRenderers;
+            ch05Director.AlphaMonitorSprite = ch5MonAlphaSp;
+            ch05Director.BetaMonitorSprite = ch5MonBetaSp;
+            ch05Director.TrackingLights = trackingLights;
+            ch05Director.CameraHeads = cameraHeads;
+            ch05Director.CyanConduitLights = new Light2D[] { vLight, ceilLight, betaLight };
+            ch05Director.RedSensorLights = redSensorLights;
+
+            var globalLightObj = GameObject.Find("Global Light 2D");
+            if (globalLightObj != null)
+            {
+                ch05Director.GlobalLight = globalLightObj.GetComponent<Light2D>();
+            }
+
             // Wire ExitDoor and EchoSwitch into Director and HUD
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
+
+            // Clean UI canvas overlays for clean GameView capture
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+
+            var subtitleBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subtitleBanner != null) subtitleBanner.SetActive(false);
 
             SaveChamberScene("Level05.unity");
         }
