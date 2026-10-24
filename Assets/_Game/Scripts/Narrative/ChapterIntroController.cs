@@ -150,7 +150,7 @@ namespace GlitchVerse.Narrative
                 case 4:
                     chapterRom = "IV";
                     titleName = "REVELATION";
-                    subtitle = "The truth was never inside.";
+                    subtitle = "Some things disappear when you stop looking. Others finally become visible.";
                     break;
                 case 5:
                     chapterRom = "V";

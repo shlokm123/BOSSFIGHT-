@@ -44,6 +44,9 @@ namespace GlitchVerse.Mechanics
         /// </summary>
         public void SetDimensionState(DimensionType currentDimension)
         {
+            if (col == null) col = GetComponent<Collider2D>();
+            if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
             bool isMatching = (activeInDimension == currentDimension);
 
             if (isMatching)

@@ -2484,18 +2484,42 @@ namespace GlitchVerse.Editor
             FakeCheckpointPrank fakeCheckpoint = fakeCheckpointObj.AddComponent<FakeCheckpointPrank>();
             SetPrivateField(fakeCheckpoint, "triggerX", 0.0f);
 
-            // Dimension Alpha Platform 1 (X: -4.0, Y: -1.5)
-            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Platform_1", 
-                new Vector3(-4.0f, -1.5f, 0f), new Vector2(3.5f, 0.4f), alphaSp, DimensionType.Alpha);
+            // Floor Hazard across the chasm pit at X: -4.5 to 3.5, Y: -4.0
+            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+            GameObject floorChasmHazard = new GameObject("FloorChasm_Hazard");
+            floorChasmHazard.transform.SetParent(refs.puzzleRoot.transform);
+            floorChasmHazard.transform.position = new Vector3(-0.5f, -3.8f, 0f);
 
-            // Dimension Alpha Platform 2 with EchoSwitch (X: 1.0, Y: 1.0)
-            GameObject alphaPlat2 = CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Platform_2", 
-                new Vector3(1.0f, 1.0f, 0f), new Vector2(3.5f, 0.4f), alphaSp, DimensionType.Alpha);
+            SpriteRenderer fchRend = floorChasmHazard.AddComponent<SpriteRenderer>();
+            fchRend.sprite = laserSp;
+            fchRend.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            fchRend.sortingOrder = 7;
+            fchRend.drawMode = SpriteDrawMode.Sliced;
+            fchRend.size = new Vector2(8.0f, 0.7f);
 
-            // EchoSwitch mounted on Alpha Platform 2 at (1.0, 1.3)
-            GameObject echoSwitchObj = new GameObject("EchoSwitch_Dimension");
-            echoSwitchObj.transform.SetParent(alphaPlat2.transform);
-            echoSwitchObj.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+            BoxCollider2D fchCol = floorChasmHazard.AddComponent<BoxCollider2D>();
+            fchCol.isTrigger = true;
+            fchCol.size = new Vector2(8.0f, 0.7f);
+
+            MovingLaserHazard fchComp = floorChasmHazard.AddComponent<MovingLaserHazard>();
+            fchComp.ConfigurePath(MovingLaserHazard.MotionAxis.Horizontal, new Vector3(-0.5f, -3.8f, 0f), new Vector3(-0.5f, -3.8f, 0f), 0f, 0f, startActive: true);
+            SetPrivateField(fchComp, "laserRenderer", fchRend);
+            SetPrivateField(fchComp, "activeOnStart", true);
+            fchComp.SetHazardActive(true);
+
+            // 1. DIMENSION ALPHA: Inverted Ceiling Observation Catwalk at X: -3.5, Y: 3.8
+            GameObject alphaCeilingCatwalk = CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_CeilingCatwalk", 
+                new Vector3(-3.5f, 3.8f, 0f), new Vector2(4.2f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            // Step platform to ceiling in Alpha at X: -6.0, Y: -1.5
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Step_1", 
+                new Vector3(-6.0f, -1.5f, 0f), new Vector2(2.0f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            // EchoSwitch mounted inverted on Alpha Ceiling Catwalk at (-3.5, 3.5)
+            GameObject echoSwitchObj = new GameObject("EchoSwitch_Revelation");
+            echoSwitchObj.transform.SetParent(alphaCeilingCatwalk.transform);
+            echoSwitchObj.transform.localPosition = new Vector3(0f, -0.3f, 0f);
+            echoSwitchObj.transform.localRotation = Quaternion.Euler(0, 0, 180f);
 
             SpriteRenderer switchRend = echoSwitchObj.AddComponent<SpriteRenderer>();
             switchRend.sprite = echoSwitchSp;
@@ -2505,17 +2529,88 @@ namespace GlitchVerse.Editor
             switchCol.isTrigger = true;
             switchCol.size = new Vector2(1.2f, 0.4f);
 
-            EchoSwitch echoSwitchComp = echoSwitchObj.AddComponent<EchoSwitch>();
+            GameObject switchLightObj = new GameObject("Switch_Light");
+            switchLightObj.transform.SetParent(echoSwitchObj.transform);
+            switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            Light2D switchLight = switchLightObj.AddComponent<Light2D>();
+            switchLight.lightType = Light2D.LightType.Point;
+            switchLight.pointLightOuterRadius = 3.0f;
+            switchLight.color = new Color(0.85f, 0f, 1f, 1f);
+            switchLight.intensity = 0.7f;
+
+            SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
+            SetPrivateField(echoSwitchComp, "glowLight", switchLight);
             SetPrivateField(echoSwitchComp, "depressVisual", echoSwitchObj.transform);
+            SetPrivateField(echoSwitchComp, "allowPlayerActivation", false);
+            SetPrivateField(echoSwitchComp, "allowEchoActivation", true);
+            SetPrivateField(echoSwitchComp, "holdGraceDuration", 4.0f);
+            SetPrivateField(echoSwitchComp, "latching", false);
+            SetPrivateField(echoSwitchComp, "isPowered", true);
 
-            // Dimension Beta Platform 1 (Bridge spanning chasm, X: -1.5, Y: -1.5)
-            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Platform_1", 
-                new Vector3(-1.0f, -1.5f, 0f), new Vector2(3.5f, 0.4f), betaSp, DimensionType.Beta);
+            // Revelation Schematic Display on Ceiling bulkheads (Visible in Alpha)
+            GameObject schematicObj = new GameObject("Deco_AlphaSchematic");
+            schematicObj.transform.SetParent(refs.envRoot.transform);
+            schematicObj.transform.position = new Vector3(-1.0f, 3.2f, 0f);
+            SpriteRenderer schemRend = schematicObj.AddComponent<SpriteRenderer>();
+            schemRend.sprite = quarantineSp;
+            schemRend.color = new Color(0f, 0.94f, 1f, 0.75f);
+            schemRend.sortingOrder = -5;
 
-            // Dimension Beta Platform 2 (Approaching final ceiling breach, X: 5.0, Y: 1.5)
-            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Platform_2", 
-                new Vector3(5.0f, 1.5f, 0f), new Vector2(3.5f, 0.4f), betaSp, DimensionType.Beta);
+            // 2. DIMENSION BETA: Lower Chasm Crossing & Ascent Platforms
+            // Dimension Beta Platform Bridge 1 (X: -2.0, Y: -1.5)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Platform_Bridge1", 
+                new Vector3(-2.0f, -1.5f, 0f), new Vector2(2.5f, 0.4f), betaSp, DimensionType.Beta);
+
+            // Dimension Beta Platform Bridge 2 (X: 0.5, Y: -0.8)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Platform_Bridge2", 
+                new Vector3(0.5f, -0.8f, 0f), new Vector2(2.5f, 0.4f), betaSp, DimensionType.Beta);
+
+            // Dimension Beta Ascent Platform 1 (X: 2.8, Y: 0.5)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Platform_Ascent1", 
+                new Vector3(2.8f, 0.5f, 0f), new Vector2(2.0f, 0.4f), betaSp, DimensionType.Beta);
+
+            // Dimension Beta Ascent Platform 2 (X: 4.6, Y: 1.8)
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimBeta_Platform_Ascent2", 
+                new Vector3(4.6f, 1.8f, 0f), new Vector2(2.2f, 0.4f), betaSp, DimensionType.Beta);
+
+            // 3. DIMENSION ALPHA: Final Exit Catwalk at X: 6.6, Y: 2.5
+            // Requires mid-air switch from Beta jump into Alpha phase!
+            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Catwalk_Exit", 
+                new Vector3(6.6f, 2.5f, 0f), new Vector2(2.8f, 0.4f), alphaSp, DimensionType.Alpha);
+
+            // Security Barrier Exit at X: 7.0, Y: 3.4 (Controlled by EchoSwitch_Revelation)
+            GameObject exitBarrierObj = new GameObject("SecurityBarrier_Exit");
+            exitBarrierObj.transform.SetParent(refs.puzzleRoot.transform);
+            exitBarrierObj.transform.position = new Vector3(7.0f, 3.4f, 0f);
+
+            SpriteRenderer ebRend = exitBarrierObj.AddComponent<SpriteRenderer>();
+            ebRend.sprite = laserSp;
+            ebRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            ebRend.sortingOrder = 8;
+            ebRend.drawMode = SpriteDrawMode.Sliced;
+            ebRend.size = new Vector2(0.35f, 2.2f);
+
+            BoxCollider2D ebCol = exitBarrierObj.AddComponent<BoxCollider2D>();
+            ebCol.size = new Vector2(0.35f, 2.2f);
+
+            GameObject ebLightObj = new GameObject("ExitBarrier_Light");
+            ebLightObj.transform.SetParent(exitBarrierObj.transform);
+            ebLightObj.transform.localPosition = Vector3.zero;
+            Light2D ebLight = ebLightObj.AddComponent<Light2D>();
+            ebLight.lightType = Light2D.LightType.Point;
+            ebLight.pointLightOuterRadius = 2.4f;
+            ebLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            ebLight.intensity = 1.3f;
+
+            SecurityBarrier exitBarrierComp = exitBarrierObj.AddComponent<SecurityBarrier>();
+            SetPrivateField(exitBarrierComp, "barrierCollider", ebCol);
+            SetPrivateField(exitBarrierComp, "barrierRenderer", ebRend);
+            SetPrivateField(exitBarrierComp, "barrierLight", ebLight);
+
+            // Connect echo switch to exit security barrier
+            SetPrivateField(echoSwitchComp, "targetBarrier", exitBarrierComp);
+            echoSwitchComp.TargetBarrier = exitBarrierComp;
 
             // Final Breach Exit Door mounted high on the right bulkhead at (X: 8.5, Y: 3.5)
             refs.exitDoor.transform.position = new Vector3(8.5f, 3.5f, 0f);
