@@ -1186,6 +1186,9 @@ namespace GlitchVerse.Editor
             // Chapter III: BETRAYAL Modular Environmental Art
             GenerateChapter03Sprites();
 
+            // Chapter IV: REVELATION Modular Environmental Art
+            GenerateChapter04Sprites();
+
             AssetDatabase.Refresh();
         }
 
@@ -2591,6 +2594,835 @@ namespace GlitchVerse.Editor
                 }
 
                 return Color.clear;
+            });
+        }
+        #endregion
+
+        #region Chapter IV: Revelation Procedural Sprites
+        private static void GenerateChapter04Sprites()
+        {
+            // 1. Chapter IV Observation Vista Backdrop (256x144)
+            // Left (X: 0..115): Derelict observation bunker with concrete/steel bulkheads, conduit runs, and crimson emergency glare.
+            // Center (X: 116..132): Massive reinforced steel blast archway framing the opening.
+            // Right (X: 133..255): Devastated skyline vista under toxic green-gray atmospheric smog with ruined skeletal towers, broken skyways, searchlights, and distant silhouettes.
+            CreateSpriteAsset("Environment/Chapter04/ch4_observation_vista_bg.png", 256, 144, (x, y) =>
+            {
+                float nx = x / 255.0f;
+                float ny = y / 143.0f;
+
+                // --- LEFT: OBSERVATION BUNKER INTERIOR (X <= 115) ---
+                if (x <= 115)
+                {
+                    // Base weathered concrete / rusted cladding gradient with crimson ambient spill
+                    Color baseInterior = Color.Lerp(
+                        new Color(0.18f, 0.05f, 0.06f, 1f), // Deep red emergency glow on far left
+                        new Color(0.08f, 0.09f, 0.11f, 1f), // Shadowed dark bunker near arch
+                        x / 115.0f
+                    );
+
+                    // Concrete panel lines (horizontal every 36px, vertical every 48px)
+                    if (y % 36 == 0 || x % 48 == 0)
+                    {
+                        baseInterior = new Color(0.04f, 0.03f, 0.04f, 1f);
+                    }
+
+                    // Rivets along seams
+                    if ((y % 36 == 2 || y % 36 == 34) && (x % 16 == 0))
+                    {
+                        baseInterior = new Color(0.24f, 0.18f, 0.18f, 1f);
+                    }
+
+                    // Surface grime / rust stains
+                    float grime = (Mathf.Sin(x * 0.14f + y * 0.09f) + Mathf.Cos(x * 0.07f - y * 0.15f)) * 0.5f;
+                    baseInterior += new Color(grime * 0.02f, grime * 0.01f, grime * 0.01f, 0f);
+
+                    // High overhead technical gantry & heavy crane rail (Y >= 118)
+                    if (y >= 118)
+                    {
+                        if (y == 118 || y == 138) return new Color(0.05f, 0.04f, 0.05f, 1f); // Steel flange
+                        if (x % 32 <= 1) return new Color(0.09f, 0.08f, 0.09f, 1f); // Vertical hanger
+                        if (y >= 139) return new Color(0.04f, 0.04f, 0.05f, 1f); // Ceiling darkness
+                    }
+
+                    // Stenciled Facility Hazard Triangle Insignia (X: 34..52, Y: 82..100)
+                    if (x >= 34 && x <= 52 && y >= 82 && y <= 100)
+                    {
+                        int cx = 43;
+                        int dy = y - 82;
+                        int dx = Mathf.Abs(x - cx);
+                        if (dy <= 16 && dx <= (16 - dy) / 2 + 1)
+                        {
+                            if (dy >= 2 && dx <= (16 - dy) / 2 - 1)
+                            {
+                                if (dy >= 6 && dx <= (14 - dy) / 2)
+                                    baseInterior = new Color(0.06f, 0.04f, 0.05f, 1f);
+                                else
+                                    return new Color(0.85f, 0.18f, 0.15f, 0.85f);
+                            }
+                            else
+                            {
+                                return new Color(0.85f, 0.18f, 0.15f, 0.85f);
+                            }
+                        }
+                    }
+
+                    // Emergency red indicator strip along lower wainscot (Y: 28..30)
+                    if (y >= 28 && y <= 30 && x <= 95)
+                    {
+                        if (x % 12 < 8) return new Color(0.95f, 0.15f, 0.15f, 0.95f);
+                    }
+
+                    return baseInterior;
+                }
+
+                // --- CENTER: MASSIVE BLAST ARCHWAY BULKHEAD (X: 116..132) ---
+                if (x >= 116 && x <= 132)
+                {
+                    Color archCol = new Color(0.09f, 0.10f, 0.12f, 1f);
+                    if (x == 116 || x == 132) archCol = new Color(0.03f, 0.04f, 0.05f, 1f);
+                    if (x == 117 || x == 131) archCol = new Color(0.18f, 0.20f, 0.22f, 1f);
+
+                    // Hydraulic piston cylinder & locking clamps (Y: 60..85, X: 119..123)
+                    if (x >= 119 && x <= 123 && y >= 60 && y <= 85)
+                    {
+                        archCol = new Color(0.24f, 0.26f, 0.30f, 1f);
+                        if (x == 121) archCol = new Color(0.40f, 0.44f, 0.50f, 1f);
+                    }
+
+                    // Yellow/Black diagonal caution hazard trim on outer blast rim (X: 129..131)
+                    if (x >= 129 && x <= 131)
+                    {
+                        bool stripe = ((x + y) / 4) % 2 == 0;
+                        archCol = stripe ? new Color(0.85f, 0.72f, 0.10f, 1f) : new Color(0.08f, 0.08f, 0.08f, 1f);
+                    }
+
+                    // Hanging severed cables drooping into the frame (Y >= 105)
+                    if (y >= 105 && (x == 125 || x == 126 || x == 128))
+                    {
+                        archCol = new Color(0.04f, 0.04f, 0.04f, 1f);
+                    }
+
+                    return archCol;
+                }
+
+                // --- RIGHT: DEVASTATED RUINED SKYLINE & TOXIC SMOG VISTA (X > 132) ---
+                Color smogSky = Color.Lerp(
+                    new Color(0.08f, 0.12f, 0.11f, 1f),
+                    Color.Lerp(new Color(0.22f, 0.30f, 0.26f, 1f), new Color(0.11f, 0.16f, 0.15f, 1f), Mathf.Clamp01((ny - 0.35f) * 1.5f)),
+                    Mathf.Clamp01(ny * 1.4f)
+                );
+
+                float atmoNoise = (Mathf.Sin(x * 0.08f + y * 0.05f) + Mathf.Cos(x * 0.04f - y * 0.10f)) * 0.5f;
+                smogSky += new Color(atmoNoise * 0.015f, atmoNoise * 0.025f, atmoNoise * 0.020f, 0f);
+
+                // Tower A (X: 142..168, Y up to 108)
+                if (x >= 142 && x <= 168)
+                {
+                    int topY = 108 - (x - 142) / 2;
+                    if (x >= 155 && x <= 158) topY += 6;
+                    if (y <= topY)
+                    {
+                        Color towerCol = new Color(0.07f, 0.10f, 0.09f, 1f);
+                        if ((x % 6 >= 2) && (y % 8 >= 3) && y <= topY - 10)
+                        {
+                            towerCol = ((x + y) % 5 == 0) ? new Color(0.14f, 0.20f, 0.18f, 1f) : new Color(0.04f, 0.06f, 0.05f, 1f);
+                        }
+                        if (x <= 147 && y >= 70 && ((x + y) % 4 == 0))
+                        {
+                            towerCol = new Color(0.12f, 0.16f, 0.14f, 1f);
+                        }
+                        return towerCol;
+                    }
+                }
+
+                // Tower B - Massive Central Ruined Spire (X: 178..214, Y up to 134)
+                if (x >= 178 && x <= 214)
+                {
+                    int topY = 126;
+                    if (x >= 192 && x <= 200) topY = 134;
+                    if (y <= topY)
+                    {
+                        Color spireCol = new Color(0.06f, 0.08f, 0.08f, 1f);
+                        if ((x % 5 >= 2) && (y % 7 >= 2) && y <= topY - 14)
+                        {
+                            spireCol = ((x * y) % 7 == 0) ? new Color(0.12f, 0.17f, 0.15f, 1f) : new Color(0.03f, 0.05f, 0.05f, 1f);
+                        }
+                        if (Mathf.Abs(x - 196) <= 1 && y >= 132 && y <= 134)
+                        {
+                            return new Color(1.0f, 0.20f, 0.20f, 1f);
+                        }
+                        return spireCol;
+                    }
+                }
+
+                // Tower C - Industrial Gantry Structure (X: 226..255, Y up to 118)
+                if (x >= 226 && x <= 255)
+                {
+                    int topY = 114;
+                    if (x >= 238 && x <= 246) topY = 118;
+                    if (y <= topY)
+                    {
+                        Color indCol = new Color(0.07f, 0.10f, 0.09f, 1f);
+                        if ((x % 7 >= 2) && (y % 6 >= 2) && y <= topY - 8)
+                        {
+                            indCol = new Color(0.04f, 0.06f, 0.05f, 1f);
+                        }
+                        if (x == 242 && (y == 117 || y == 118)) return new Color(1.0f, 0.25f, 0.20f, 1f);
+                        return indCol;
+                    }
+                }
+
+                // Broken Elevated Highway Bridge (Y: 62..70, X: 158..240)
+                if (y >= 62 && y <= 70 && x >= 158 && x <= 240)
+                {
+                    bool inGap = (x >= 194 && x <= 206);
+                    if (!inGap)
+                    {
+                        Color bridgeCol = (y == 70) ? new Color(0.18f, 0.24f, 0.22f, 1f) : new Color(0.08f, 0.11f, 0.10f, 1f);
+                        if (y <= 64 && ((x + y) % 4 == 0)) bridgeCol = new Color(0.12f, 0.16f, 0.14f, 1f);
+                        return bridgeCol;
+                    }
+                    else
+                    {
+                        if ((x == 195 || x == 205) && y <= 66) return new Color(0.14f, 0.18f, 0.16f, 1f);
+                    }
+                }
+
+                // Searchlight Beam cutting through smog
+                float beamCenter = 42f + (245f - x) * 0.84f;
+                float beamDist = Mathf.Abs(y - beamCenter);
+                float beamWidth = 6f + (245f - x) * 0.14f;
+                if (x >= 145 && x <= 245 && beamDist <= beamWidth)
+                {
+                    float beamAlpha = (1.0f - (beamDist / beamWidth)) * 0.28f * Mathf.Clamp01((x - 145f) / 30f);
+                    smogSky = Color.Lerp(smogSky, new Color(0.72f, 0.90f, 0.92f, 1f), beamAlpha);
+                }
+
+                // Distant Razor-Wire Containment Barrier & Crowd Silhouettes (Y: 10..32)
+                if (y <= 32)
+                {
+                    if (y >= 24 && y <= 26)
+                    {
+                        if (y == 26) return new Color(0.16f, 0.20f, 0.18f, 1f);
+                        if (x % 16 <= 1) return new Color(0.14f, 0.18f, 0.16f, 1f);
+                    }
+                    if (y >= 12 && y <= 25)
+                    {
+                        int headMod = x % 5;
+                        int headHeight = 22 + (int)(Mathf.Sin(x * 0.45f) * 3f);
+                        if (headMod >= 2 && headMod <= 3 && y >= headHeight - 2 && y <= headHeight)
+                        {
+                            return new Color(0.04f, 0.06f, 0.06f, 0.95f);
+                        }
+                        if (y < headHeight - 2)
+                        {
+                            return new Color(0.05f, 0.07f, 0.06f, 0.90f);
+                        }
+                    }
+                    if (y < 12)
+                    {
+                        return new Color(0.03f, 0.05f, 0.04f, 1f);
+                    }
+                }
+
+                return smogSky;
+            });
+
+            // 2. Chapter IV Surveillance Monitor Wall (Active Alpha Feed) (96x64)
+            CreateSpriteAsset("Environment/Chapter04/ch4_surveillance_wall_alpha.png", 96, 64, (x, y) =>
+            {
+                if (x <= 1 || x >= 94 || y <= 1 || y >= 62) return new Color(0.10f, 0.12f, 0.14f, 1f);
+                if (x == 2 || x == 93 || y == 2 || y == 61) return new Color(0.18f, 0.20f, 0.24f, 1f);
+
+                if ((x == 3 || x == 92) && (y == 3 || y == 60)) return new Color(0.45f, 0.50f, 0.55f, 1f);
+
+                // Central Main Monitor (X: 19..76, Y: 15..58)
+                if (x >= 19 && x <= 76 && y >= 15 && y <= 58)
+                {
+                    if (x == 19 || x == 76 || y == 15 || y == 58) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    if (x == 20 || x == 75 || y == 16 || y == 57) return new Color(0.14f, 0.16f, 0.18f, 1f);
+
+                    Color scrCol = Color.Lerp(
+                        new Color(0.04f, 0.10f, 0.11f, 1f),
+                        new Color(0.09f, 0.20f, 0.22f, 1f),
+                        (y - 16) / 41.0f
+                    );
+
+                    if (y <= 36)
+                    {
+                        bool inFeedTower1 = (x >= 26 && x <= 38 && y <= 32);
+                        bool inFeedTower2 = (x >= 44 && x <= 58 && y <= 36);
+                        bool inFeedTower3 = (x >= 64 && x <= 72 && y <= 30);
+                        if (inFeedTower1 || inFeedTower2 || inFeedTower3)
+                        {
+                            scrCol = new Color(0.03f, 0.06f, 0.07f, 1f);
+                            if (y >= 20 && ((x + y) % 4 == 0)) scrCol = new Color(0.06f, 0.14f, 0.14f, 1f);
+                        }
+                    }
+
+                    bool isReticle = (
+                        ((x >= 23 && x <= 27 || x >= 68 && x <= 72) && (y == 20 || y == 53)) ||
+                        ((x == 23 || x == 72) && (y >= 20 && y <= 24 || y >= 49 && y <= 53))
+                    );
+                    if (isReticle) scrCol = new Color(0.35f, 0.85f, 0.90f, 1f);
+
+                    if (y >= 54 && y <= 55 && x >= 32 && x <= 62)
+                    {
+                        if ((x % 3 == 0)) scrCol = new Color(0.40f, 0.95f, 0.85f, 1f);
+                    }
+
+                    if (y % 2 == 0) scrCol *= 0.82f;
+                    return scrCol;
+                }
+
+                // Left Auxiliary Monitor 1 (Top: X: 4..16, Y: 38..56)
+                if (x >= 4 && x <= 16 && y >= 38 && y <= 56)
+                {
+                    if (x == 4 || x == 16 || y == 38 || y == 56) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    Color aux1 = new Color(0.03f, 0.07f, 0.06f, 1f);
+                    if (x == 10 || y == 47) aux1 = new Color(0.20f, 0.55f, 0.45f, 1f);
+                    if (x >= 12 && x <= 14 && y >= 42 && y <= 44) aux1 = new Color(0.95f, 0.15f, 0.15f, 1f);
+                    if (y % 2 == 0) aux1 *= 0.85f;
+                    return aux1;
+                }
+
+                // Left Auxiliary Monitor 2 (Bottom: X: 4..16, Y: 15..33)
+                if (x >= 4 && x <= 16 && y >= 15 && y <= 33)
+                {
+                    if (x == 4 || x == 16 || y == 15 || y == 33) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    Color aux2 = new Color(0.03f, 0.06f, 0.08f, 1f);
+                    int waveY = 24 + (int)(Mathf.Sin((x - 4) * 0.7f) * 3f);
+                    if (x == 10) waveY += 4;
+                    if (y == waveY) aux2 = new Color(0.25f, 0.85f, 0.95f, 1f);
+                    if (y % 2 == 0) aux2 *= 0.85f;
+                    return aux2;
+                }
+
+                // Right Auxiliary Monitor 1 (Top: X: 79..91, Y: 38..56)
+                if (x >= 79 && x <= 91 && y >= 38 && y <= 56)
+                {
+                    if (x == 79 || x == 91 || y == 38 || y == 56) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    Color aux3 = new Color(0.08f, 0.04f, 0.06f, 1f);
+                    if ((x - 79) == (y - 38) || (91 - x) == (y - 38)) aux3 = new Color(0.35f, 0.15f, 0.25f, 1f);
+                    if (x >= 84 && x <= 86 && y >= 46 && y <= 48) aux3 = new Color(1.0f, 0.35f, 0.10f, 1f);
+                    if (y % 2 == 0) aux3 *= 0.85f;
+                    return aux3;
+                }
+
+                // Right Auxiliary Monitor 2 (Bottom: X: 79..91, Y: 15..33)
+                if (x >= 79 && x <= 91 && y >= 15 && y <= 33)
+                {
+                    if (x == 79 || x == 91 || y == 15 || y == 33) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    Color aux4 = new Color(0.04f, 0.06f, 0.07f, 1f);
+                    if (y >= 18 && y <= 20 && x <= 88) aux4 = new Color(0.20f, 0.75f, 0.45f, 1f);
+                    if (y >= 23 && y <= 25 && x <= 85) aux4 = new Color(0.85f, 0.65f, 0.15f, 1f);
+                    if (y >= 28 && y <= 30 && x <= 90) aux4 = new Color(0.95f, 0.20f, 0.15f, 1f);
+                    if (y % 2 == 0) aux4 *= 0.85f;
+                    return aux4;
+                }
+
+                // Bottom Status Panel (Y: 3..12) with Indicator LEDs
+                if (y >= 3 && y <= 12)
+                {
+                    Color panelCol = new Color(0.12f, 0.14f, 0.16f, 1f);
+                    int[] ledXs = { 24, 30, 36, 42, 54, 60, 66, 72 };
+                    foreach (int lx in ledXs)
+                    {
+                        if (Mathf.Abs(x - lx) <= 1 && y >= 6 && y <= 8)
+                        {
+                            if (lx <= 36) return new Color(0.25f, 0.90f, 0.40f, 1f);
+                            if (lx <= 54) return new Color(0.95f, 0.70f, 0.15f, 1f);
+                            return new Color(0.95f, 0.18f, 0.20f, 1f);
+                        }
+                    }
+                    return panelCol;
+                }
+
+                return new Color(0.14f, 0.16f, 0.18f, 1f);
+            });
+
+            // 3. Chapter IV Surveillance Monitor Wall (Corrupted Beta Feed) (96x64)
+            CreateSpriteAsset("Environment/Chapter04/ch4_surveillance_wall_beta.png", 96, 64, (x, y) =>
+            {
+                if (x <= 1 || x >= 94 || y <= 1 || y >= 62) return new Color(0.10f, 0.12f, 0.14f, 1f);
+                if (x == 2 || x == 93 || y == 2 || y == 61) return new Color(0.18f, 0.20f, 0.24f, 1f);
+
+                // Central Main Monitor (X: 19..76, Y: 15..58) - Heavy Static & Glitch Distortion
+                if (x >= 19 && x <= 76 && y >= 15 && y <= 58)
+                {
+                    if (x == 19 || x == 76 || y == 15 || y == 58) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    if (x == 20 || x == 75 || y == 16 || y == 57) return new Color(0.14f, 0.16f, 0.18f, 1f);
+
+                    int hash = (x * 157 + y * 311 + ((x ^ y) * 97)) % 100;
+                    float noiseVal = hash / 100.0f;
+
+                    bool isGlitchRow = ((y >= 26 && y <= 29) || (y >= 44 && y <= 47));
+                    if (isGlitchRow)
+                    {
+                        if (x % 3 == 0) return new Color(0.0f, 0.95f, 1.0f, 1f);
+                        if (x % 3 == 1) return new Color(1.0f, 0.10f, 0.60f, 1f);
+                        return new Color(0.95f, 0.95f, 0.95f, 1f);
+                    }
+
+                    if (x >= 28 && x <= 67 && y >= 33 && y <= 41)
+                    {
+                        if (x == 28 || x == 67 || y == 33 || y == 41) return new Color(1.0f, 0.20f, 0.15f, 1f);
+                        bool isTextDot = ((x + y) % 3 == 0 && (x >= 32 && x <= 63));
+                        return isTextDot ? new Color(0.05f, 0.05f, 0.08f, 1f) : new Color(0.85f, 0.15f, 0.15f, 1f);
+                    }
+
+                    Color snowCol = Color.Lerp(
+                        new Color(0.05f, 0.08f, 0.10f, 1f),
+                        new Color(0.65f, 0.75f, 0.85f, 1f),
+                        noiseVal
+                    );
+                    if (y % 2 == 0) snowCol *= 0.80f;
+                    return snowCol;
+                }
+
+                bool inAnyAux = (
+                    (x >= 4 && x <= 16 && y >= 38 && y <= 56) ||
+                    (x >= 4 && x <= 16 && y >= 15 && y <= 33) ||
+                    (x >= 79 && x <= 91 && y >= 38 && y <= 56) ||
+                    (x >= 79 && x <= 91 && y >= 15 && y <= 33)
+                );
+                if (inAnyAux)
+                {
+                    int auxHash = (x * 73 + y * 199) % 50;
+                    if (auxHash < 15) return new Color(0.0f, 0.85f, 0.90f, 1f);
+                    if (auxHash < 25) return new Color(0.90f, 0.15f, 0.35f, 1f);
+                    return new Color(0.08f, 0.12f, 0.15f, 1f);
+                }
+
+                if (y >= 3 && y <= 12)
+                {
+                    int[] ledXs = { 24, 30, 36, 42, 54, 60, 66, 72 };
+                    foreach (int lx in ledXs)
+                    {
+                        if (Mathf.Abs(x - lx) <= 1 && y >= 6 && y <= 8)
+                        {
+                            return new Color(1.0f, 0.15f, 0.15f, 1f);
+                        }
+                    }
+                    return new Color(0.12f, 0.14f, 0.16f, 1f);
+                }
+
+                return new Color(0.14f, 0.16f, 0.18f, 1f);
+            });
+
+            // 4. Chapter IV Observation Bulkhead Blast Arch (64x128)
+            CreateSpriteAsset("Environment/Chapter04/ch4_observation_bulkhead_arch.png", 64, 128, (x, y) =>
+            {
+                if (x <= 28)
+                {
+                    if (x <= 4 || (x >= 24 && x <= 28)) return new Color(0.16f, 0.18f, 0.22f, 1f);
+                    if (x == 5 || x == 23) return new Color(0.05f, 0.06f, 0.08f, 1f);
+                    Color webCol = new Color(0.10f, 0.12f, 0.14f, 1f);
+                    if (y % 16 == 0 && (x == 12 || x == 16)) webCol = new Color(0.35f, 0.38f, 0.42f, 1f);
+                    return webCol;
+                }
+
+                int gussetBaseline = 70 + (int)((x - 28) * 1.6f);
+                if (y >= gussetBaseline)
+                {
+                    if (y <= gussetBaseline + 5)
+                    {
+                        bool cautionStripe = ((x + y) / 5) % 2 == 0;
+                        return cautionStripe ? new Color(0.85f, 0.72f, 0.12f, 1f) : new Color(0.08f, 0.08f, 0.08f, 1f);
+                    }
+                    return new Color(0.12f, 0.14f, 0.16f, 1f);
+                }
+
+                if (x >= 12 && x <= 24 && y >= 35 && y <= 65)
+                {
+                    if (x == 18) return new Color(0.55f, 0.60f, 0.65f, 1f);
+                    return new Color(0.22f, 0.24f, 0.28f, 1f);
+                }
+
+                if ((x == 36 || x == 44 || x == 52) && y <= 40)
+                {
+                    int cableLen = (x == 36) ? 35 : ((x == 44) ? 22 : 15);
+                    if (y >= (40 - cableLen))
+                    {
+                        if (y == (40 - cableLen)) return new Color(0.85f, 0.45f, 0.10f, 1f);
+                        return new Color(0.06f, 0.06f, 0.06f, 1f);
+                    }
+                }
+
+                return Color.clear;
+            });
+
+            // 5. Chapter IV Ruined City Towers Parallax Layer (128x128)
+            CreateSpriteAsset("Environment/Chapter04/ch4_ruined_city_towers.png", 128, 128, (x, y) =>
+            {
+                if (x >= 8 && x <= 38)
+                {
+                    int topY = 96 - (x - 8);
+                    if (y <= topY)
+                    {
+                        Color tCol = new Color(0.09f, 0.14f, 0.13f, 1f);
+                        if ((x % 6 >= 2) && (y % 8 >= 3) && y <= topY - 8)
+                        {
+                            tCol = ((x + y) % 4 == 0) ? new Color(0.16f, 0.25f, 0.23f, 1f) : new Color(0.04f, 0.07f, 0.06f, 1f);
+                        }
+                        return tCol;
+                    }
+                }
+
+                if (x >= 48 && x <= 84)
+                {
+                    int topY = 116;
+                    if (x >= 62 && x <= 70) topY = 124;
+                    if (y <= topY)
+                    {
+                        Color tCol = new Color(0.08f, 0.12f, 0.12f, 1f);
+                        if ((x % 5 >= 2) && (y % 7 >= 2) && y <= topY - 12)
+                        {
+                            tCol = ((x * y) % 5 == 0) ? new Color(0.14f, 0.22f, 0.20f, 1f) : new Color(0.04f, 0.06f, 0.06f, 1f);
+                        }
+                        if (x >= 65 && x <= 67 && y >= 122) return new Color(1.0f, 0.25f, 0.20f, 1f);
+                        return tCol;
+                    }
+                }
+
+                if (x >= 94 && x <= 122)
+                {
+                    int topY = 105 - (x - 94) / 2;
+                    if (y <= topY)
+                    {
+                        Color tCol = new Color(0.09f, 0.13f, 0.13f, 1f);
+                        if ((x % 6 >= 2) && (y % 6 >= 2) && y <= topY - 8)
+                        {
+                            tCol = new Color(0.05f, 0.08f, 0.07f, 1f);
+                        }
+                        if (x == 108 && y >= 96) return new Color(1.0f, 0.25f, 0.20f, 1f);
+                        return tCol;
+                    }
+                }
+
+                if (y >= 52 && y <= 58 && x >= 34 && x <= 52)
+                {
+                    return (y == 58) ? new Color(0.18f, 0.26f, 0.24f, 1f) : new Color(0.07f, 0.10f, 0.09f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 6. Chapter IV Distant Containment Barrier & Silhouetted Crowd (128x48)
+            CreateSpriteAsset("Environment/Chapter04/ch4_containment_fence_crowd.png", 128, 48, (x, y) =>
+            {
+                if (x >= 104 && x <= 122 && y <= 46)
+                {
+                    if (y >= 36)
+                    {
+                        if (x >= 106 && x <= 120) return new Color(0.12f, 0.16f, 0.15f, 1f);
+                    }
+                    if (x == 106 || x == 120) return new Color(0.08f, 0.11f, 0.10f, 1f);
+                    if (y <= 36 && ((x + y) % 8 == 0)) return new Color(0.10f, 0.14f, 0.13f, 1f);
+                }
+
+                if (y >= 24 && y <= 30 && x <= 104)
+                {
+                    if (y == 30) return new Color(0.20f, 0.26f, 0.24f, 1f);
+                    if (x % 16 <= 1) return new Color(0.14f, 0.18f, 0.16f, 1f);
+                    if ((x + y) % 4 == 0) return new Color(0.12f, 0.16f, 0.15f, 0.75f);
+                }
+
+                if (y >= 6 && y <= 26 && x <= 104)
+                {
+                    int headMod = x % 5;
+                    int headHeight = 22 + (int)(Mathf.Sin(x * 0.45f) * 3f);
+                    if (headMod >= 2 && headMod <= 3 && y >= headHeight - 2 && y <= headHeight)
+                    {
+                        return new Color(0.04f, 0.06f, 0.06f, 0.95f);
+                    }
+                    if (y < headHeight - 2)
+                    {
+                        return new Color(0.05f, 0.07f, 0.06f, 0.90f);
+                    }
+                }
+
+                if (y < 6) return new Color(0.03f, 0.05f, 0.04f, 1f);
+
+                return Color.clear;
+            });
+
+            // 7. Chapter IV Operator Console Desk (64x48)
+            CreateSpriteAsset("Environment/Chapter04/ch4_operator_console_desk.png", 64, 48, (x, y) =>
+            {
+                if (y >= 20 && y <= 24 && x >= 4 && x <= 60)
+                {
+                    if (y == 24) return new Color(0.32f, 0.36f, 0.40f, 1f);
+                    return new Color(0.14f, 0.16f, 0.18f, 1f);
+                }
+
+                if (x >= 10 && x <= 28 && y >= 25 && y <= 45)
+                {
+                    if (x == 10 || x == 28 || y == 25 || y == 45) return new Color(0.08f, 0.09f, 0.11f, 1f);
+                    Color scr1 = new Color(0.03f, 0.12f, 0.08f, 1f);
+                    if (y == 35 + (int)(Mathf.Sin(x * 0.8f) * 4f)) scr1 = new Color(0.35f, 0.95f, 0.50f, 1f);
+                    if (y % 2 == 0) scr1 *= 0.85f;
+                    return scr1;
+                }
+
+                if (x >= 36 && x <= 54 && y >= 25 && y <= 45)
+                {
+                    if (x == 36 || x == 54 || y == 25 || y == 45) return new Color(0.08f, 0.09f, 0.11f, 1f);
+                    Color scr2 = new Color(0.04f, 0.09f, 0.13f, 1f);
+                    if (x == 45 || y == 35) scr2 = new Color(0.30f, 0.85f, 0.95f, 1f);
+                    if (y % 2 == 0) scr2 *= 0.85f;
+                    return scr2;
+                }
+
+                if (y >= 4 && y <= 19 && x >= 8 && x <= 56)
+                {
+                    if (x == 8 || x == 56 || y == 4 || y == 19) return new Color(0.10f, 0.11f, 0.13f, 1f);
+                    if (y % 5 == 0) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    if ((x == 16 || x == 32 || x == 48) && (y == 8 || y == 13 || y == 17))
+                    {
+                        return (x == 48) ? new Color(1.0f, 0.20f, 0.15f, 1f) : new Color(0.20f, 0.90f, 0.45f, 1f);
+                    }
+                    return new Color(0.12f, 0.14f, 0.16f, 1f);
+                }
+
+                if (y < 4 && (x == 18 || x == 26 || x == 42))
+                {
+                    return new Color(0.05f, 0.05f, 0.05f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 8. Chapter IV Server Monitoring Cabinet (40x72)
+            CreateSpriteAsset("Environment/Chapter04/ch4_server_cabinet.png", 40, 72, (x, y) =>
+            {
+                if (x <= 1 || x >= 38 || y <= 1 || y >= 70) return new Color(0.08f, 0.09f, 0.11f, 1f);
+                if (x == 2 || x == 37 || y == 2 || y == 69) return new Color(0.18f, 0.20f, 0.24f, 1f);
+
+                int bladeY = (y - 4) % 8;
+                if (bladeY == 0) return new Color(0.06f, 0.07f, 0.08f, 1f);
+
+                if (x >= 6 && x <= 22 && bladeY >= 3 && bladeY <= 5)
+                {
+                    if (x % 4 == 0)
+                    {
+                        if (x == 20) return new Color(1.0f, 0.20f, 0.15f, 1f);
+                        if (x == 16) return new Color(0.95f, 0.70f, 0.15f, 1f);
+                        return new Color(0.20f, 0.90f, 0.45f, 1f);
+                    }
+                }
+
+                if (x >= 28 && x <= 34)
+                {
+                    if (x == 29) return new Color(0.85f, 0.20f, 0.15f, 1f);
+                    if (x == 31) return new Color(0.15f, 0.45f, 0.85f, 1f);
+                    if (x == 33) return new Color(0.90f, 0.75f, 0.15f, 1f);
+                    return new Color(0.05f, 0.06f, 0.07f, 1f);
+                }
+
+                if (y >= 64 && y <= 68 && (x % 3 == 0))
+                {
+                    return new Color(0.04f, 0.04f, 0.05f, 1f);
+                }
+
+                return new Color(0.12f, 0.13f, 0.15f, 1f);
+            });
+
+            // 9. Chapter IV Industrial Catwalk Staircase (48x64)
+            CreateSpriteAsset("Environment/Chapter04/ch4_industrial_staircase.png", 48, 64, (x, y) =>
+            {
+                int stairBaseY = 4 + (int)((x - 4) * 1.3f);
+                int yDist = y - stairBaseY;
+
+                int stepX = (x - 4) % 6;
+                if (yDist >= 0 && yDist <= 3)
+                {
+                    if (yDist == 3) return new Color(0.35f, 0.38f, 0.42f, 1f);
+                    if (stepX <= 1) return new Color(0.15f, 0.17f, 0.20f, 1f);
+                    return new Color(0.22f, 0.25f, 0.28f, 1f);
+                }
+
+                if (yDist >= -6 && yDist <= -1)
+                {
+                    return new Color(0.10f, 0.12f, 0.14f, 1f);
+                }
+
+                if (yDist >= 14 && yDist <= 16)
+                {
+                    return new Color(0.40f, 0.44f, 0.48f, 1f);
+                }
+                if (yDist >= 0 && yDist <= 16 && (x % 12 <= 1))
+                {
+                    return new Color(0.25f, 0.28f, 0.32f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 10. Chapter IV Revelation Catwalk Platform Deck (128x64)
+            CreateSpriteAsset("Environment/Chapter04/ch4_revelation_catwalk_deck.png", 128, 64, (x, y) =>
+            {
+                if (y >= 54)
+                {
+                    if (y >= 60)
+                    {
+                        bool stripe = ((x + y) / 4) % 2 == 0;
+                        return stripe ? new Color(0.90f, 0.75f, 0.15f, 1f) : new Color(0.08f, 0.08f, 0.08f, 1f);
+                    }
+                    bool isDiamond = ((x + y) % 6 == 0 || (x - y) % 6 == 0);
+                    return isDiamond ? new Color(0.30f, 0.34f, 0.38f, 1f) : new Color(0.16f, 0.18f, 0.22f, 1f);
+                }
+
+                if (y >= 30)
+                {
+                    if (y == 53) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    Color web = new Color(0.12f, 0.14f, 0.16f, 1f);
+                    if (y == 42 && (x % 16 == 0)) web = new Color(0.38f, 0.42f, 0.46f, 1f);
+                    if (y >= 34 && y <= 38 && (x % 32 >= 10 && x % 32 <= 22)) web = new Color(0.04f, 0.05f, 0.06f, 1f);
+                    return web;
+                }
+
+                if (y >= 4)
+                {
+                    int cellX = x % 32;
+                    int cellY = y - 4;
+                    bool inCross = (Mathf.Abs(cellX - cellY) <= 1 || Mathf.Abs(cellX - (25 - cellY)) <= 1);
+                    if (inCross) return new Color(0.18f, 0.20f, 0.24f, 1f);
+                    if (cellX == 0 || cellX == 31) return new Color(0.14f, 0.16f, 0.18f, 1f);
+                    return new Color(0.04f, 0.05f, 0.06f, 0.85f);
+                }
+
+                return Color.clear;
+            });
+
+            // 11. Chapter IV Observation Hanging Cables & Conduit Manifold (128x64)
+            CreateSpriteAsset("Environment/Chapter04/ch4_observation_pipes_cables.png", 128, 64, (x, y) =>
+            {
+                if (y >= 50 && y <= 62)
+                {
+                    if (y == 62 || y == 50) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                    if (y == 59) return new Color(0.40f, 0.44f, 0.48f, 1f);
+                    if (x % 40 <= 3) return new Color(0.25f, 0.28f, 0.32f, 1f);
+                    return new Color(0.18f, 0.20f, 0.24f, 1f);
+                }
+
+                float sag1 = 18f + Mathf.Pow((x - 64f) / 64f, 2f) * 30f;
+                if (Mathf.Abs(y - sag1) <= 1.5f)
+                {
+                    return new Color(0.06f, 0.06f, 0.07f, 1f);
+                }
+
+                float sag2 = 10f + Mathf.Pow((x - 50f) / 60f, 2f) * 35f;
+                if (Mathf.Abs(y - sag2) <= 1.2f)
+                {
+                    return new Color(0.14f, 0.10f, 0.08f, 1f);
+                }
+
+                if (x >= 80 && x <= 84 && y >= 12 && y <= 35)
+                {
+                    if (y <= 15) return new Color(0.95f, 0.55f, 0.15f, 1f);
+                    return new Color(0.06f, 0.06f, 0.06f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 12. Chapter IV Emergency Wall Alarm Siren Beacon (24x32)
+            CreateSpriteAsset("Environment/Chapter04/ch4_emergency_wall_beacon.png", 24, 32, (x, y) =>
+            {
+                if (y >= 2 && y <= 10 && x >= 4 && x <= 20)
+                {
+                    if (x == 4 || x == 20 || y == 2 || y == 10) return new Color(0.10f, 0.11f, 0.13f, 1f);
+                    return new Color(0.18f, 0.20f, 0.22f, 1f);
+                }
+
+                if (x >= 6 && x <= 18 && y >= 11 && y <= 28)
+                {
+                    if (y >= 27) return new Color(0.20f, 0.22f, 0.25f, 1f);
+
+                    if (x == 7 || x == 11 || x == 15 || x == 17) return new Color(0.25f, 0.28f, 0.30f, 1f);
+                    if (y == 19) return new Color(0.25f, 0.28f, 0.30f, 1f);
+
+                    float distFromCenter = Mathf.Abs(x - 12) + Mathf.Abs(y - 19) * 0.5f;
+                    if (distFromCenter <= 3.5f) return new Color(1.0f, 0.85f, 0.85f, 1f);
+                    return new Color(1.0f, 0.22f, 0.18f, 0.95f);
+                }
+
+                return Color.clear;
+            });
+
+            // 13. Chapter IV Searchlight Beam Cone (64x128)
+            CreateSpriteAsset("Environment/Chapter04/ch4_searchlight_beam.png", 64, 128, (x, y) =>
+            {
+                float t = (126f - y) / 126f;
+                float halfWidth = 2.0f + t * 29.0f;
+                float distFromCenter = Mathf.Abs(x - 32f);
+
+                if (distFromCenter <= halfWidth && y <= 126)
+                {
+                    float normalizedDist = distFromCenter / halfWidth;
+                    float falloff = (1.0f - normalizedDist * normalizedDist);
+                    float lengthFade = Mathf.Clamp01((y + 10f) / 136f);
+                    float alpha = falloff * lengthFade * 0.45f;
+                    return new Color(0.72f, 0.90f, 0.95f, alpha);
+                }
+
+                return Color.clear;
+            });
+
+            // 14. Chapter IV Hazard Emitter Housing (32x48)
+            CreateSpriteAsset("Environment/Chapter04/ch4_hazard_emitter_housing.png", 32, 48, (x, y) =>
+            {
+                if (x >= 4 && x <= 28 && y >= 4 && y <= 44)
+                {
+                    if (x == 4 || x == 28 || y == 4 || y == 44) return new Color(0.08f, 0.09f, 0.11f, 1f);
+
+                    if (y >= 36 && y <= 42)
+                    {
+                        bool stripe = ((x + y) / 4) % 2 == 0;
+                        return stripe ? new Color(0.90f, 0.75f, 0.15f, 1f) : new Color(0.08f, 0.08f, 0.08f, 1f);
+                    }
+
+                    if (x >= 10 && x <= 22 && y >= 12 && y <= 28)
+                    {
+                        if (x == 10 || x == 22 || y == 12 || y == 28) return new Color(0.18f, 0.20f, 0.24f, 1f);
+                        float cdist = Vector2.Distance(new Vector2(x, y), new Vector2(16, 20));
+                        if (cdist <= 2f) return new Color(1.0f, 0.92f, 0.95f, 1f);
+                        return new Color(1.0f, 0.05f, 0.15f, 1f);
+                    }
+
+                    if (x <= 8 || x >= 24)
+                    {
+                        if (y % 4 == 0) return new Color(0.05f, 0.06f, 0.07f, 1f);
+                    }
+
+                    return new Color(0.14f, 0.16f, 0.18f, 1f);
+                }
+
+                return Color.clear;
+            });
+
+            // 15. Chapter IV Weathered Concrete Wall Panel (64x64)
+            CreateSpriteAsset("Environment/Chapter04/ch4_concrete_wall_panel.png", 64, 64, (x, y) =>
+            {
+                if (x <= 1 || x >= 62 || y <= 1 || y >= 62) return new Color(0.06f, 0.07f, 0.08f, 1f);
+                if (x == 2 || x == 61 || y == 2 || y == 61) return new Color(0.20f, 0.22f, 0.25f, 1f);
+
+                bool inTieHole = (
+                    (Mathf.Abs(x - 10) <= 2 && Mathf.Abs(y - 10) <= 2) ||
+                    (Mathf.Abs(x - 53) <= 2 && Mathf.Abs(y - 10) <= 2) ||
+                    (Mathf.Abs(x - 10) <= 2 && Mathf.Abs(y - 53) <= 2) ||
+                    (Mathf.Abs(x - 53) <= 2 && Mathf.Abs(y - 53) <= 2)
+                );
+                if (inTieHole) return new Color(0.05f, 0.05f, 0.06f, 1f);
+
+                if ((x == 10 || x == 53) && y < 50 && y > 12)
+                {
+                    return new Color(0.18f, 0.12f, 0.10f, 1f);
+                }
+
+                float grain = (Mathf.Sin(x * 0.2f + y * 0.15f) + Mathf.Cos(x * 0.1f - y * 0.25f)) * 0.5f;
+                return new Color(0.14f + grain * 0.015f, 0.15f + grain * 0.015f, 0.17f + grain * 0.02f, 1f);
             });
         }
         #endregion
@@ -5498,7 +6330,7 @@ namespace GlitchVerse.Editor
                 ambientColor = new Color(0.92f, 0.32f, 0.36f, 1f), // Deep emergency crimson/red
                 ambientIntensity = 0.76f,
                 spawnLampColor = new Color(1.0f, 0.22f, 0.18f, 1f),
-                spawnLampIntensity = 1.2f,
+                spawnLampIntensity = 1.25f,
                 spawnLampFlicker = FlickeringLight2D.FlickerMode.EmergencyStrobe,
                 particleType = AtmosphericParticleEmitter.AtmosphereType.EmergencyEmbers,
                 architectMonitorColor = new Color(1.0f, 0.25f, 0.20f, 0.95f)
@@ -5506,97 +6338,291 @@ namespace GlitchVerse.Editor
 
             var refs = SetupBaseChamber("CONTAINMENT 04 // REALITY BREACH", 4, "Level05", false, atmo);
 
+            // Load Chapter IV dedicated modular art kit
+            Sprite ch4VistaBgSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_observation_vista_bg.png");
+            Sprite ch4SurvAlphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_surveillance_wall_alpha.png");
+            Sprite ch4SurvBetaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_surveillance_wall_beta.png");
+            Sprite ch4ArchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_observation_bulkhead_arch.png");
+            Sprite ch4TowersSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_ruined_city_towers.png");
+            Sprite ch4FenceSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_containment_fence_crowd.png");
+            Sprite ch4ConsoleSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_operator_console_desk.png");
+            Sprite ch4ServerSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_server_cabinet.png");
+            Sprite ch4StairsSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_industrial_staircase.png");
+            Sprite ch4DeckSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_revelation_catwalk_deck.png");
+            Sprite ch4CablesSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_observation_pipes_cables.png");
+            Sprite ch4BeaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_emergency_wall_beacon.png");
+            Sprite ch4BeamSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_searchlight_beam.png");
+            Sprite ch4HazardHousingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_hazard_emitter_housing.png");
+            Sprite ch4ConcreteSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/Environment/Chapter04/ch4_concrete_wall_panel.png");
+
             Sprite alphaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_alpha_platform.png");
             Sprite betaSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/dim_beta_platform.png");
             Sprite echoSwitchSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/echo_switch.png");
-            Sprite skylineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/distant_skyline_vent.png");
-            Sprite beaconSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/warning_beacon.png");
+            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+            Sprite railingSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/platform_railing.png");
+            Sprite cableSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/cable_bundle.png");
             Sprite quarantineSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/decal_quarantine.png");
-            Sprite pillarSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/bg_pillar.png");
 
-            // Unlock ALL powers for the finale: Gravity (G), Time Freeze (F), Dimension Swap (Q)
+            // Unlock ALL powers for Level 04: Gravity (G), Time Freeze (F), Dimension Swap (Q)
             refs.abilityCtrl.AllowGravity = true;
             refs.abilityCtrl.AllowTimeFreeze = true;
             refs.abilityCtrl.AllowDimensionSwap = true;
 
-            // Environmental Storytelling: Distant Skyline Observation Slit (The Last City)
-            GameObject skylineObj = new GameObject("Deco_DistantSkyline_Vent");
-            skylineObj.transform.SetParent(refs.envRoot.transform);
-            skylineObj.transform.position = new Vector3(0f, 2.2f, 0f);
-            skylineObj.transform.localScale = new Vector3(1.8f, 1.4f, 1f);
-            SpriteRenderer skyRend = skylineObj.AddComponent<SpriteRenderer>();
-            skyRend.sprite = skylineSp;
-            skyRend.sortingOrder = -25; // Deepest background layer
+            // Clean up old prototype monitor / background shapes
+            GameObject oldMonitor = GameObject.Find("Architect_Surveillance_Unit");
+            if (oldMonitor != null) Object.DestroyImmediate(oldMonitor);
 
-            // Heavy Brutalist Bulkhead Columns
-            float[] colXs = new float[] { -8.5f, -2.5f, 3.5f };
-            foreach (var cx in colXs)
+            GameObject oldLight = GameObject.Find("Chamber_Spotlight");
+            if (oldLight != null) Object.DestroyImmediate(oldLight);
+
+            GameObject bgOldRoot = GameObject.Find("--- BACKGROUND ---");
+            if (bgOldRoot != null)
             {
-                GameObject col = new GameObject($"Deco_BulkheadCol_{cx}");
-                col.transform.SetParent(refs.envRoot.transform);
-                col.transform.position = new Vector3(cx, 1.0f, 0f);
-                col.transform.localScale = new Vector3(1.6f, 2.2f, 1f);
-                SpriteRenderer colR = col.AddComponent<SpriteRenderer>();
-                colR.sprite = pillarSp;
-                colR.sortingOrder = -15;
-                colR.color = new Color(0.18f, 0.12f, 0.14f, 0.85f);
+                for (int i = bgOldRoot.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(bgOldRoot.transform.GetChild(i).gameObject);
+                }
             }
 
-            // Stenciled Quarantine Warning Decals
-            GameObject qd1 = new GameObject("Deco_Quarantine_1");
-            qd1.transform.SetParent(refs.envRoot.transform);
-            qd1.transform.position = new Vector3(-6.0f, -1.0f, 0f);
-            SpriteRenderer qdR1 = qd1.AddComponent<SpriteRenderer>();
-            qdR1.sprite = quarantineSp;
-            qdR1.sortingOrder = -5;
+            var unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            Material unlitMat = (unlitShader != null) ? new Material(unlitShader) : null;
 
-            GameObject qd2 = new GameObject("Deco_Quarantine_2");
-            qd2.transform.SetParent(refs.envRoot.transform);
-            qd2.transform.position = new Vector3(5.0f, -0.5f, 0f);
-            SpriteRenderer qdR2 = qd2.AddComponent<SpriteRenderer>();
-            qdR2.sprite = quarantineSp;
-            qdR2.sortingOrder = -5;
+            // =========================================================================
+            // 1. VISUAL ENVIRONMENT ROOT (CH04_VisualEnvironment)
+            // =========================================================================
+            GameObject ch04EnvRoot = new GameObject("CH04_VisualEnvironment");
+            ch04EnvRoot.transform.position = Vector3.zero;
 
-            // Flashing Emergency Wall Alarm Beacons
-            GameObject leftBeacon = new GameObject("Deco_EmergencyBeacon_L");
-            leftBeacon.transform.SetParent(refs.envRoot.transform);
-            leftBeacon.transform.position = new Vector3(-9.5f, 1.0f, 0f);
-            SpriteRenderer lbRend = leftBeacon.AddComponent<SpriteRenderer>();
-            lbRend.sprite = beaconSp;
-            lbRend.sortingOrder = 5;
+            // A. Deep Observation Vista Backdrop (Sorting Order: -25, Unlit Material)
+            GameObject vistaBackdrop = new GameObject("BG_ObservationVistaBackdrop");
+            vistaBackdrop.transform.SetParent(ch04EnvRoot.transform);
+            vistaBackdrop.transform.position = new Vector3(0.5f, 1.2f, 2.0f);
+            vistaBackdrop.transform.localScale = new Vector3(7.5f, 4.5f, 1f);
+            SpriteRenderer vistaRend = vistaBackdrop.AddComponent<SpriteRenderer>();
+            vistaRend.sprite = ch4VistaBgSp;
+            vistaRend.sortingOrder = -25;
+            if (unlitMat != null) vistaRend.material = new Material(unlitMat);
+            vistaRend.color = Color.white;
 
-            GameObject lbLightObj = new GameObject("Beacon_Light_L");
-            lbLightObj.transform.SetParent(leftBeacon.transform);
-            lbLightObj.transform.localPosition = Vector3.zero;
-            Light2D lbLight = lbLightObj.AddComponent<Light2D>();
-            lbLight.lightType = Light2D.LightType.Point;
-            lbLight.pointLightOuterRadius = 3.5f;
-            lbLight.color = new Color(1.0f, 0.12f, 0.15f, 1f);
-            lbLight.intensity = 0.8f;
+            // B. Distant Ruined City Towers Parallax Layer (Sorting Order: -22)
+            GameObject towersObj = new GameObject("BG_RuinedCityTowers");
+            towersObj.transform.SetParent(ch04EnvRoot.transform);
+            towersObj.transform.position = new Vector3(5.6f, 1.2f, 1.0f);
+            towersObj.transform.localScale = new Vector3(2.6f, 2.8f, 1f);
+            SpriteRenderer towersRend = towersObj.AddComponent<SpriteRenderer>();
+            towersRend.sprite = ch4TowersSp;
+            towersRend.sortingOrder = -22;
+            if (unlitMat != null) towersRend.material = new Material(unlitMat);
+            towersRend.color = new Color(0.85f, 0.95f, 0.90f, 0.85f); // Atmospheric haze tint
 
-            FlickeringLight2D lbFlicker = lbLightObj.AddComponent<FlickeringLight2D>();
-            lbFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
-            lbFlicker.BaseIntensity = 0.8f;
+            // C. Exterior Searchlight Beams cutting through smog (Sorting Order: -20)
+            GameObject searchlight1 = new GameObject("Deco_Searchlight_1");
+            searchlight1.transform.SetParent(ch04EnvRoot.transform);
+            searchlight1.transform.position = new Vector3(6.5f, 1.8f, 0.5f);
+            searchlight1.transform.localRotation = Quaternion.Euler(0, 0, 22f);
+            searchlight1.transform.localScale = new Vector3(1.6f, 2.4f, 1f);
+            SpriteRenderer sl1Rend = searchlight1.AddComponent<SpriteRenderer>();
+            sl1Rend.sprite = ch4BeamSp;
+            sl1Rend.sortingOrder = -20;
+            if (unlitMat != null) sl1Rend.material = new Material(unlitMat);
+            sl1Rend.color = new Color(0.70f, 0.90f, 0.95f, 0.45f);
 
-            GameObject rightBeacon = new GameObject("Deco_EmergencyBeacon_R");
-            rightBeacon.transform.SetParent(refs.envRoot.transform);
-            rightBeacon.transform.position = new Vector3(9.5f, 1.0f, 0f);
-            SpriteRenderer rbRend = rightBeacon.AddComponent<SpriteRenderer>();
-            rbRend.sprite = beaconSp;
-            rbRend.sortingOrder = 5;
+            GameObject searchlight2 = new GameObject("Deco_Searchlight_2");
+            searchlight2.transform.SetParent(ch04EnvRoot.transform);
+            searchlight2.transform.position = new Vector3(8.8f, 0.5f, 0.5f);
+            searchlight2.transform.localRotation = Quaternion.Euler(0, 0, -18f);
+            searchlight2.transform.localScale = new Vector3(1.2f, 2.0f, 1f);
+            SpriteRenderer sl2Rend = searchlight2.AddComponent<SpriteRenderer>();
+            sl2Rend.sprite = ch4BeamSp;
+            sl2Rend.sortingOrder = -20;
+            if (unlitMat != null) sl2Rend.material = new Material(unlitMat);
+            sl2Rend.color = new Color(0.70f, 0.90f, 0.95f, 0.35f);
 
-            GameObject rbLightObj = new GameObject("Beacon_Light_R");
-            rbLightObj.transform.SetParent(rightBeacon.transform);
-            rbLightObj.transform.localPosition = Vector3.zero;
-            Light2D rbLight = rbLightObj.AddComponent<Light2D>();
-            rbLight.lightType = Light2D.LightType.Point;
-            rbLight.pointLightOuterRadius = 3.5f;
-            rbLight.color = new Color(1.0f, 0.12f, 0.15f, 1f);
-            rbLight.intensity = 0.8f;
+            // D. Distant Containment Barrier & Crowd Silhouettes (Sorting Order: -18)
+            GameObject crowdFence = new GameObject("Deco_ContainmentFenceCrowd");
+            crowdFence.transform.SetParent(ch04EnvRoot.transform);
+            crowdFence.transform.position = new Vector3(5.6f, -2.6f, 0f);
+            crowdFence.transform.localScale = new Vector3(3.2f, 1.8f, 1f);
+            SpriteRenderer cfRend = crowdFence.AddComponent<SpriteRenderer>();
+            cfRend.sprite = ch4FenceSp;
+            cfRend.sortingOrder = -18;
+            if (unlitMat != null) cfRend.material = new Material(unlitMat);
+            cfRend.color = new Color(0.75f, 0.85f, 0.80f, 0.90f);
 
-            FlickeringLight2D rbFlicker = rbLightObj.AddComponent<FlickeringLight2D>();
-            rbFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
-            rbFlicker.BaseIntensity = 0.8f;
+            // E. Left Observation Interior Concrete Wall Panels (Sorting Order: -16)
+            GameObject interiorWallGroup = new GameObject("Deco_InteriorWallGroup");
+            interiorWallGroup.transform.SetParent(ch04EnvRoot.transform);
+            interiorWallGroup.transform.position = Vector3.zero;
+
+            for (float px = -9.0f; px <= 0.0f; px += 2.0f)
+            {
+                for (float py = -2.5f; py <= 3.5f; py += 2.0f)
+                {
+                    GameObject cPan = new GameObject($"ConcretePanel_{px}_{py}");
+                    cPan.transform.SetParent(interiorWallGroup.transform);
+                    cPan.transform.position = new Vector3(px, py, 0f);
+                    cPan.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+                    SpriteRenderer cpRend = cPan.AddComponent<SpriteRenderer>();
+                    cpRend.sprite = ch4ConcreteSp;
+                    cpRend.sortingOrder = -16;
+                    cpRend.color = new Color(0.55f, 0.40f, 0.42f, 0.70f); // Emergency red tint on concrete
+                }
+            }
+
+            // F. Giant Observation Bulkhead Archway (Sorting Order: -12)
+            // Frames the transition between indoor command bunker on left and devastated exterior vista on right
+            GameObject archwayObj = new GameObject("Deco_ObservationBulkheadArch");
+            archwayObj.transform.SetParent(ch04EnvRoot.transform);
+            archwayObj.transform.position = new Vector3(1.4f, 1.0f, 0f);
+            archwayObj.transform.localScale = new Vector3(2.0f, 3.4f, 1f);
+            SpriteRenderer archRend = archwayObj.AddComponent<SpriteRenderer>();
+            archRend.sprite = ch4ArchSp;
+            archRend.sortingOrder = -12;
+            archRend.color = Color.white;
+
+            // G. Surveillance Monitor Display Wall (Sorting Order: -10, Unlit)
+            GameObject survWallObj = new GameObject("Surveillance_Monitor_Wall");
+            survWallObj.transform.SetParent(ch04EnvRoot.transform);
+            survWallObj.transform.position = new Vector3(-4.5f, 1.8f, 0f);
+            survWallObj.transform.localScale = new Vector3(2.4f, 1.6f, 1f);
+            SpriteRenderer survRend = survWallObj.AddComponent<SpriteRenderer>();
+            survRend.sprite = ch4SurvAlphaSp;
+            survRend.sortingOrder = -10;
+            if (unlitMat != null) survRend.material = new Material(unlitMat);
+            survRend.color = Color.white;
+
+            // Dedicated localized emergency monitor light
+            GameObject monLightObj = new GameObject("Surveillance_Monitor_Spotlight");
+            monLightObj.transform.SetParent(survWallObj.transform);
+            monLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            Light2D monLight = monLightObj.AddComponent<Light2D>();
+            monLight.lightType = Light2D.LightType.Point;
+            monLight.pointLightInnerRadius = 0.4f;
+            monLight.pointLightOuterRadius = 3.6f;
+            monLight.color = new Color(1.0f, 0.22f, 0.18f, 1f);
+            monLight.intensity = 1.35f;
+
+            // H. Operator Desks & Workstations (Sorting Order: 2)
+            GameObject console1 = new GameObject("Deco_OperatorConsole_1");
+            console1.transform.SetParent(ch04EnvRoot.transform);
+            console1.transform.position = new Vector3(-6.5f, -3.2f, 0f);
+            console1.transform.localScale = new Vector3(1.2f, 1.0f, 1f);
+            SpriteRenderer c1Rend = console1.AddComponent<SpriteRenderer>();
+            c1Rend.sprite = ch4ConsoleSp;
+            c1Rend.sortingOrder = 2;
+
+            GameObject console2 = new GameObject("Deco_OperatorConsole_2");
+            console2.transform.SetParent(ch04EnvRoot.transform);
+            console2.transform.position = new Vector3(-2.8f, -3.2f, 0f);
+            console2.transform.localScale = new Vector3(1.2f, 1.0f, 1f);
+            SpriteRenderer c2Rend = console2.AddComponent<SpriteRenderer>();
+            c2Rend.sprite = ch4ConsoleSp;
+            c2Rend.sortingOrder = 2;
+
+            // I. Server Monitoring Data Racks (Sorting Order: 1)
+            GameObject server1 = new GameObject("Deco_ServerRack_1");
+            server1.transform.SetParent(ch04EnvRoot.transform);
+            server1.transform.position = new Vector3(-8.8f, -2.7f, 0f);
+            server1.transform.localScale = new Vector3(1.1f, 1.3f, 1f);
+            SpriteRenderer s1Rend = server1.AddComponent<SpriteRenderer>();
+            s1Rend.sprite = ch4ServerSp;
+            s1Rend.sortingOrder = 1;
+
+            GameObject server2 = new GameObject("Deco_ServerRack_2");
+            server2.transform.SetParent(ch04EnvRoot.transform);
+            server2.transform.position = new Vector3(-7.7f, -2.7f, 0f);
+            server2.transform.localScale = new Vector3(1.1f, 1.3f, 1f);
+            SpriteRenderer s2Rend = server2.AddComponent<SpriteRenderer>();
+            s2Rend.sprite = ch4ServerSp;
+            s2Rend.sortingOrder = 1;
+
+            // J. Industrial Catwalk Staircase Decoration (Sorting Order: 1)
+            GameObject stairsObj = new GameObject("Deco_IndustrialStairs");
+            stairsObj.transform.SetParent(ch04EnvRoot.transform);
+            stairsObj.transform.position = new Vector3(-5.8f, -2.2f, 0f);
+            stairsObj.transform.localScale = new Vector3(1.4f, 1.5f, 1f);
+            SpriteRenderer stRend = stairsObj.AddComponent<SpriteRenderer>();
+            stRend.sprite = ch4StairsSp;
+            stRend.sortingOrder = 1;
+
+            // K. Overhead Hanging Electrical Cables & Conduit Clusters (Sorting Order: 12)
+            GameObject cables1 = new GameObject("Deco_HangingCables_1");
+            cables1.transform.SetParent(ch04EnvRoot.transform);
+            cables1.transform.position = new Vector3(-4.0f, 4.3f, 0f);
+            cables1.transform.localScale = new Vector3(2.4f, 1.4f, 1f);
+            SpriteRenderer cab1Rend = cables1.AddComponent<SpriteRenderer>();
+            cab1Rend.sprite = ch4CablesSp;
+            cab1Rend.sortingOrder = 12;
+
+            GameObject cables2 = new GameObject("Deco_HangingCables_2");
+            cables2.transform.SetParent(ch04EnvRoot.transform);
+            cables2.transform.position = new Vector3(1.8f, 4.4f, 0f);
+            cables2.transform.localScale = new Vector3(2.0f, 1.5f, 1f);
+            SpriteRenderer cab2Rend = cables2.AddComponent<SpriteRenderer>();
+            cab2Rend.sprite = ch4CablesSp;
+            cab2Rend.sortingOrder = 12;
+
+            GameObject cables3 = new GameObject("Deco_HangingCables_3");
+            cables3.transform.SetParent(ch04EnvRoot.transform);
+            cables3.transform.position = new Vector3(6.5f, 4.5f, 0f);
+            cables3.transform.localScale = new Vector3(2.2f, 1.4f, 1f);
+            SpriteRenderer cab3Rend = cables3.AddComponent<SpriteRenderer>();
+            cab3Rend.sprite = ch4CablesSp;
+            cab3Rend.sortingOrder = 12;
+
+            // L. Wall-Mounted Emergency Sirens / Beacons (Sorting Order: 6)
+            var emergencyLightList = new System.Collections.Generic.List<Light2D>();
+
+            Vector3[] beaconPositions = new Vector3[]
+            {
+                new Vector3(-9.2f, 0.8f, 0f),
+                new Vector3(-1.8f, 0.8f, 0f),
+                new Vector3(1.6f, 3.2f, 0f),
+                new Vector3(8.8f, 1.6f, 0f)
+            };
+
+            for (int bi = 0; bi < beaconPositions.Length; bi++)
+            {
+                Vector3 bpos = beaconPositions[bi];
+                GameObject beacon = new GameObject($"Deco_WallBeacon_{bi}");
+                beacon.transform.SetParent(ch04EnvRoot.transform);
+                beacon.transform.position = bpos;
+                beacon.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
+                SpriteRenderer bRend = beacon.AddComponent<SpriteRenderer>();
+                bRend.sprite = ch4BeaconSp;
+                bRend.sortingOrder = 6;
+
+                GameObject bLightObj = new GameObject($"Beacon_Light_{bi}");
+                bLightObj.transform.SetParent(beacon.transform);
+                bLightObj.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+                Light2D bLight = bLightObj.AddComponent<Light2D>();
+                bLight.lightType = Light2D.LightType.Point;
+                bLight.pointLightInnerRadius = 0.25f;
+                bLight.pointLightOuterRadius = 2.4f;
+                bLight.color = new Color(1.0f, 0.25f, 0.18f, 1f);
+                bLight.intensity = 0.95f;
+
+                FlickeringLight2D bFlicker = bLightObj.AddComponent<FlickeringLight2D>();
+                bFlicker.Mode = FlickeringLight2D.FlickerMode.EmergencyStrobe;
+                bFlicker.BaseIntensity = 0.95f;
+
+                emergencyLightList.Add(bLight);
+            }
+
+            // M. Wire Chapter 04 Visual Director for dynamic dimension switching
+            GameObject dirObj = new GameObject("CH04_VisualDirector");
+            dirObj.transform.SetParent(ch04EnvRoot.transform);
+            Chapter04VisualDirector ch04Director = dirObj.AddComponent<Chapter04VisualDirector>();
+            ch04Director.SurveillanceWallRenderer = survRend;
+            ch04Director.AlphaScreenSprite = ch4SurvAlphaSp;
+            ch04Director.BetaScreenSprite = ch4SurvBetaSp;
+            GameObject glObj = GameObject.Find("Global Light 2D");
+            if (glObj != null) ch04Director.GlobalLight = glObj.GetComponent<Light2D>();
+            ch04Director.EmergencyLights = emergencyLightList.ToArray();
+
+            // =========================================================================
+            // 2. PLAYABLE PUZZLE & PLATFORMS (PRESERVE 100% GAMEPLAY)
+            // =========================================================================
 
             // Checkpoint 4: Fake Checkpoint Dialogue Prank (Level 04)
             GameObject fakeCheckpointObj = new GameObject("FakeCheckpointPrankController");
@@ -5605,14 +6631,14 @@ namespace GlitchVerse.Editor
             SetPrivateField(fakeCheckpoint, "triggerX", 0.0f);
 
             // Floor Hazard across the chasm pit at X: -4.5 to 3.5, Y: -4.0
-            Sprite laserSp = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/hazard_laser.png");
+            // Laser hazard uses distinct hyper-bright neon ruby laser with high-contrast emitter housings
             GameObject floorChasmHazard = new GameObject("FloorChasm_Hazard");
             floorChasmHazard.transform.SetParent(refs.puzzleRoot.transform);
             floorChasmHazard.transform.position = new Vector3(-0.5f, -3.8f, 0f);
 
             SpriteRenderer fchRend = floorChasmHazard.AddComponent<SpriteRenderer>();
             fchRend.sprite = laserSp;
-            fchRend.color = new Color(1.0f, 0.15f, 0.25f, 1f);
+            fchRend.color = new Color(1.0f, 0.05f, 0.15f, 1f); // Distinct hyper-bright saturated neon red
             fchRend.sortingOrder = 7;
             fchRend.drawMode = SpriteDrawMode.Sliced;
             fchRend.size = new Vector2(8.0f, 0.7f);
@@ -5627,12 +6653,40 @@ namespace GlitchVerse.Editor
             SetPrivateField(fchComp, "activeOnStart", true);
             fchComp.SetHazardActive(true);
 
+            // High-voltage emitter housings flanking the chasm pit
+            GameObject fchHousingL = new GameObject("Deco_ChasmHousing_L");
+            fchHousingL.transform.SetParent(floorChasmHazard.transform);
+            fchHousingL.transform.position = new Vector3(-4.55f, -3.8f, 0f);
+            fchHousingL.transform.localScale = new Vector3(1.0f, 1.1f, 1f);
+            SpriteRenderer hlRend = fchHousingL.AddComponent<SpriteRenderer>();
+            hlRend.sprite = ch4HazardHousingSp;
+            hlRend.sortingOrder = 8;
+
+            GameObject fchHousingR = new GameObject("Deco_ChasmHousing_R");
+            fchHousingR.transform.SetParent(floorChasmHazard.transform);
+            fchHousingR.transform.position = new Vector3(3.55f, -3.8f, 0f);
+            fchHousingR.transform.localScale = new Vector3(1.0f, 1.1f, 1f);
+            fchHousingR.transform.localRotation = Quaternion.Euler(0, 180f, 0);
+            SpriteRenderer hrRend = fchHousingR.AddComponent<SpriteRenderer>();
+            hrRend.sprite = ch4HazardHousingSp;
+            hrRend.sortingOrder = 8;
+
             // 1. DIMENSION ALPHA: Inverted Ceiling Observation Catwalk at X: -3.5, Y: 3.8
             GameObject alphaCeilingCatwalk = CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_CeilingCatwalk", 
                 new Vector3(-3.5f, 3.8f, 0f), new Vector2(4.2f, 0.4f), alphaSp, DimensionType.Alpha);
 
+            // Decorative industrial grating trim on ceiling catwalk
+            GameObject alphaCeilTrim = new GameObject("Deco_CeilCatwalkDeck");
+            alphaCeilTrim.transform.SetParent(alphaCeilingCatwalk.transform);
+            alphaCeilTrim.transform.localPosition = new Vector3(0f, 0f, 0f);
+            alphaCeilTrim.transform.localScale = new Vector3(3.2f, 0.45f, 1f);
+            SpriteRenderer actRend = alphaCeilTrim.AddComponent<SpriteRenderer>();
+            actRend.sprite = ch4DeckSp;
+            actRend.sortingOrder = 1;
+            actRend.color = new Color(0.8f, 0.95f, 1.0f, 0.65f);
+
             // Step platform to ceiling in Alpha at X: -6.0, Y: -1.5
-            CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Step_1", 
+            GameObject alphaStep1 = CreateDimensionPlatform(refs.puzzleRoot.transform, "DimAlpha_Step_1", 
                 new Vector3(-6.0f, -1.5f, 0f), new Vector2(2.0f, 0.4f), alphaSp, DimensionType.Alpha);
 
             // EchoSwitch mounted inverted on Alpha Ceiling Catwalk at (-3.5, 3.5)
@@ -5654,9 +6708,10 @@ namespace GlitchVerse.Editor
             switchLightObj.transform.localPosition = new Vector3(0f, 0.2f, 0f);
             Light2D switchLight = switchLightObj.AddComponent<Light2D>();
             switchLight.lightType = Light2D.LightType.Point;
-            switchLight.pointLightOuterRadius = 3.0f;
+            switchLight.pointLightInnerRadius = 0.2f;
+            switchLight.pointLightOuterRadius = 2.4f;
             switchLight.color = new Color(0.85f, 0f, 1f, 1f);
-            switchLight.intensity = 0.7f;
+            switchLight.intensity = 0.85f;
 
             SecurityOverrideSwitch echoSwitchComp = echoSwitchObj.AddComponent<SecurityOverrideSwitch>();
             SetPrivateField(echoSwitchComp, "switchRenderer", switchRend);
@@ -5668,9 +6723,9 @@ namespace GlitchVerse.Editor
             SetPrivateField(echoSwitchComp, "latching", false);
             SetPrivateField(echoSwitchComp, "isPowered", true);
 
-            // Revelation Schematic Display on Ceiling bulkheads (Visible in Alpha)
+            // Revelation Stenciled Diagnostic on Ceiling bulkheads (Visible in Alpha)
             GameObject schematicObj = new GameObject("Deco_AlphaSchematic");
-            schematicObj.transform.SetParent(refs.envRoot.transform);
+            schematicObj.transform.SetParent(ch04EnvRoot.transform);
             schematicObj.transform.position = new Vector3(-1.0f, 3.2f, 0f);
             SpriteRenderer schemRend = schematicObj.AddComponent<SpriteRenderer>();
             schemRend.sprite = quarantineSp;
@@ -5706,7 +6761,7 @@ namespace GlitchVerse.Editor
 
             SpriteRenderer ebRend = exitBarrierObj.AddComponent<SpriteRenderer>();
             ebRend.sprite = laserSp;
-            ebRend.color = new Color(1.0f, 0.15f, 0.25f, 0.95f);
+            ebRend.color = new Color(1.0f, 0.10f, 0.20f, 0.95f);
             ebRend.sortingOrder = 8;
             ebRend.drawMode = SpriteDrawMode.Sliced;
             ebRend.size = new Vector2(0.35f, 2.2f);
@@ -5719,8 +6774,9 @@ namespace GlitchVerse.Editor
             ebLightObj.transform.localPosition = Vector3.zero;
             Light2D ebLight = ebLightObj.AddComponent<Light2D>();
             ebLight.lightType = Light2D.LightType.Point;
+            ebLight.pointLightInnerRadius = 0.2f;
             ebLight.pointLightOuterRadius = 2.4f;
-            ebLight.color = new Color(1.0f, 0.2f, 0.25f, 1f);
+            ebLight.color = new Color(1.0f, 0.15f, 0.22f, 1f);
             ebLight.intensity = 1.3f;
 
             SecurityBarrier exitBarrierComp = exitBarrierObj.AddComponent<SecurityBarrier>();
@@ -5735,9 +6791,27 @@ namespace GlitchVerse.Editor
             // Final Breach Exit Door mounted high on the right bulkhead at (X: 8.5, Y: 3.5)
             refs.exitDoor.transform.position = new Vector3(8.5f, 3.5f, 0f);
 
+            // Framing spot above exit door
+            GameObject exitDoorSpotObj = new GameObject("ExitDoor_Spotlight");
+            exitDoorSpotObj.transform.SetParent(refs.exitDoor.transform);
+            exitDoorSpotObj.transform.localPosition = new Vector3(0f, 1.4f, 0f);
+            Light2D exitDoorSpot = exitDoorSpotObj.AddComponent<Light2D>();
+            exitDoorSpot.lightType = Light2D.LightType.Point;
+            exitDoorSpot.pointLightInnerRadius = 0.3f;
+            exitDoorSpot.pointLightOuterRadius = 3.2f;
+            exitDoorSpot.color = new Color(0.95f, 0.35f, 0.25f, 1f);
+            exitDoorSpot.intensity = 1.2f;
+
             SetPrivateField(refs.hud, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.director, "echoSwitch", echoSwitchComp);
             SetPrivateField(refs.triggers, "echoSwitch", echoSwitchComp);
+
+            // Ensure intro overlay panels are clean in edit mode
+            var introPanel = GameObject.Find("ChapterIntroPanel");
+            if (introPanel != null) introPanel.SetActive(false);
+
+            var subtitleBanner = GameObject.Find("ArchitectSubtitleBanner");
+            if (subtitleBanner != null) subtitleBanner.SetActive(false);
 
             SaveChamberScene("Level04.unity");
         }
